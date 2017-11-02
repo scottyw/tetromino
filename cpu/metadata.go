@@ -29,16 +29,33 @@ func noFlags(flags []string) bool {
 	return flags[0] == "-" && flags[1] == "-" && flags[2] == "-" && flags[3] == "-"
 }
 
-func operandType(operand string) string {
-	switch operand {
-	case "BC", "DE", "HL":
-		return "16"
+func validateOpcodeCOnsistency(opcode opcodeMetadata) {
+	switch opcode.Length {
+	case 1:
+		if (strings.Contains(opcode.Operand1, "8") && !strings.Contains(opcode.Operand1, "8H")) ||
+			(strings.Contains(opcode.Operand2, "8") && !strings.Contains(opcode.Operand2, "8H")) ||
+			strings.Contains(opcode.Operand1, "16") ||
+			strings.Contains(opcode.Operand2, "16") {
+			panic(fmt.Sprintf("Metadata error: Length of 1 implies no operands should be immediate values: %v", opcode))
+		}
+	case 2:
+		if (strings.Contains(opcode.Operand1, "8") == strings.Contains(opcode.Operand2, "8")) ||
+			strings.Contains(opcode.Operand1, "16") ||
+			strings.Contains(opcode.Operand2, "16") {
+			panic(fmt.Sprintf("Metadata error: Length of 2 implies exactly one of the operands should be an 8-bit immediate value: %v", opcode))
+		}
+	case 3:
+		if (strings.Contains(opcode.Operand1, "16") == strings.Contains(opcode.Operand2, "16")) ||
+			strings.Contains(opcode.Operand1, "8") ||
+			strings.Contains(opcode.Operand2, "8") {
+			panic(fmt.Sprintf("Metadata error: Length of 3 implies exactly one of the operands should be a 16-bit immediate value: %v", opcode))
+		}
 	default:
-		return ""
+		panic("Metadata error: Unsupported opcode length " + opcode.Mnemonic)
 	}
 }
 
-func initOpcodeArray(opcodeMap map[string]opcodeMetadata, arrayToInit *[256]opcodeMetadata, validate bool) {
+func initOpcodeArray(opcodeMap map[string]opcodeMetadata, arrayToInit *[256]opcodeMetadata, unprefixed bool) {
 	for addrStr, opcode := range opcodeMap {
 		addr, err := strconv.ParseUint(addrStr, 0, 8)
 		if err != nil {
@@ -51,39 +68,6 @@ func initOpcodeArray(opcodeMap map[string]opcodeMetadata, arrayToInit *[256]opco
 		for i := 0; i < len(opcode.Cycles); i++ {
 			opcode.Cycles[i] /= 4
 		}
-		// Validate that the length and operands seem consistent
-		if validate {
-			switch opcode.Length {
-			case 1:
-				if (strings.Contains(opcode.Operand1, "8") && !strings.Contains(opcode.Operand1, "8H")) ||
-					(strings.Contains(opcode.Operand2, "8") && !strings.Contains(opcode.Operand2, "8H")) ||
-					strings.Contains(opcode.Operand1, "16") ||
-					strings.Contains(opcode.Operand2, "16") {
-					panic(fmt.Sprintf("Metadata error: Length of 1 implies no operands should be immediate values: %v", opcode))
-				}
-			case 2:
-				if (strings.Contains(opcode.Operand1, "8") == strings.Contains(opcode.Operand2, "8")) ||
-					strings.Contains(opcode.Operand1, "16") ||
-					strings.Contains(opcode.Operand2, "16") {
-					panic(fmt.Sprintf("Metadata error: Length of 2 implies exactly one of the operands should be an 8-bit immediate value: %v", opcode))
-				}
-			case 3:
-				if (strings.Contains(opcode.Operand1, "16") == strings.Contains(opcode.Operand2, "16")) ||
-					strings.Contains(opcode.Operand1, "8") ||
-					strings.Contains(opcode.Operand2, "8") {
-					panic(fmt.Sprintf("Metadata error: Length of 3 implies exactly one of the operands should be a 16-bit immediate value: %v", opcode))
-				}
-			default:
-				panic("Metadata error: Unsupported opcode length " + opcode.Mnemonic)
-			}
-		}
-		// Find the matching opcode implementation
-		fname := opcode.Mnemonic + operandType(opcode.Operand1)
-		mappedFunc, present := mapping[fname]
-		if !present {
-			panic("Metadata error: No method mapped for opcode " + fname)
-		}
-		opcode.Func = mappedFunc
 		(*arrayToInit)[addr] = opcode
 	}
 }

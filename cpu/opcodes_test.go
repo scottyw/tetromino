@@ -2,7 +2,6 @@ package cpu
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/scottyw/goomba/mem"
@@ -35,35 +34,48 @@ func (mem testMemory) Write(addr uint16, b byte) {
 }
 
 type testTable struct {
-	mnemonic      string
-	op1           string
-	op2           string
-	u8            uint8
-	u16           uint16
-	actualCPU     CPU
-	expectedCPU   CPU
-	expectedFlags map[string]bool
-	mem           mem.Memory
+	instruction uint8
+	u8          uint8
+	u16         uint16
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         mem.Memory
+}
+
+func (cpu *CPU) checkFlags(op opcodeMetadata, flagsToUpdate map[string]bool) {
+	if len(op.Flags) > 0 {
+		for i, flag := range op.Flags {
+			switch flag {
+			case "0":
+				cpu.resetFlag(flags[i])
+			case "1":
+				cpu.setFlag(flags[i])
+			case "-":
+				// Leave the flag alone
+			default:
+				set, present := flagsToUpdate[flag]
+				if !present {
+					panic(fmt.Sprintf("Expected flag %v in %v", flag, flagsToUpdate))
+				}
+				if set {
+					cpu.setFlag(flags[i])
+				} else {
+					cpu.resetFlag(flags[i])
+				}
+			}
+		}
+	}
 }
 
 func TestOpcodes(t *testing.T) {
 	for i, test := range tests {
-		if test.mnemonic == "" {
-			t.Error("( TEST", i, ") Mnemonic cannot be empty:", test)
-		}
-		f := mapping[test.mnemonic]
-		if f == nil {
-			t.Error("( TEST", i, ") No opcode function: ", test)
-		}
-		flags := f((&test.actualCPU), test.mem, test.op1, test.op2, test.u8, test.u16)
+		(&test.actualCPU).dispatch(test.instruction)
 		if test.actualCPU != test.expectedCPU {
 			t.Error("( TEST", i, ") CPUs do not match for: ", test)
 			t.Error("  Expected : ", test.expectedCPU)
 			t.Error("  Actual   : ", test.actualCPU)
 		}
-		if !reflect.DeepEqual(flags, test.expectedFlags) {
-			t.Error("( TEST", i, ") Flags", flags, "do not match for: ", test)
-		}
+		// checkFlags()
 	}
 }
 
@@ -105,22 +117,26 @@ var tests = []testTable{
 	// {"ADC", "A", "d8", 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x1a}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
 	// {"ADC", "A", "d8", 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x1a}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
 
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x3c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x0c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x45, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x00}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x3d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x0d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x46, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
-	{"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": true, "H": true, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xff}}},
+	///////////////////////
 
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x12, f: 0x00}, CPU{a: 0x24, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0xa3, f: 0x00}, CPU{a: 0x46, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x1a, f: 0x00}, CPU{a: 0x34, f: 0x00}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x00, f: 0x00}, CPU{a: 0x00, f: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x12, f: cFlag}, CPU{a: 0x25, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0xa3, f: cFlag}, CPU{a: 0x47, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x1a, f: cFlag}, CPU{a: 0x35, f: cFlag}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x3c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x0c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x45, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x00p00, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x00}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x3d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x0d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x46, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
+	// {"ADC", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": true, "H": true, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xff}}},
+
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x12, f: 0x00}, CPU{a: 0x24, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0xa3, f: 0x00}, CPU{a: 0x46, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x1a, f: 0x00}, CPU{a: 0x34, f: 0x00}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x00, f: 0x00}, CPU{a: 0x00, f: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x12, f: cFlag}, CPU{a: 0x25, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0xa3, f: cFlag}, CPU{a: 0x47, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+	// {"ADC", "A", "A", 0x00, 0x0000, CPU{a: 0x1a, f: cFlag}, CPU{a: 0x35, f: cFlag}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+
+	///////////////////////
 
 	// {"ADC", "A", "B", 0x00, 0x0000, CPU{a: 0x1a, b: 0x22}, CPU{a: 0x3c, b: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
 	// {"ADC", "A", "B", 0x00, 0x0000, CPU{a: 0x1a, b: 0xf2}, CPU{a: 0x0c, b: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
@@ -151,75 +167,88 @@ var tests = []testTable{
 	// {"ADC", "A", "d8", 0x2b, 0x0000, CPU{a: 0x1a}, CPU{a: 0x45}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
 	// {"ADC", "A", "d8", 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
 
-	{"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x3c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
-	{"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x0c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
-	{"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x45, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
-	{"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x00, h: 0xa7, l: 0xf8}, CPU{a: 0x00, h: 0xa7, l: 0xf8}, map[string]bool{"Z": true, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x00}}},
-	{"ADD", "A", "A", 0x00, 0x0000, CPU{a: 0x12}, CPU{a: 0x24}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "A", 0x00, 0x0000, CPU{a: 0xa3}, CPU{a: 0x46}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "A", 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x34}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "A", 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "B", 0x00, 0x0000, CPU{a: 0x1a, b: 0x22}, CPU{a: 0x3c, b: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "B", 0x00, 0x0000, CPU{a: 0x1a, b: 0xf2}, CPU{a: 0x0c, b: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "B", 0x00, 0x0000, CPU{a: 0x1a, b: 0x2b}, CPU{a: 0x45, b: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "B", 0x00, 0x0000, CPU{a: 0x00, b: 0x00}, CPU{a: 0x00, b: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x1a, c: 0x22}, CPU{a: 0x3c, c: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x1a, c: 0xf2}, CPU{a: 0x0c, c: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x1a, c: 0x2b}, CPU{a: 0x45, c: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x00, c: 0x00}, CPU{a: 0x00, c: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x1a, d: 0x22}, CPU{a: 0x3c, d: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x1a, d: 0xf2}, CPU{a: 0x0c, d: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x1a, d: 0x2b}, CPU{a: 0x45, d: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x00, d: 0x00}, CPU{a: 0x00, d: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x1a, e: 0x22}, CPU{a: 0x3c, e: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x1a, e: 0xf2}, CPU{a: 0x0c, e: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x1a, e: 0x2b}, CPU{a: 0x45, e: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x00, e: 0x00}, CPU{a: 0x00, e: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x1a, h: 0x22}, CPU{a: 0x3c, h: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x1a, h: 0xf2}, CPU{a: 0x0c, h: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x1a, h: 0x2b}, CPU{a: 0x45, h: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x00, h: 0x00}, CPU{a: 0x00, h: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x1a, l: 0x22}, CPU{a: 0x3c, l: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x1a, l: 0xf2}, CPU{a: 0x0c, l: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x1a, l: 0x2b}, CPU{a: 0x45, l: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x00, l: 0x00}, CPU{a: 0x00, l: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	{"ADD", "A", "d8", 0x22, 0x0000, CPU{a: 0x1a}, CPU{a: 0x3c}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
-	{"ADD", "A", "d8", 0xf2, 0x0000, CPU{a: 0x1a}, CPU{a: 0x0c}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
-	{"ADD", "A", "d8", 0x2b, 0x0000, CPU{a: 0x1a}, CPU{a: 0x45}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
-	{"ADD", "A", "d8", 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
-	// {"ADD", "HL", "BC", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, map[string]bool{"H": false, "C": false}, nil},
-	// {"ADD", "HL", "BC", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, map[string]bool{"H": false, "C": true}, nil},
-	// {"ADD", "HL", "BC", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, map[string]bool{"H": true, "C": false}, nil},
-	// {"ADD", "HL", "DE", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, map[string]bool{"H": false, "C": false}, nil},
-	// {"ADD", "HL", "DE", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, map[string]bool{"H": false, "C": true}, nil},
-	// {"ADD", "HL", "DE", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, map[string]bool{"H": true, "C": false}, nil},
-	// {"ADD", "HL", "HL", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": false}, nil},
-	// {"ADD", "HL", "HL", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": true}, nil},
-	// {"ADD", "HL", "HL", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": true, "C": false}, nil},
-	// {"ADD", "HL", "SP", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": false}, nil},
-	// {"ADD", "HL", "SP", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": true}, nil},
-	// {"ADD", "HL", "SP", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": true, "C": false}, nil},
-	// {"ADD", "SP", "r8", 0x00, 0x0000, CPU{}, CPU{}, map[string]bool{"H": false, "C": false}, nil},
-	// {"ADD", "SP", "r8", 0x00, 0x0000, CPU{}, CPU{}, map[string]bool{"H": false, "C": true}, nil},
-	// {"ADD", "SP", "r8", 0x00, 0x0000, CPU{}, CPU{}, map[string]bool{"H": true, "C": false}, nil},
-	// {"AND", "(HL)", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x12, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x33}}},
-	// {"AND", "(HL)", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x00, h: 0xa7, l: 0xf8}, map[string]bool{"Z": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0x21}}},
-	{"AND", "A", "", 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x1a}, map[string]bool{"Z": false}, nil},
-	{"AND", "A", "", 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, map[string]bool{"Z": true}, nil},
-	{"AND", "B", "", 0x00, 0x0000, CPU{a: 0x1a, b: 0x33}, CPU{a: 0x12, b: 0x33}, map[string]bool{"Z": false}, nil},
-	{"AND", "B", "", 0x00, 0x0000, CPU{a: 0x1a, b: 0x21}, CPU{a: 0x00, b: 0x21}, map[string]bool{"Z": true}, nil},
-	{"AND", "C", "", 0x00, 0x0000, CPU{a: 0x1a, c: 0x33}, CPU{a: 0x12, c: 0x33}, map[string]bool{"Z": false}, nil},
-	{"AND", "C", "", 0x00, 0x0000, CPU{a: 0x1a, c: 0x21}, CPU{a: 0x00, c: 0x21}, map[string]bool{"Z": true}, nil},
-	{"AND", "D", "", 0x00, 0x0000, CPU{a: 0x1a, d: 0x33}, CPU{a: 0x12, d: 0x33}, map[string]bool{"Z": false}, nil},
-	{"AND", "D", "", 0x00, 0x0000, CPU{a: 0x1a, d: 0x21}, CPU{a: 0x00, d: 0x21}, map[string]bool{"Z": true}, nil},
-	{"AND", "E", "", 0x00, 0x0000, CPU{a: 0x1a, e: 0x33}, CPU{a: 0x12, e: 0x33}, map[string]bool{"Z": false}, nil},
-	{"AND", "E", "", 0x00, 0x0000, CPU{a: 0x1a, e: 0x21}, CPU{a: 0x00, e: 0x21}, map[string]bool{"Z": true}, nil},
-	{"AND", "H", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0x33}, CPU{a: 0x12, h: 0x33}, map[string]bool{"Z": false}, nil},
-	{"AND", "H", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0x21}, CPU{a: 0x00, h: 0x21}, map[string]bool{"Z": true}, nil},
-	{"AND", "L", "", 0x00, 0x0000, CPU{a: 0x1a, l: 0x33}, CPU{a: 0x12, l: 0x33}, map[string]bool{"Z": false}, nil},
-	{"AND", "L", "", 0x00, 0x0000, CPU{a: 0x1a, l: 0x21}, CPU{a: 0x00, l: 0x21}, map[string]bool{"Z": true}, nil},
-	{"AND", "d8", "", 0x33, 0x0000, CPU{a: 0x1a}, CPU{a: 0x12}, map[string]bool{"Z": false}, nil},
-	{"AND", "d8", "", 0x21, 0x0000, CPU{a: 0x1a}, CPU{a: 0x00}, map[string]bool{"Z": true}, nil}}
+	///////////////////////
+	// GOOD
+
+	// {"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x3c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
+	// {"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x0c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
+	// {"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x45, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
+	// {"ADD", "A", "(HL)", 0x00, 0x0000, CPU{a: 0x00, h: 0xa7, l: 0xf8}, CPU{a: 0x00, h: 0xa7, l: 0xf8}, map[string]bool{"Z": true, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x00}}},
+	{0x87, 0x00, 0x0000, CPU{a: 0x12}, CPU{a: 0x24}, nil},
+	{0x87, 0x00, 0x0000, CPU{a: 0xa3}, CPU{a: 0x46, cf: true}, nil},
+	{0x87, 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x34, hf: true}, nil},
+	{0x87, 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00, zf: true}, nil},
+	{0x80, 0x00, 0x0000, CPU{a: 0x1a, b: 0x22}, CPU{a: 0x3c, b: 0x22}, nil},
+	{0x80, 0x00, 0x0000, CPU{a: 0x1a, b: 0xf2}, CPU{a: 0x0c, b: 0xf2, cf: true}, nil},
+	{0x80, 0x00, 0x0000, CPU{a: 0x1a, b: 0x2b}, CPU{a: 0x45, b: 0x2b, hf: true}, nil},
+	{0x80, 0x00, 0x0000, CPU{a: 0x00, b: 0x00}, CPU{a: 0x00, b: 0x00, zf: true}, nil}}
+
+// {"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x1a, c: 0x22}, CPU{a: 0x3c, c: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+// {"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x1a, c: 0xf2}, CPU{a: 0x0c, c: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+// {"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x1a, c: 0x2b}, CPU{a: 0x45, c: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+// {"ADD", "A", "C", 0x00, 0x0000, CPU{a: 0x00, c: 0x00}, CPU{a: 0x00, c: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+// {"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x1a, d: 0x22}, CPU{a: 0x3c, d: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+// {"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x1a, d: 0xf2}, CPU{a: 0x0c, d: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+// {"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x1a, d: 0x2b}, CPU{a: 0x45, d: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+// {"ADD", "A", "D", 0x00, 0x0000, CPU{a: 0x00, d: 0x00}, CPU{a: 0x00, d: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+// {"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x1a, e: 0x22}, CPU{a: 0x3c, e: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+// {"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x1a, e: 0xf2}, CPU{a: 0x0c, e: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+// {"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x1a, e: 0x2b}, CPU{a: 0x45, e: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+// {"ADD", "A", "E", 0x00, 0x0000, CPU{a: 0x00, e: 0x00}, CPU{a: 0x00, e: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+// {"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x1a, h: 0x22}, CPU{a: 0x3c, h: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+// {"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x1a, h: 0xf2}, CPU{a: 0x0c, h: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+// {"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x1a, h: 0x2b}, CPU{a: 0x45, h: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+// {"ADD", "A", "H", 0x00, 0x0000, CPU{a: 0x00, h: 0x00}, CPU{a: 0x00, h: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+// {"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x1a, l: 0x22}, CPU{a: 0x3c, l: 0x22}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+// {"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x1a, l: 0xf2}, CPU{a: 0x0c, l: 0xf2}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+// {"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x1a, l: 0x2b}, CPU{a: 0x45, l: 0x2b}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+// {"ADD", "A", "L", 0x00, 0x0000, CPU{a: 0x00, l: 0x00}, CPU{a: 0x00, l: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+// {"ADD", "A", "d8", 0x22, 0x0000, CPU{a: 0x1a}, CPU{a: 0x3c}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
+// {"ADD", "A", "d8", 0xf2, 0x0000, CPU{a: 0x1a}, CPU{a: 0x0c}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
+// {"ADD", "A", "d8", 0x2b, 0x0000, CPU{a: 0x1a}, CPU{a: 0x45}, map[string]bool{"Z": false, "H": true, "C": false}, nil},
+// {"ADD", "A", "d8", 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, nil},
+
+///////////////////////
+
+// {"ADD", "HL", "BC", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, map[string]bool{"H": false, "C": false}, nil},
+// {"ADD", "HL", "BC", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, map[string]bool{"H": false, "C": true}, nil},
+// {"ADD", "HL", "BC", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, CPU{h: 0xa7, l: 0xf8, b: 0xb3, c: 0xc4}, map[string]bool{"H": true, "C": false}, nil},
+// {"ADD", "HL", "DE", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, map[string]bool{"H": false, "C": false}, nil},
+// {"ADD", "HL", "DE", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, map[string]bool{"H": false, "C": true}, nil},
+// {"ADD", "HL", "DE", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, CPU{h: 0xa7, l: 0xf8, d: 0xd5, e: 0xe6}, map[string]bool{"H": true, "C": false}, nil},
+// {"ADD", "HL", "HL", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": false}, nil},
+// {"ADD", "HL", "HL", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": true}, nil},
+// {"ADD", "HL", "HL", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": true, "C": false}, nil},
+// {"ADD", "HL", "SP", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": false}, nil},
+// {"ADD", "HL", "SP", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": false, "C": true}, nil},
+// {"ADD", "HL", "SP", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"H": true, "C": false}, nil},
+// {"ADD", "SP", "r8", 0x00, 0x0000, CPU{}, CPU{}, map[string]bool{"H": false, "C": false}, nil},
+// {"ADD", "SP", "r8", 0x00, 0x0000, CPU{}, CPU{}, map[string]bool{"H": false, "C": true}, nil},
+// {"ADD", "SP", "r8", 0x00, 0x0000, CPU{}, CPU{}, map[string]bool{"H": true, "C": false}, nil},
+// {"AND", "(HL)", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x12, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x33}}},
+// {"AND", "(HL)", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x00, h: 0xa7, l: 0xf8}, map[string]bool{"Z": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0x21}}},
+
+///////////////////////
+// GOOD
+
+// 	{"AND", "A", "", 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x1a}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "A", "", 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "B", "", 0x00, 0x0000, CPU{a: 0x1a, b: 0x33}, CPU{a: 0x12, b: 0x33}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "B", "", 0x00, 0x0000, CPU{a: 0x1a, b: 0x21}, CPU{a: 0x00, b: 0x21}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "C", "", 0x00, 0x0000, CPU{a: 0x1a, c: 0x33}, CPU{a: 0x12, c: 0x33}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "C", "", 0x00, 0x0000, CPU{a: 0x1a, c: 0x21}, CPU{a: 0x00, c: 0x21}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "D", "", 0x00, 0x0000, CPU{a: 0x1a, d: 0x33}, CPU{a: 0x12, d: 0x33}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "D", "", 0x00, 0x0000, CPU{a: 0x1a, d: 0x21}, CPU{a: 0x00, d: 0x21}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "E", "", 0x00, 0x0000, CPU{a: 0x1a, e: 0x33}, CPU{a: 0x12, e: 0x33}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "E", "", 0x00, 0x0000, CPU{a: 0x1a, e: 0x21}, CPU{a: 0x00, e: 0x21}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "H", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0x33}, CPU{a: 0x12, h: 0x33}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "H", "", 0x00, 0x0000, CPU{a: 0x1a, h: 0x21}, CPU{a: 0x00, h: 0x21}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "L", "", 0x00, 0x0000, CPU{a: 0x1a, l: 0x33}, CPU{a: 0x12, l: 0x33}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "L", "", 0x00, 0x0000, CPU{a: 0x1a, l: 0x21}, CPU{a: 0x00, l: 0x21}, map[string]bool{"Z": true}, nil},
+// 	{"AND", "d8", "", 0x33, 0x0000, CPU{a: 0x1a}, CPU{a: 0x12}, map[string]bool{"Z": false}, nil},
+// 	{"AND", "d8", "", 0x21, 0x0000, CPU{a: 0x1a}, CPU{a: 0x00}, map[string]bool{"Z": true}, nil}}
+
+///////////////////////
 
 // {"BIT", "0", "(HL)", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"Z": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0xcc}}},
 // {"BIT", "0", "(HL)", 0x00, 0x0000, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, map[string]bool{"Z": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xcc}}},

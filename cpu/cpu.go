@@ -32,19 +32,28 @@ var prefixedOpcodes [256]opcodeMetadata
 
 var cycles int
 
-// CPU stores the internal CPU state including registers, program counter, stack pointer and IME
+// CPU stores the internal CPU state
 type CPU struct {
-	ime bool
-	a   uint8
-	b   uint8
-	c   uint8
-	d   uint8
-	e   uint8
-	f   uint8
-	h   uint8
-	l   uint8
+	// Registers
+	a uint8
+	b uint8
+	c uint8
+	d uint8
+	e uint8
+	f uint8
+	h uint8
+	l uint8
+
+	// Flags
+	zf bool
+	nf bool
+	hf bool
+	cf bool
+
+	// State
 	sp  uint16
 	pc  uint16
+	ime bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -177,6 +186,18 @@ func (cpu *CPU) checkInterrupts(mem mem.Memory) {
 	}
 }
 
+func z(new uint8) bool {
+	return new == 0
+}
+
+func h(old, new uint8) bool {
+	return old&0xf > new&0xf
+}
+
+func c(old, new uint8) bool {
+	return old > new
+}
+
 func setBitByPos(b uint8, pos uint8) {
 	b |= bits[pos]
 }
@@ -206,52 +227,29 @@ func (cpu *CPU) resetFlag(flagBit uint8) {
 	cpu.f &^= flagBit
 }
 
-func (cpu *CPU) checkFlags(op opcodeMetadata, flagsToUpdate map[string]bool) {
-	if len(op.Flags) > 0 {
-		for i, flag := range op.Flags {
-			switch flag {
-			case "0":
-				cpu.resetFlag(flags[i])
-			case "1":
-				cpu.setFlag(flags[i])
-			case "-":
-				// Leave the flag alone
-			default:
-				set, present := flagsToUpdate[flag]
-				if !present {
-					panic(fmt.Sprintf("Expected flag %v in %v", flag, flagsToUpdate))
-				}
-				if set {
-					cpu.setFlag(flags[i])
-				} else {
-					cpu.resetFlag(flags[i])
-				}
-			}
-		}
-	}
-}
-
-func (cpu *CPU) fetch(mem mem.Memory) (opcode opcodeMetadata, u8 uint8, u16 uint16) {
-	opcode = opcodes[mem.Read(cpu.pc)]
-	switch opcode.Length {
-	case 2:
-		u8 = mem.Read(cpu.pc + 1)
-	case 3:
-		u16 = uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
-	}
-	cpu.pc += opcode.Length
-	return
-}
-
 func (cpu *CPU) execute(mem mem.Memory) {
 	defer mem.MemoryDump()
 	cpu.checkInterrupts(mem)
-	opcode, u8, u16 := cpu.fetch(mem)
+	instruction := mem.Read(cpu.pc)
+	opcode := opcodes[instruction]
+	switch opcode.Length {
+	case 1:
+		fmt.Printf("0x%02x : %v\n", cpu.pc, opcode)
+		cpu.pc++
+		cpu.dispatch(instruction)
+	case 2:
+		u8 := mem.Read(cpu.pc + 1)
+		fmt.Printf("0x%02x : %v u8=0x%02x\n", cpu.pc, opcode, u8)
+		cpu.pc += 2
+		cpu.dispatch8(instruction, u8)
+	case 3:
+		u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
+		fmt.Printf("0x%02x : %v u8=0x%04x\n", cpu.pc, opcode, u16)
+		cpu.pc += 3
+		cpu.dispatch16(instruction, u16)
+	}
 	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.
 	cycles = opcode.Cycles[0]
-	//	fmt.Printf("0x%04x : %v u8=%v u16=%v\n", (cpu.pc - opcode.Length), opcode, u8, u16) // DEBUG
-	flags := opcode.Func(cpu, mem, opcode.Operand1, opcode.Operand2, u8, u16)
-	cpu.checkFlags(opcode, flags)
 }
 
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
