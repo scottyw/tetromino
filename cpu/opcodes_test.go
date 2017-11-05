@@ -33,10 +33,31 @@ func (mem testMemory) Write(addr uint16, b byte) {
 	}
 }
 
-type testTable struct {
+type dispatchOneByteInstructionTestTable struct {
+	instruction uint8
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         mem.Memory
+}
+
+type dispatchTwoByteInstructionTestTable struct {
 	instruction uint8
 	u8          uint8
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         mem.Memory
+}
+
+type dispatchThreeByteInstructionTestTable struct {
+	instruction uint8
 	u16         uint16
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         mem.Memory
+}
+
+type dispatchPrefixedInstructionTestTable struct {
+	instruction uint8
 	actualCPU   CPU
 	expectedCPU CPU
 	mem         mem.Memory
@@ -54,36 +75,44 @@ func (cpu *CPU) checkFlags(op opcodeMetadata, flagsToUpdate map[string]bool) {
 	}
 }
 
-func compareCPUs(t *testing.T, i int, test testTable) {
-	if test.actualCPU != test.expectedCPU {
-		t.Error("( TEST", i, ") CPUs do not match for: ", test)
-		t.Error("  Expected : ", test.expectedCPU)
-		t.Error("  Actual   : ", test.actualCPU)
+func compareCPUs(t *testing.T, opcode opcodeMetadata, expectedCPU, actualCPU CPU) {
+	if actualCPU != expectedCPU {
+		t.Error("CPUs do not match for: ", opcode)
+		t.Error("  Expected : ", expectedCPU)
+		t.Error("  Actual   : ", actualCPU)
 	}
 	// checkFlags() //FIXME
 }
 
-func TestDispatch(t *testing.T) {
-	for i, test := range dispatchTests {
-		(&test.actualCPU).dispatch(test.instruction)
-		compareCPUs(t, i, test)
+func TestDispatchOneByteInstruction(t *testing.T) {
+	for _, test := range dispatchOneByteInstructionTests {
+		(&test.actualCPU).dispatchOneByteInstruction(test.instruction)
+		compareCPUs(t, opcodes[test.instruction], test.expectedCPU, test.actualCPU)
 	}
 }
 
-func TestDispatch8(t *testing.T) {
-	for i, test := range dispatch8Tests {
-		(&test.actualCPU).dispatch8(test.instruction, test.u8)
-		compareCPUs(t, i, test)
+func TestDispatchTwoByteInstruction(t *testing.T) {
+	for _, test := range dispatchTwoByteInstructionTests {
+		(&test.actualCPU).dispatchTwoByteInstruction(test.instruction, test.u8)
+		compareCPUs(t, opcodes[test.instruction], test.expectedCPU, test.actualCPU)
 	}
 }
 
-var dispatch8Tests = []testTable{
-
-//
-
+func TestDispatchThreeByteInstruction(t *testing.T) {
+	for _, test := range dispatchThreeByteInstructionTests {
+		(&test.actualCPU).dispatchThreeByteInstruction(test.instruction, test.u16)
+		compareCPUs(t, opcodes[test.instruction], test.expectedCPU, test.actualCPU)
+	}
 }
 
-var dispatchTests = []testTable{
+func TestDispatchPrefixedInstruction(t *testing.T) {
+	for _, test := range dispatchPrefixedInstructionTests {
+		(&test.actualCPU).dispatchPrefixedInstruction(test.instruction)
+		compareCPUs(t, opcodes[test.instruction], test.expectedCPU, test.actualCPU)
+	}
+}
+
+var dispatchOneByteInstructionTests = []dispatchOneByteInstructionTestTable{
 
 	// // ADC A A [Z 0 H C]
 	// {0x8f, 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, nil},
@@ -122,16 +151,16 @@ var dispatchTests = []testTable{
 	// {0x8d, 0x00, 0x0000, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
 
 	// ADD A A [Z 0 H C]
-	{0x87, 0x00, 0x0000, CPU{a: 0x12}, CPU{a: 0x24}, nil},
-	{0x87, 0x00, 0x0000, CPU{a: 0xa3}, CPU{a: 0x46, cf: true}, nil},
-	{0x87, 0x00, 0x0000, CPU{a: 0x1a}, CPU{a: 0x34, hf: true}, nil},
-	{0x87, 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00, zf: true}, nil},
+	{0x87, CPU{a: 0x12}, CPU{a: 0x24}, nil},
+	{0x87, CPU{a: 0xa3}, CPU{a: 0x46, cf: true}, nil},
+	{0x87, CPU{a: 0x1a}, CPU{a: 0x34, hf: true}, nil},
+	{0x87, CPU{a: 0x00}, CPU{a: 0x00, zf: true}, nil},
 
 	// ADD A B [Z 0 H C]
-	{0x80, 0x00, 0x0000, CPU{a: 0x1a, b: 0x22}, CPU{a: 0x3c, b: 0x22}, nil},
-	{0x80, 0x00, 0x0000, CPU{a: 0x1a, b: 0xf2}, CPU{a: 0x0c, b: 0xf2, cf: true}, nil},
-	{0x80, 0x00, 0x0000, CPU{a: 0x1a, b: 0x2b}, CPU{a: 0x45, b: 0x2b, hf: true}, nil},
-	{0x80, 0x00, 0x0000, CPU{a: 0x00, b: 0x00}, CPU{a: 0x00, b: 0x00, zf: true}, nil}}
+	{0x80, CPU{a: 0x1a, b: 0x22}, CPU{a: 0x3c, b: 0x22}, nil},
+	{0x80, CPU{a: 0x1a, b: 0xf2}, CPU{a: 0x0c, b: 0xf2, cf: true}, nil},
+	{0x80, CPU{a: 0x1a, b: 0x2b}, CPU{a: 0x45, b: 0x2b, hf: true}, nil},
+	{0x80, CPU{a: 0x00, b: 0x00}, CPU{a: 0x00, b: 0x00, zf: true}, nil}}
 
 // // ADD A C [Z 0 H C]
 // {0x81, 0x00, 0x0000, CPU{a: 0x00}, CPU{a: 0x00}, nil},
@@ -2136,3 +2165,21 @@ var dispatchTests = []testTable{
 // 	{"AND", "d8", "", 0x21, 0x0000, CPU{a: 0x1a}, CPU{a: 0x00}, map[string]bool{"Z": true}, nil}}
 
 ///////////////////////
+
+var dispatchTwoByteInstructionTests = []dispatchTwoByteInstructionTestTable{
+
+//
+
+}
+
+var dispatchThreeByteInstructionTests = []dispatchThreeByteInstructionTestTable{
+
+//
+
+}
+
+var dispatchPrefixedInstructionTests = []dispatchPrefixedInstructionTestTable{
+
+//
+
+}

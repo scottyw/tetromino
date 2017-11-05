@@ -6,12 +6,20 @@ import (
 	"github.com/scottyw/goomba/mem"
 )
 
+func (cpu *CPU) xxxx(xxxx uint8) {
+	panic(fmt.Sprintf("Missing implementation for XXXX: %v", xxxx))
+}
+
 func (cpu *CPU) add(value uint8) {
 	a := cpu.a
 	cpu.a += value
 	cpu.zf = z(cpu.a)
 	cpu.hf = h(a, cpu.a)
 	cpu.cf = c(a, cpu.a)
+}
+
+func (cpu *CPU) bit(i int, register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for bit: %v %v", i, register))
 }
 
 func (cpu *CPU) jp(kind string, u16 uint16) {
@@ -26,6 +34,46 @@ func (cpu *CPU) jp(kind string, u16 uint16) {
 func (cpu *CPU) nop() {
 	// Do nothing
 	return
+}
+
+func (cpu *CPU) res(i int, register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for res: %v %v", i, register))
+}
+
+func (cpu *CPU) rl(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for rl: %v", register))
+}
+
+func (cpu *CPU) rlc(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for rlc: %v", register))
+}
+
+func (cpu *CPU) rr(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for rr: %v", register))
+}
+
+func (cpu *CPU) rrc(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for rrc: %v", register))
+}
+
+func (cpu *CPU) set(i int, register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for set: %v %v", i, register))
+}
+
+func (cpu *CPU) sla(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for sla: %v", register))
+}
+
+func (cpu *CPU) sra(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for sra: %v", register))
+}
+
+func (cpu *CPU) srl(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for srl: %v", register))
+}
+
+func (cpu *CPU) swap(register *uint8) {
+	panic(fmt.Sprintf("Missing implementation for swap: %v", register))
 }
 
 ////////////////

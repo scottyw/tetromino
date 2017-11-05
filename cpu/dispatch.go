@@ -2,33 +2,7 @@ package cpu
 
 import "fmt"
 
-func (cpu *CPU) dispatch8(instruction, u8 uint8) {
-	switch instruction {
-	case 0xc6:
-		cpu.add(u8) // ADD A d8 [Z 0 H C]
-	default:
-		panic(fmt.Sprintf("Missing dispatch8: %s %02x %02x", opcodes[instruction].Mnemonic, instruction, u8))
-	}
-}
-
-func (cpu *CPU) dispatch16(instruction uint8, u16 uint16) {
-	switch instruction {
-	case 0xc3:
-		cpu.jp("", u16) // JP a16  []
-	case 0xda:
-		cpu.jp("C", u16) // JP C a16 []
-	case 0xd2:
-		cpu.jp("NC", u16) // JP NC a16 []
-	case 0xca:
-		cpu.jp("Z", u16) // JP Z a16 []
-	case 0xc2:
-		cpu.jp("NZ", u16) // JP NZ a16 []
-	default:
-		panic(fmt.Sprintf("Missing dispatch16: %s %02x %04x", opcodes[instruction].Mnemonic, instruction, u16))
-	}
-}
-
-func (cpu *CPU) dispatch(instruction uint8) {
+func (cpu *CPU) dispatchOneByteInstruction(instruction uint8) {
 	switch instruction {
 	// case 0x8f:
 	// 	cpu.adc(cpu.a, cpu.a) // ADC A A [Z 0 H C]
@@ -497,525 +471,551 @@ func (cpu *CPU) dispatch(instruction uint8) {
 	// case 0xad:
 	// 	cpu.xor(cpu.l) // XOR L  [Z 0 0 0]
 	default:
-		panic(fmt.Sprintf("Missing dispatch: %s %02x", opcodes[instruction].Mnemonic, instruction))
+		panic(fmt.Sprintf("Missing dispatchOneByteInstruction: %s %02x", opcodes[instruction].Mnemonic, instruction))
 	}
 }
 
-func (cpu *CPU) dispatchPrefixed(instruction uint8) {
+func (cpu *CPU) dispatchTwoByteInstruction(instruction, u8 uint8) {
 	switch instruction {
-	// case 0x47:
-	// 	cpu.bit(0, cpu.a) // BIT 0 A [Z 0 1 -]
-	// case 0x40:
-	// 	cpu.bit(0, cpu.b) // BIT 0 B [Z 0 1 -]
-	// case 0x41:
-	// 	cpu.bit(0, cpu.c) // BIT 0 C [Z 0 1 -]
-	// case 0x42:
-	// 	cpu.bit(0, cpu.d) // BIT 0 D [Z 0 1 -]
-	// case 0x43:
-	// 	cpu.bit(0, cpu.e) // BIT 0 E [Z 0 1 -]
-	// case 0x44:
-	// 	cpu.bit(0, cpu.h) // BIT 0 H [Z 0 1 -]
-	// case 0x46:
-	// 	cpu.bit(0, cpu.HL) // BIT 0 (HL) [Z 0 1 -]
-	// case 0x45:
-	// 	cpu.bit(0, cpu.l) // BIT 0 L [Z 0 1 -]
-	// case 0x4f:
-	// 	cpu.bit(1, cpu.a) // BIT 1 A [Z 0 1 -]
-	// case 0x48:
-	// 	cpu.bit(1, cpu.b) // BIT 1 B [Z 0 1 -]
-	// case 0x49:
-	// 	cpu.bit(1, cpu.c) // BIT 1 C [Z 0 1 -]
-	// case 0x4a:
-	// 	cpu.bit(1, cpu.d) // BIT 1 D [Z 0 1 -]
-	// case 0x4b:
-	// 	cpu.bit(1, cpu.e) // BIT 1 E [Z 0 1 -]
-	// case 0x4c:
-	// 	cpu.bit(1, cpu.h) // BIT 1 H [Z 0 1 -]
-	// case 0x4e:
-	// 	cpu.bit(1, cpu.HL) // BIT 1 (HL) [Z 0 1 -]
-	// case 0x4d:
-	// 	cpu.bit(1, cpu.l) // BIT 1 L [Z 0 1 -]
-	// case 0x57:
-	// 	cpu.bit(2, cpu.a) // BIT 2 A [Z 0 1 -]
-	// case 0x50:
-	// 	cpu.bit(2, cpu.b) // BIT 2 B [Z 0 1 -]
-	// case 0x51:
-	// 	cpu.bit(2, cpu.c) // BIT 2 C [Z 0 1 -]
-	// case 0x52:
-	// 	cpu.bit(2, cpu.d) // BIT 2 D [Z 0 1 -]
-	// case 0x53:
-	// 	cpu.bit(2, cpu.e) // BIT 2 E [Z 0 1 -]
-	// case 0x54:
-	// 	cpu.bit(2, cpu.h) // BIT 2 H [Z 0 1 -]
-	// case 0x56:
-	// 	cpu.bit(2, cpu.HL) // BIT 2 (HL) [Z 0 1 -]
-	// case 0x55:
-	// 	cpu.bit(2, cpu.l) // BIT 2 L [Z 0 1 -]
-	// case 0x5f:
-	// 	cpu.bit(3, cpu.a) // BIT 3 A [Z 0 1 -]
-	// case 0x58:
-	// 	cpu.bit(3, cpu.b) // BIT 3 B [Z 0 1 -]
-	// case 0x59:
-	// 	cpu.bit(3, cpu.c) // BIT 3 C [Z 0 1 -]
-	// case 0x5a:
-	// 	cpu.bit(3, cpu.d) // BIT 3 D [Z 0 1 -]
-	// case 0x5b:
-	// 	cpu.bit(3, cpu.e) // BIT 3 E [Z 0 1 -]
-	// case 0x5c:
-	// 	cpu.bit(3, cpu.h) // BIT 3 H [Z 0 1 -]
-	// case 0x5e:
-	// 	cpu.bit(3, cpu.HL) // BIT 3 (HL) [Z 0 1 -]
-	// case 0x5d:
-	// 	cpu.bit(3, cpu.l) // BIT 3 L [Z 0 1 -]
-	// case 0x67:
-	// 	cpu.bit(4, cpu.a) // BIT 4 A [Z 0 1 -]
-	// case 0x60:
-	// 	cpu.bit(4, cpu.b) // BIT 4 B [Z 0 1 -]
-	// case 0x61:
-	// 	cpu.bit(4, cpu.c) // BIT 4 C [Z 0 1 -]
-	// case 0x62:
-	// 	cpu.bit(4, cpu.d) // BIT 4 D [Z 0 1 -]
-	// case 0x63:
-	// 	cpu.bit(4, cpu.e) // BIT 4 E [Z 0 1 -]
-	// case 0x64:
-	// 	cpu.bit(4, cpu.h) // BIT 4 H [Z 0 1 -]
-	// case 0x66:
-	// 	cpu.bit(4, cpu.HL) // BIT 4 (HL) [Z 0 1 -]
-	// case 0x65:
-	// 	cpu.bit(4, cpu.l) // BIT 4 L [Z 0 1 -]
-	// case 0x6f:
-	// 	cpu.bit(5, cpu.a) // BIT 5 A [Z 0 1 -]
-	// case 0x68:
-	// 	cpu.bit(5, cpu.b) // BIT 5 B [Z 0 1 -]
-	// case 0x69:
-	// 	cpu.bit(5, cpu.c) // BIT 5 C [Z 0 1 -]
-	// case 0x6a:
-	// 	cpu.bit(5, cpu.d) // BIT 5 D [Z 0 1 -]
-	// case 0x6b:
-	// 	cpu.bit(5, cpu.e) // BIT 5 E [Z 0 1 -]
-	// case 0x6c:
-	// 	cpu.bit(5, cpu.h) // BIT 5 H [Z 0 1 -]
-	// case 0x6e:
-	// 	cpu.bit(5, cpu.HL) // BIT 5 (HL) [Z 0 1 -]
-	// case 0x6d:
-	// 	cpu.bit(5, cpu.l) // BIT 5 L [Z 0 1 -]
-	// case 0x77:
-	// 	cpu.bit(6, cpu.a) // BIT 6 A [Z 0 1 -]
-	// case 0x70:
-	// 	cpu.bit(6, cpu.b) // BIT 6 B [Z 0 1 -]
-	// case 0x71:
-	// 	cpu.bit(6, cpu.c) // BIT 6 C [Z 0 1 -]
-	// case 0x72:
-	// 	cpu.bit(6, cpu.d) // BIT 6 D [Z 0 1 -]
-	// case 0x73:
-	// 	cpu.bit(6, cpu.e) // BIT 6 E [Z 0 1 -]
-	// case 0x74:
-	// 	cpu.bit(6, cpu.h) // BIT 6 H [Z 0 1 -]
-	// case 0x76:
-	// 	cpu.bit(6, cpu.HL) // BIT 6 (HL) [Z 0 1 -]
-	// case 0x75:
-	// 	cpu.bit(6, cpu.l) // BIT 6 L [Z 0 1 -]
-	// case 0x7f:
-	// 	cpu.bit(7, cpu.a) // BIT 7 A [Z 0 1 -]
-	// case 0x78:
-	// 	cpu.bit(7, cpu.b) // BIT 7 B [Z 0 1 -]
-	// case 0x79:
-	// 	cpu.bit(7, cpu.c) // BIT 7 C [Z 0 1 -]
-	// case 0x7a:
-	// 	cpu.bit(7, cpu.d) // BIT 7 D [Z 0 1 -]
-	// case 0x7b:
-	// 	cpu.bit(7, cpu.e) // BIT 7 E [Z 0 1 -]
-	// case 0x7c:
-	// 	cpu.bit(7, cpu.h) // BIT 7 H [Z 0 1 -]
-	// case 0x7e:
-	// 	cpu.bit(7, cpu.HL) // BIT 7 (HL) [Z 0 1 -]
-	// case 0x7d:
-	// 	cpu.bit(7, cpu.l) // BIT 7 L [Z 0 1 -]
-	// case 0x87:
-	// 	cpu.res(0, cpu.a) // RES 0 A []
-	// case 0x80:
-	// 	cpu.res(0, cpu.b) // RES 0 B []
-	// case 0x81:
-	// 	cpu.res(0, cpu.c) // RES 0 C []
-	// case 0x82:
-	// 	cpu.res(0, cpu.d) // RES 0 D []
-	// case 0x83:
-	// 	cpu.res(0, cpu.e) // RES 0 E []
-	// case 0x84:
-	// 	cpu.res(0, cpu.h) // RES 0 H []
-	// case 0x86:
-	// 	cpu.res(0, cpu.HL) // RES 0 (HL) []
-	// case 0x85:
-	// 	cpu.res(0, cpu.l) // RES 0 L []
-	// case 0x8f:
-	// 	cpu.res(1, cpu.a) // RES 1 A []
-	// case 0x88:
-	// 	cpu.res(1, cpu.b) // RES 1 B []
-	// case 0x89:
-	// 	cpu.res(1, cpu.c) // RES 1 C []
-	// case 0x8a:
-	// 	cpu.res(1, cpu.d) // RES 1 D []
-	// case 0x8b:
-	// 	cpu.res(1, cpu.e) // RES 1 E []
-	// case 0x8c:
-	// 	cpu.res(1, cpu.h) // RES 1 H []
-	// case 0x8e:
-	// 	cpu.res(1, cpu.HL) // RES 1 (HL) []
-	// case 0x8d:
-	// 	cpu.res(1, cpu.l) // RES 1 L []
-	// case 0x97:
-	// 	cpu.res(2, cpu.a) // RES 2 A []
-	// case 0x90:
-	// 	cpu.res(2, cpu.b) // RES 2 B []
-	// case 0x91:
-	// 	cpu.res(2, cpu.c) // RES 2 C []
-	// case 0x92:
-	// 	cpu.res(2, cpu.d) // RES 2 D []
-	// case 0x93:
-	// 	cpu.res(2, cpu.e) // RES 2 E []
-	// case 0x94:
-	// 	cpu.res(2, cpu.h) // RES 2 H []
-	// case 0x96:
-	// 	cpu.res(2, cpu.HL) // RES 2 (HL) []
-	// case 0x95:
-	// 	cpu.res(2, cpu.l) // RES 2 L []
-	// case 0x9f:
-	// 	cpu.res(3, cpu.a) // RES 3 A []
-	// case 0x98:
-	// 	cpu.res(3, cpu.b) // RES 3 B []
-	// case 0x99:
-	// 	cpu.res(3, cpu.c) // RES 3 C []
-	// case 0x9a:
-	// 	cpu.res(3, cpu.d) // RES 3 D []
-	// case 0x9b:
-	// 	cpu.res(3, cpu.e) // RES 3 E []
-	// case 0x9c:
-	// 	cpu.res(3, cpu.h) // RES 3 H []
-	// case 0x9e:
-	// 	cpu.res(3, cpu.HL) // RES 3 (HL) []
-	// case 0x9d:
-	// 	cpu.res(3, cpu.l) // RES 3 L []
-	// case 0xa7:
-	// 	cpu.res(4, cpu.a) // RES 4 A []
-	// case 0xa0:
-	// 	cpu.res(4, cpu.b) // RES 4 B []
-	// case 0xa1:
-	// 	cpu.res(4, cpu.c) // RES 4 C []
-	// case 0xa2:
-	// 	cpu.res(4, cpu.d) // RES 4 D []
-	// case 0xa3:
-	// 	cpu.res(4, cpu.e) // RES 4 E []
-	// case 0xa4:
-	// 	cpu.res(4, cpu.h) // RES 4 H []
-	// case 0xa6:
-	// 	cpu.res(4, cpu.HL) // RES 4 (HL) []
-	// case 0xa5:
-	// 	cpu.res(4, cpu.l) // RES 4 L []
-	// case 0xaf:
-	// 	cpu.res(5, cpu.a) // RES 5 A []
-	// case 0xa8:
-	// 	cpu.res(5, cpu.b) // RES 5 B []
-	// case 0xa9:
-	// 	cpu.res(5, cpu.c) // RES 5 C []
-	// case 0xaa:
-	// 	cpu.res(5, cpu.d) // RES 5 D []
-	// case 0xab:
-	// 	cpu.res(5, cpu.e) // RES 5 E []
-	// case 0xac:
-	// 	cpu.res(5, cpu.h) // RES 5 H []
-	// case 0xae:
-	// 	cpu.res(5, cpu.HL) // RES 5 (HL) []
-	// case 0xad:
-	// 	cpu.res(5, cpu.l) // RES 5 L []
-	// case 0xb7:
-	// 	cpu.res(6, cpu.a) // RES 6 A []
-	// case 0xb0:
-	// 	cpu.res(6, cpu.b) // RES 6 B []
-	// case 0xb1:
-	// 	cpu.res(6, cpu.c) // RES 6 C []
-	// case 0xb2:
-	// 	cpu.res(6, cpu.d) // RES 6 D []
-	// case 0xb3:
-	// 	cpu.res(6, cpu.e) // RES 6 E []
-	// case 0xb4:
-	// 	cpu.res(6, cpu.h) // RES 6 H []
-	// case 0xb6:
-	// 	cpu.res(6, cpu.HL) // RES 6 (HL) []
-	// case 0xb5:
-	// 	cpu.res(6, cpu.l) // RES 6 L []
-	// case 0xbf:
-	// 	cpu.res(7, cpu.a) // RES 7 A []
-	// case 0xb8:
-	// 	cpu.res(7, cpu.b) // RES 7 B []
-	// case 0xb9:
-	// 	cpu.res(7, cpu.c) // RES 7 C []
-	// case 0xba:
-	// 	cpu.res(7, cpu.d) // RES 7 D []
-	// case 0xbb:
-	// 	cpu.res(7, cpu.e) // RES 7 E []
-	// case 0xbc:
-	// 	cpu.res(7, cpu.h) // RES 7 H []
-	// case 0xbe:
-	// 	cpu.res(7, cpu.HL) // RES 7 (HL) []
-	// case 0xbd:
-	// 	cpu.res(7, cpu.l) // RES 7 L []
-	// case 0x17:
-	// 	cpu.rl(cpu.a) // RL A  [Z 0 0 C]
-	// case 0x10:
-	// 	cpu.rl(cpu.b) // RL B  [Z 0 0 C]
-	// case 0x11:
-	// 	cpu.rl(cpu.c) // RL C  [Z 0 0 C]
-	// case 0x12:
-	// 	cpu.rl(cpu.d) // RL D  [Z 0 0 C]
-	// case 0x13:
-	// 	cpu.rl(cpu.e) // RL E  [Z 0 0 C]
-	// case 0x14:
-	// 	cpu.rl(cpu.h) // RL H  [Z 0 0 C]
-	// case 0x16:
-	// 	cpu.rl(cpu.HL) // RL (HL)  [Z 0 0 C]
-	// case 0x15:
-	// 	cpu.rl(cpu.l) // RL L  [Z 0 0 C]
-	// case 0x07:
-	// 	cpu.rlc(cpu.a) // RLC A  [Z 0 0 C]
-	// case 0x00:
-	// 	cpu.rlc(cpu.b) // RLC B  [Z 0 0 C]
-	// case 0x01:
-	// 	cpu.rlc(cpu.c) // RLC C  [Z 0 0 C]
-	// case 0x02:
-	// 	cpu.rlc(cpu.d) // RLC D  [Z 0 0 C]
-	// case 0x03:
-	// 	cpu.rlc(cpu.e) // RLC E  [Z 0 0 C]
-	// case 0x04:
-	// 	cpu.rlc(cpu.h) // RLC H  [Z 0 0 C]
-	// case 0x06:
-	// 	cpu.rlc(cpu.HL) // RLC (HL)  [Z 0 0 C]
-	// case 0x05:
-	// 	cpu.rlc(cpu.l) // RLC L  [Z 0 0 C]
-	// case 0x1f:
-	// 	cpu.rr(cpu.a) // RR A  [Z 0 0 C]
-	// case 0x18:
-	// 	cpu.rr(cpu.b) // RR B  [Z 0 0 C]
-	// case 0x19:
-	// 	cpu.rr(cpu.c) // RR C  [Z 0 0 C]
-	// case 0x1a:
-	// 	cpu.rr(cpu.d) // RR D  [Z 0 0 C]
-	// case 0x1b:
-	// 	cpu.rr(cpu.e) // RR E  [Z 0 0 C]
-	// case 0x1c:
-	// 	cpu.rr(cpu.h) // RR H  [Z 0 0 C]
-	// case 0x1e:
-	// 	cpu.rr(cpu.HL) // RR (HL)  [Z 0 0 C]
-	// case 0x1d:
-	// 	cpu.rr(cpu.l) // RR L  [Z 0 0 C]
-	// case 0x0f:
-	// 	cpu.rrc(cpu.a) // RRC A  [Z 0 0 C]
-	// case 0x08:
-	// 	cpu.rrc(cpu.b) // RRC B  [Z 0 0 C]
-	// case 0x09:
-	// 	cpu.rrc(cpu.c) // RRC C  [Z 0 0 C]
-	// case 0x0a:
-	// 	cpu.rrc(cpu.d) // RRC D  [Z 0 0 C]
-	// case 0x0b:
-	// 	cpu.rrc(cpu.e) // RRC E  [Z 0 0 C]
-	// case 0x0c:
-	// 	cpu.rrc(cpu.h) // RRC H  [Z 0 0 C]
-	// case 0x0e:
-	// 	cpu.rrc(cpu.HL) // RRC (HL)  [Z 0 0 C]
-	// case 0x0d:
-	// 	cpu.rrc(cpu.l) // RRC L  [Z 0 0 C]
-	// case 0xc7:
-	// 	cpu.set(0, cpu.a) // SET 0 A []
-	// case 0xc0:
-	// 	cpu.set(0, cpu.b) // SET 0 B []
-	// case 0xc1:
-	// 	cpu.set(0, cpu.c) // SET 0 C []
-	// case 0xc2:
-	// 	cpu.set(0, cpu.d) // SET 0 D []
-	// case 0xc3:
-	// 	cpu.set(0, cpu.e) // SET 0 E []
-	// case 0xc4:
-	// 	cpu.set(0, cpu.h) // SET 0 H []
-	// case 0xc6:
-	// 	cpu.set(0, cpu.HL) // SET 0 (HL) []
-	// case 0xc5:
-	// 	cpu.set(0, cpu.l) // SET 0 L []
-	// case 0xcf:
-	// 	cpu.set(1, cpu.a) // SET 1 A []
-	// case 0xc8:
-	// 	cpu.set(1, cpu.b) // SET 1 B []
-	// case 0xc9:
-	// 	cpu.set(1, cpu.c) // SET 1 C []
-	// case 0xca:
-	// 	cpu.set(1, cpu.d) // SET 1 D []
-	// case 0xcb:
-	// 	cpu.set(1, cpu.e) // SET 1 E []
-	// case 0xcc:
-	// 	cpu.set(1, cpu.h) // SET 1 H []
-	// case 0xce:
-	// 	cpu.set(1, cpu.HL) // SET 1 (HL) []
-	// case 0xcd:
-	// 	cpu.set(1, cpu.l) // SET 1 L []
-	// case 0xd7:
-	// 	cpu.set(2, cpu.a) // SET 2 A []
-	// case 0xd0:
-	// 	cpu.set(2, cpu.b) // SET 2 B []
-	// case 0xd1:
-	// 	cpu.set(2, cpu.c) // SET 2 C []
-	// case 0xd2:
-	// 	cpu.set(2, cpu.d) // SET 2 D []
-	// case 0xd3:
-	// 	cpu.set(2, cpu.e) // SET 2 E []
-	// case 0xd4:
-	// 	cpu.set(2, cpu.h) // SET 2 H []
-	// case 0xd6:
-	// 	cpu.set(2, cpu.HL) // SET 2 (HL) []
-	// case 0xd5:
-	// 	cpu.set(2, cpu.l) // SET 2 L []
-	// case 0xdf:
-	// 	cpu.set(3, cpu.a) // SET 3 A []
-	// case 0xd8:
-	// 	cpu.set(3, cpu.b) // SET 3 B []
-	// case 0xd9:
-	// 	cpu.set(3, cpu.c) // SET 3 C []
-	// case 0xda:
-	// 	cpu.set(3, cpu.d) // SET 3 D []
-	// case 0xdb:
-	// 	cpu.set(3, cpu.e) // SET 3 E []
-	// case 0xdc:
-	// 	cpu.set(3, cpu.h) // SET 3 H []
-	// case 0xde:
-	// 	cpu.set(3, cpu.HL) // SET 3 (HL) []
-	// case 0xdd:
-	// 	cpu.set(3, cpu.l) // SET 3 L []
-	// case 0xe7:
-	// 	cpu.set(4, cpu.a) // SET 4 A []
-	// case 0xe0:
-	// 	cpu.set(4, cpu.b) // SET 4 B []
-	// case 0xe1:
-	// 	cpu.set(4, cpu.c) // SET 4 C []
-	// case 0xe2:
-	// 	cpu.set(4, cpu.d) // SET 4 D []
-	// case 0xe3:
-	// 	cpu.set(4, cpu.e) // SET 4 E []
-	// case 0xe4:
-	// 	cpu.set(4, cpu.h) // SET 4 H []
-	// case 0xe6:
-	// 	cpu.set(4, cpu.HL) // SET 4 (HL) []
-	// case 0xe5:
-	// 	cpu.set(4, cpu.l) // SET 4 L []
-	// case 0xef:
-	// 	cpu.set(5, cpu.a) // SET 5 A []
-	// case 0xe8:
-	// 	cpu.set(5, cpu.b) // SET 5 B []
-	// case 0xe9:
-	// 	cpu.set(5, cpu.c) // SET 5 C []
-	// case 0xea:
-	// 	cpu.set(5, cpu.d) // SET 5 D []
-	// case 0xeb:
-	// 	cpu.set(5, cpu.e) // SET 5 E []
-	// case 0xec:
-	// 	cpu.set(5, cpu.h) // SET 5 H []
-	// case 0xee:
-	// 	cpu.set(5, cpu.HL) // SET 5 (HL) []
-	// case 0xed:
-	// 	cpu.set(5, cpu.l) // SET 5 L []
-	// case 0xf7:
-	// 	cpu.set(6, cpu.a) // SET 6 A []
-	// case 0xf0:
-	// 	cpu.set(6, cpu.b) // SET 6 B []
-	// case 0xf1:
-	// 	cpu.set(6, cpu.c) // SET 6 C []
-	// case 0xf2:
-	// 	cpu.set(6, cpu.d) // SET 6 D []
-	// case 0xf3:
-	// 	cpu.set(6, cpu.e) // SET 6 E []
-	// case 0xf4:
-	// 	cpu.set(6, cpu.h) // SET 6 H []
-	// case 0xf6:
-	// 	cpu.set(6, cpu.HL) // SET 6 (HL) []
-	// case 0xf5:
-	// 	cpu.set(6, cpu.l) // SET 6 L []
-	// case 0xff:
-	// 	cpu.set(7, cpu.a) // SET 7 A []
-	// case 0xf8:
-	// 	cpu.set(7, cpu.b) // SET 7 B []
-	// case 0xf9:
-	// 	cpu.set(7, cpu.c) // SET 7 C []
-	// case 0xfa:
-	// 	cpu.set(7, cpu.d) // SET 7 D []
-	// case 0xfb:
-	// 	cpu.set(7, cpu.e) // SET 7 E []
-	// case 0xfc:
-	// 	cpu.set(7, cpu.h) // SET 7 H []
-	// case 0xfe:
-	// 	cpu.set(7, cpu.HL) // SET 7 (HL) []
-	// case 0xfd:
-	// 	cpu.set(7, cpu.l) // SET 7 L []
-	// case 0x27:
-	// 	cpu.sla(cpu.a) // SLA A  [Z 0 0 C]
-	// case 0x20:
-	// 	cpu.sla(cpu.b) // SLA B  [Z 0 0 C]
-	// case 0x21:
-	// 	cpu.sla(cpu.c) // SLA C  [Z 0 0 C]
-	// case 0x22:
-	// 	cpu.sla(cpu.d) // SLA D  [Z 0 0 C]
-	// case 0x23:
-	// 	cpu.sla(cpu.e) // SLA E  [Z 0 0 C]
-	// case 0x24:
-	// 	cpu.sla(cpu.h) // SLA H  [Z 0 0 C]
-	// case 0x26:
-	// 	cpu.sla(cpu.HL) // SLA (HL)  [Z 0 0 C]
-	// case 0x25:
-	// 	cpu.sla(cpu.l) // SLA L  [Z 0 0 C]
-	// case 0x2f:
-	// 	cpu.sra(cpu.a) // SRA A  [Z 0 0 0]
-	// case 0x28:
-	// 	cpu.sra(cpu.b) // SRA B  [Z 0 0 0]
-	// case 0x29:
-	// 	cpu.sra(cpu.c) // SRA C  [Z 0 0 0]
-	// case 0x2a:
-	// 	cpu.sra(cpu.d) // SRA D  [Z 0 0 0]
-	// case 0x2b:
-	// 	cpu.sra(cpu.e) // SRA E  [Z 0 0 0]
-	// case 0x2c:
-	// 	cpu.sra(cpu.h) // SRA H  [Z 0 0 0]
-	// case 0x2e:
-	// 	cpu.sra(cpu.HL) // SRA (HL)  [Z 0 0 0]
-	// case 0x2d:
-	// 	cpu.sra(cpu.l) // SRA L  [Z 0 0 0]
-	// case 0x3f:
-	// 	cpu.srl(cpu.a) // SRL A  [Z 0 0 C]
-	// case 0x38:
-	// 	cpu.srl(cpu.b) // SRL B  [Z 0 0 C]
-	// case 0x39:
-	// 	cpu.srl(cpu.c) // SRL C  [Z 0 0 C]
-	// case 0x3a:
-	// 	cpu.srl(cpu.d) // SRL D  [Z 0 0 C]
-	// case 0x3b:
-	// 	cpu.srl(cpu.e) // SRL E  [Z 0 0 C]
-	// case 0x3c:
-	// 	cpu.srl(cpu.h) // SRL H  [Z 0 0 C]
-	// case 0x3e:
-	// 	cpu.srl(cpu.HL) // SRL (HL)  [Z 0 0 C]
-	// case 0x3d:
-	// 	cpu.srl(cpu.l) // SRL L  [Z 0 0 C]
-	// case 0x37:
-	// 	cpu.swap(cpu.a) // SWAP A  [Z 0 0 0]
-	// case 0x30:
-	// 	cpu.swap(cpu.b) // SWAP B  [Z 0 0 0]
-	// case 0x31:
-	// 	cpu.swap(cpu.c) // SWAP C  [Z 0 0 0]
-	// case 0x32:
-	// 	cpu.swap(cpu.d) // SWAP D  [Z 0 0 0]
-	// case 0x33:
-	// 	cpu.swap(cpu.e) // SWAP E  [Z 0 0 0]
-	// case 0x34:
-	// 	cpu.swap(cpu.h) // SWAP H  [Z 0 0 0]
-	// case 0x36:
-	// 	cpu.swap(cpu.HL) // SWAP (HL)  [Z 0 0 0]
-	// case 0x35:
-	// 	cpu.swap(cpu.l) // SWAP L  [Z 0 0 0]
+	case 0xc6:
+		cpu.add(u8) // ADD A d8 [Z 0 H C]
 	default:
-		panic(fmt.Sprintf("Missing prefixed dispatch: %cb02x", instruction))
+		panic(fmt.Sprintf("Missing dispatchTwoByteInstruction: %s %02x %02x", opcodes[instruction].Mnemonic, instruction, u8))
+	}
+}
+
+func (cpu *CPU) dispatchThreeByteInstruction(instruction uint8, u16 uint16) {
+	switch instruction {
+	case 0xc3:
+		cpu.jp("", u16) // JP a16  []
+	case 0xda:
+		cpu.jp("C", u16) // JP C a16 []
+	case 0xd2:
+		cpu.jp("NC", u16) // JP NC a16 []
+	case 0xca:
+		cpu.jp("Z", u16) // JP Z a16 []
+	case 0xc2:
+		cpu.jp("NZ", u16) // JP NZ a16 []
+	default:
+		panic(fmt.Sprintf("Missing dispatchThreeByteInstruction: %s %02x %04x", opcodes[instruction].Mnemonic, instruction, u16))
+	}
+}
+
+func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
+	switch instruction {
+	case 0x47:
+		cpu.bit(0, &cpu.a) // BIT 0 A [Z 0 1 -]
+	case 0x40:
+		cpu.bit(0, &cpu.b) // BIT 0 B [Z 0 1 -]
+	case 0x41:
+		cpu.bit(0, &cpu.c) // BIT 0 C [Z 0 1 -]
+	case 0x42:
+		cpu.bit(0, &cpu.d) // BIT 0 D [Z 0 1 -]
+	case 0x43:
+		cpu.bit(0, &cpu.e) // BIT 0 E [Z 0 1 -]
+	case 0x44:
+		cpu.bit(0, &cpu.h) // BIT 0 H [Z 0 1 -]
+	// case 0x46:
+	// 	cpu.bit(0, &cpu.HL) // BIT 0 (HL) [Z 0 1 -]
+	case 0x45:
+		cpu.bit(0, &cpu.l) // BIT 0 L [Z 0 1 -]
+	case 0x4f:
+		cpu.bit(1, &cpu.a) // BIT 1 A [Z 0 1 -]
+	case 0x48:
+		cpu.bit(1, &cpu.b) // BIT 1 B [Z 0 1 -]
+	case 0x49:
+		cpu.bit(1, &cpu.c) // BIT 1 C [Z 0 1 -]
+	case 0x4a:
+		cpu.bit(1, &cpu.d) // BIT 1 D [Z 0 1 -]
+	case 0x4b:
+		cpu.bit(1, &cpu.e) // BIT 1 E [Z 0 1 -]
+	case 0x4c:
+		cpu.bit(1, &cpu.h) // BIT 1 H [Z 0 1 -]
+	// case 0x4e:
+	// 	cpu.bit(1, &cpu.HL) // BIT 1 (HL) [Z 0 1 -]
+	case 0x4d:
+		cpu.bit(1, &cpu.l) // BIT 1 L [Z 0 1 -]
+	case 0x57:
+		cpu.bit(2, &cpu.a) // BIT 2 A [Z 0 1 -]
+	case 0x50:
+		cpu.bit(2, &cpu.b) // BIT 2 B [Z 0 1 -]
+	case 0x51:
+		cpu.bit(2, &cpu.c) // BIT 2 C [Z 0 1 -]
+	case 0x52:
+		cpu.bit(2, &cpu.d) // BIT 2 D [Z 0 1 -]
+	case 0x53:
+		cpu.bit(2, &cpu.e) // BIT 2 E [Z 0 1 -]
+	case 0x54:
+		cpu.bit(2, &cpu.h) // BIT 2 H [Z 0 1 -]
+	// case 0x56:
+	// 	cpu.bit(2, &cpu.HL) // BIT 2 (HL) [Z 0 1 -]
+	case 0x55:
+		cpu.bit(2, &cpu.l) // BIT 2 L [Z 0 1 -]
+	case 0x5f:
+		cpu.bit(3, &cpu.a) // BIT 3 A [Z 0 1 -]
+	case 0x58:
+		cpu.bit(3, &cpu.b) // BIT 3 B [Z 0 1 -]
+	case 0x59:
+		cpu.bit(3, &cpu.c) // BIT 3 C [Z 0 1 -]
+	case 0x5a:
+		cpu.bit(3, &cpu.d) // BIT 3 D [Z 0 1 -]
+	case 0x5b:
+		cpu.bit(3, &cpu.e) // BIT 3 E [Z 0 1 -]
+	case 0x5c:
+		cpu.bit(3, &cpu.h) // BIT 3 H [Z 0 1 -]
+	// case 0x5e:
+	// 	cpu.bit(3, &cpu.HL) // BIT 3 (HL) [Z 0 1 -]
+	case 0x5d:
+		cpu.bit(3, &cpu.l) // BIT 3 L [Z 0 1 -]
+	case 0x67:
+		cpu.bit(4, &cpu.a) // BIT 4 A [Z 0 1 -]
+	case 0x60:
+		cpu.bit(4, &cpu.b) // BIT 4 B [Z 0 1 -]
+	case 0x61:
+		cpu.bit(4, &cpu.c) // BIT 4 C [Z 0 1 -]
+	case 0x62:
+		cpu.bit(4, &cpu.d) // BIT 4 D [Z 0 1 -]
+	case 0x63:
+		cpu.bit(4, &cpu.e) // BIT 4 E [Z 0 1 -]
+	case 0x64:
+		cpu.bit(4, &cpu.h) // BIT 4 H [Z 0 1 -]
+	// case 0x66:
+	// 	cpu.bit(4, &cpu.HL) // BIT 4 (HL) [Z 0 1 -]
+	case 0x65:
+		cpu.bit(4, &cpu.l) // BIT 4 L [Z 0 1 -]
+	case 0x6f:
+		cpu.bit(5, &cpu.a) // BIT 5 A [Z 0 1 -]
+	case 0x68:
+		cpu.bit(5, &cpu.b) // BIT 5 B [Z 0 1 -]
+	case 0x69:
+		cpu.bit(5, &cpu.c) // BIT 5 C [Z 0 1 -]
+	case 0x6a:
+		cpu.bit(5, &cpu.d) // BIT 5 D [Z 0 1 -]
+	case 0x6b:
+		cpu.bit(5, &cpu.e) // BIT 5 E [Z 0 1 -]
+	case 0x6c:
+		cpu.bit(5, &cpu.h) // BIT 5 H [Z 0 1 -]
+	// case 0x6e:
+	// 	cpu.bit(5, &cpu.HL) // BIT 5 (HL) [Z 0 1 -]
+	case 0x6d:
+		cpu.bit(5, &cpu.l) // BIT 5 L [Z 0 1 -]
+	case 0x77:
+		cpu.bit(6, &cpu.a) // BIT 6 A [Z 0 1 -]
+	case 0x70:
+		cpu.bit(6, &cpu.b) // BIT 6 B [Z 0 1 -]
+	case 0x71:
+		cpu.bit(6, &cpu.c) // BIT 6 C [Z 0 1 -]
+	case 0x72:
+		cpu.bit(6, &cpu.d) // BIT 6 D [Z 0 1 -]
+	case 0x73:
+		cpu.bit(6, &cpu.e) // BIT 6 E [Z 0 1 -]
+	case 0x74:
+		cpu.bit(6, &cpu.h) // BIT 6 H [Z 0 1 -]
+	// case 0x76:
+	// 	cpu.bit(6, &cpu.HL) // BIT 6 (HL) [Z 0 1 -]
+	case 0x75:
+		cpu.bit(6, &cpu.l) // BIT 6 L [Z 0 1 -]
+	case 0x7f:
+		cpu.bit(7, &cpu.a) // BIT 7 A [Z 0 1 -]
+	case 0x78:
+		cpu.bit(7, &cpu.b) // BIT 7 B [Z 0 1 -]
+	case 0x79:
+		cpu.bit(7, &cpu.c) // BIT 7 C [Z 0 1 -]
+	case 0x7a:
+		cpu.bit(7, &cpu.d) // BIT 7 D [Z 0 1 -]
+	case 0x7b:
+		cpu.bit(7, &cpu.e) // BIT 7 E [Z 0 1 -]
+	case 0x7c:
+		cpu.bit(7, &cpu.h) // BIT 7 H [Z 0 1 -]
+	// case 0x7e:
+	// 	cpu.bit(7, &cpu.HL) // BIT 7 (HL) [Z 0 1 -]
+	case 0x7d:
+		cpu.bit(7, &cpu.l) // BIT 7 L [Z 0 1 -]
+	case 0x87:
+		cpu.res(0, &cpu.a) // RES 0 A []
+	case 0x80:
+		cpu.res(0, &cpu.b) // RES 0 B []
+	case 0x81:
+		cpu.res(0, &cpu.c) // RES 0 C []
+	case 0x82:
+		cpu.res(0, &cpu.d) // RES 0 D []
+	case 0x83:
+		cpu.res(0, &cpu.e) // RES 0 E []
+	case 0x84:
+		cpu.res(0, &cpu.h) // RES 0 H []
+	// case 0x86:
+	// 	cpu.res(0, &cpu.HL) // RES 0 (HL) []
+	case 0x85:
+		cpu.res(0, &cpu.l) // RES 0 L []
+	case 0x8f:
+		cpu.res(1, &cpu.a) // RES 1 A []
+	case 0x88:
+		cpu.res(1, &cpu.b) // RES 1 B []
+	case 0x89:
+		cpu.res(1, &cpu.c) // RES 1 C []
+	case 0x8a:
+		cpu.res(1, &cpu.d) // RES 1 D []
+	case 0x8b:
+		cpu.res(1, &cpu.e) // RES 1 E []
+	case 0x8c:
+		cpu.res(1, &cpu.h) // RES 1 H []
+	// case 0x8e:
+	// 	cpu.res(1, &cpu.HL) // RES 1 (HL) []
+	case 0x8d:
+		cpu.res(1, &cpu.l) // RES 1 L []
+	case 0x97:
+		cpu.res(2, &cpu.a) // RES 2 A []
+	case 0x90:
+		cpu.res(2, &cpu.b) // RES 2 B []
+	case 0x91:
+		cpu.res(2, &cpu.c) // RES 2 C []
+	case 0x92:
+		cpu.res(2, &cpu.d) // RES 2 D []
+	case 0x93:
+		cpu.res(2, &cpu.e) // RES 2 E []
+	case 0x94:
+		cpu.res(2, &cpu.h) // RES 2 H []
+	// case 0x96:
+	// 	cpu.res(2, &cpu.HL) // RES 2 (HL) []
+	case 0x95:
+		cpu.res(2, &cpu.l) // RES 2 L []
+	case 0x9f:
+		cpu.res(3, &cpu.a) // RES 3 A []
+	case 0x98:
+		cpu.res(3, &cpu.b) // RES 3 B []
+	case 0x99:
+		cpu.res(3, &cpu.c) // RES 3 C []
+	case 0x9a:
+		cpu.res(3, &cpu.d) // RES 3 D []
+	case 0x9b:
+		cpu.res(3, &cpu.e) // RES 3 E []
+	case 0x9c:
+		cpu.res(3, &cpu.h) // RES 3 H []
+	// case 0x9e:
+	// 	cpu.res(3, &cpu.HL) // RES 3 (HL) []
+	case 0x9d:
+		cpu.res(3, &cpu.l) // RES 3 L []
+	case 0xa7:
+		cpu.res(4, &cpu.a) // RES 4 A []
+	case 0xa0:
+		cpu.res(4, &cpu.b) // RES 4 B []
+	case 0xa1:
+		cpu.res(4, &cpu.c) // RES 4 C []
+	case 0xa2:
+		cpu.res(4, &cpu.d) // RES 4 D []
+	case 0xa3:
+		cpu.res(4, &cpu.e) // RES 4 E []
+	case 0xa4:
+		cpu.res(4, &cpu.h) // RES 4 H []
+	// case 0xa6:
+	// 	cpu.res(4, &cpu.HL) // RES 4 (HL) []
+	case 0xa5:
+		cpu.res(4, &cpu.l) // RES 4 L []
+	case 0xaf:
+		cpu.res(5, &cpu.a) // RES 5 A []
+	case 0xa8:
+		cpu.res(5, &cpu.b) // RES 5 B []
+	case 0xa9:
+		cpu.res(5, &cpu.c) // RES 5 C []
+	case 0xaa:
+		cpu.res(5, &cpu.d) // RES 5 D []
+	case 0xab:
+		cpu.res(5, &cpu.e) // RES 5 E []
+	case 0xac:
+		cpu.res(5, &cpu.h) // RES 5 H []
+	// case 0xae:
+	// 	cpu.res(5, &cpu.HL) // RES 5 (HL) []
+	case 0xad:
+		cpu.res(5, &cpu.l) // RES 5 L []
+	case 0xb7:
+		cpu.res(6, &cpu.a) // RES 6 A []
+	case 0xb0:
+		cpu.res(6, &cpu.b) // RES 6 B []
+	case 0xb1:
+		cpu.res(6, &cpu.c) // RES 6 C []
+	case 0xb2:
+		cpu.res(6, &cpu.d) // RES 6 D []
+	case 0xb3:
+		cpu.res(6, &cpu.e) // RES 6 E []
+	case 0xb4:
+		cpu.res(6, &cpu.h) // RES 6 H []
+	// case 0xb6:
+	// 	cpu.res(6, &cpu.HL) // RES 6 (HL) []
+	case 0xb5:
+		cpu.res(6, &cpu.l) // RES 6 L []
+	case 0xbf:
+		cpu.res(7, &cpu.a) // RES 7 A []
+	case 0xb8:
+		cpu.res(7, &cpu.b) // RES 7 B []
+	case 0xb9:
+		cpu.res(7, &cpu.c) // RES 7 C []
+	case 0xba:
+		cpu.res(7, &cpu.d) // RES 7 D []
+	case 0xbb:
+		cpu.res(7, &cpu.e) // RES 7 E []
+	case 0xbc:
+		cpu.res(7, &cpu.h) // RES 7 H []
+	// case 0xbe:
+	// 	cpu.res(7, &cpu.HL) // RES 7 (HL) []
+	case 0xbd:
+		cpu.res(7, &cpu.l) // RES 7 L []
+	case 0x17:
+		cpu.rl(&cpu.a) // RL A  [Z 0 0 C]
+	case 0x10:
+		cpu.rl(&cpu.b) // RL B  [Z 0 0 C]
+	case 0x11:
+		cpu.rl(&cpu.c) // RL C  [Z 0 0 C]
+	case 0x12:
+		cpu.rl(&cpu.d) // RL D  [Z 0 0 C]
+	case 0x13:
+		cpu.rl(&cpu.e) // RL E  [Z 0 0 C]
+	case 0x14:
+		cpu.rl(&cpu.h) // RL H  [Z 0 0 C]
+	// case 0x16:
+	// 	cpu.rl(&cpu.HL) // RL (HL)  [Z 0 0 C]
+	case 0x15:
+		cpu.rl(&cpu.l) // RL L  [Z 0 0 C]
+	case 0x07:
+		cpu.rlc(&cpu.a) // RLC A  [Z 0 0 C]
+	case 0x00:
+		cpu.rlc(&cpu.b) // RLC B  [Z 0 0 C]
+	case 0x01:
+		cpu.rlc(&cpu.c) // RLC C  [Z 0 0 C]
+	case 0x02:
+		cpu.rlc(&cpu.d) // RLC D  [Z 0 0 C]
+	case 0x03:
+		cpu.rlc(&cpu.e) // RLC E  [Z 0 0 C]
+	case 0x04:
+		cpu.rlc(&cpu.h) // RLC H  [Z 0 0 C]
+	// case 0x06:
+	// 	cpu.rlc(&cpu.HL) // RLC (HL)  [Z 0 0 C]
+	case 0x05:
+		cpu.rlc(&cpu.l) // RLC L  [Z 0 0 C]
+	case 0x1f:
+		cpu.rr(&cpu.a) // RR A  [Z 0 0 C]
+	case 0x18:
+		cpu.rr(&cpu.b) // RR B  [Z 0 0 C]
+	case 0x19:
+		cpu.rr(&cpu.c) // RR C  [Z 0 0 C]
+	case 0x1a:
+		cpu.rr(&cpu.d) // RR D  [Z 0 0 C]
+	case 0x1b:
+		cpu.rr(&cpu.e) // RR E  [Z 0 0 C]
+	case 0x1c:
+		cpu.rr(&cpu.h) // RR H  [Z 0 0 C]
+	// case 0x1e:
+	// 	cpu.rr(&cpu.HL) // RR (HL)  [Z 0 0 C]
+	case 0x1d:
+		cpu.rr(&cpu.l) // RR L  [Z 0 0 C]
+	case 0x0f:
+		cpu.rrc(&cpu.a) // RRC A  [Z 0 0 C]
+	case 0x08:
+		cpu.rrc(&cpu.b) // RRC B  [Z 0 0 C]
+	case 0x09:
+		cpu.rrc(&cpu.c) // RRC C  [Z 0 0 C]
+	case 0x0a:
+		cpu.rrc(&cpu.d) // RRC D  [Z 0 0 C]
+	case 0x0b:
+		cpu.rrc(&cpu.e) // RRC E  [Z 0 0 C]
+	case 0x0c:
+		cpu.rrc(&cpu.h) // RRC H  [Z 0 0 C]
+	// case 0x0e:
+	// 	cpu.rrc(&cpu.HL) // RRC (HL)  [Z 0 0 C]
+	case 0x0d:
+		cpu.rrc(&cpu.l) // RRC L  [Z 0 0 C]
+	case 0xc7:
+		cpu.set(0, &cpu.a) // SET 0 A []
+	case 0xc0:
+		cpu.set(0, &cpu.b) // SET 0 B []
+	case 0xc1:
+		cpu.set(0, &cpu.c) // SET 0 C []
+	case 0xc2:
+		cpu.set(0, &cpu.d) // SET 0 D []
+	case 0xc3:
+		cpu.set(0, &cpu.e) // SET 0 E []
+	case 0xc4:
+		cpu.set(0, &cpu.h) // SET 0 H []
+	// case 0xc6:
+	// 	cpu.set(0, &cpu.HL) // SET 0 (HL) []
+	case 0xc5:
+		cpu.set(0, &cpu.l) // SET 0 L []
+	case 0xcf:
+		cpu.set(1, &cpu.a) // SET 1 A []
+	case 0xc8:
+		cpu.set(1, &cpu.b) // SET 1 B []
+	case 0xc9:
+		cpu.set(1, &cpu.c) // SET 1 C []
+	case 0xca:
+		cpu.set(1, &cpu.d) // SET 1 D []
+	case 0xcb:
+		cpu.set(1, &cpu.e) // SET 1 E []
+	case 0xcc:
+		cpu.set(1, &cpu.h) // SET 1 H []
+	// case 0xce:
+	// 	cpu.set(1, &cpu.HL) // SET 1 (HL) []
+	case 0xcd:
+		cpu.set(1, &cpu.l) // SET 1 L []
+	case 0xd7:
+		cpu.set(2, &cpu.a) // SET 2 A []
+	case 0xd0:
+		cpu.set(2, &cpu.b) // SET 2 B []
+	case 0xd1:
+		cpu.set(2, &cpu.c) // SET 2 C []
+	case 0xd2:
+		cpu.set(2, &cpu.d) // SET 2 D []
+	case 0xd3:
+		cpu.set(2, &cpu.e) // SET 2 E []
+	case 0xd4:
+		cpu.set(2, &cpu.h) // SET 2 H []
+	// case 0xd6:
+	// 	cpu.set(2, &cpu.HL) // SET 2 (HL) []
+	case 0xd5:
+		cpu.set(2, &cpu.l) // SET 2 L []
+	case 0xdf:
+		cpu.set(3, &cpu.a) // SET 3 A []
+	case 0xd8:
+		cpu.set(3, &cpu.b) // SET 3 B []
+	case 0xd9:
+		cpu.set(3, &cpu.c) // SET 3 C []
+	case 0xda:
+		cpu.set(3, &cpu.d) // SET 3 D []
+	case 0xdb:
+		cpu.set(3, &cpu.e) // SET 3 E []
+	case 0xdc:
+		cpu.set(3, &cpu.h) // SET 3 H []
+	// case 0xde:
+	// 	cpu.set(3, &cpu.HL) // SET 3 (HL) []
+	case 0xdd:
+		cpu.set(3, &cpu.l) // SET 3 L []
+	case 0xe7:
+		cpu.set(4, &cpu.a) // SET 4 A []
+	case 0xe0:
+		cpu.set(4, &cpu.b) // SET 4 B []
+	case 0xe1:
+		cpu.set(4, &cpu.c) // SET 4 C []
+	case 0xe2:
+		cpu.set(4, &cpu.d) // SET 4 D []
+	case 0xe3:
+		cpu.set(4, &cpu.e) // SET 4 E []
+	case 0xe4:
+		cpu.set(4, &cpu.h) // SET 4 H []
+	// case 0xe6:
+	// 	cpu.set(4, &cpu.HL) // SET 4 (HL) []
+	case 0xe5:
+		cpu.set(4, &cpu.l) // SET 4 L []
+	case 0xef:
+		cpu.set(5, &cpu.a) // SET 5 A []
+	case 0xe8:
+		cpu.set(5, &cpu.b) // SET 5 B []
+	case 0xe9:
+		cpu.set(5, &cpu.c) // SET 5 C []
+	case 0xea:
+		cpu.set(5, &cpu.d) // SET 5 D []
+	case 0xeb:
+		cpu.set(5, &cpu.e) // SET 5 E []
+	case 0xec:
+		cpu.set(5, &cpu.h) // SET 5 H []
+	// case 0xee:
+	// 	cpu.set(5, &cpu.HL) // SET 5 (HL) []
+	case 0xed:
+		cpu.set(5, &cpu.l) // SET 5 L []
+	case 0xf7:
+		cpu.set(6, &cpu.a) // SET 6 A []
+	case 0xf0:
+		cpu.set(6, &cpu.b) // SET 6 B []
+	case 0xf1:
+		cpu.set(6, &cpu.c) // SET 6 C []
+	case 0xf2:
+		cpu.set(6, &cpu.d) // SET 6 D []
+	case 0xf3:
+		cpu.set(6, &cpu.e) // SET 6 E []
+	case 0xf4:
+		cpu.set(6, &cpu.h) // SET 6 H []
+	// case 0xf6:
+	// 	cpu.set(6, &cpu.HL) // SET 6 (HL) []
+	case 0xf5:
+		cpu.set(6, &cpu.l) // SET 6 L []
+	case 0xff:
+		cpu.set(7, &cpu.a) // SET 7 A []
+	case 0xf8:
+		cpu.set(7, &cpu.b) // SET 7 B []
+	case 0xf9:
+		cpu.set(7, &cpu.c) // SET 7 C []
+	case 0xfa:
+		cpu.set(7, &cpu.d) // SET 7 D []
+	case 0xfb:
+		cpu.set(7, &cpu.e) // SET 7 E []
+	case 0xfc:
+		cpu.set(7, &cpu.h) // SET 7 H []
+	// case 0xfe:
+	// 	cpu.set(7, &cpu.HL) // SET 7 (HL) []
+	case 0xfd:
+		cpu.set(7, &cpu.l) // SET 7 L []
+	case 0x27:
+		cpu.sla(&cpu.a) // SLA A  [Z 0 0 C]
+	case 0x20:
+		cpu.sla(&cpu.b) // SLA B  [Z 0 0 C]
+	case 0x21:
+		cpu.sla(&cpu.c) // SLA C  [Z 0 0 C]
+	case 0x22:
+		cpu.sla(&cpu.d) // SLA D  [Z 0 0 C]
+	case 0x23:
+		cpu.sla(&cpu.e) // SLA E  [Z 0 0 C]
+	case 0x24:
+		cpu.sla(&cpu.h) // SLA H  [Z 0 0 C]
+	// case 0x26:
+	// 	cpu.sla(&cpu.HL) // SLA (HL)  [Z 0 0 C]
+	case 0x25:
+		cpu.sla(&cpu.l) // SLA L  [Z 0 0 C]
+	case 0x2f:
+		cpu.sra(&cpu.a) // SRA A  [Z 0 0 0]
+	case 0x28:
+		cpu.sra(&cpu.b) // SRA B  [Z 0 0 0]
+	case 0x29:
+		cpu.sra(&cpu.c) // SRA C  [Z 0 0 0]
+	case 0x2a:
+		cpu.sra(&cpu.d) // SRA D  [Z 0 0 0]
+	case 0x2b:
+		cpu.sra(&cpu.e) // SRA E  [Z 0 0 0]
+	case 0x2c:
+		cpu.sra(&cpu.h) // SRA H  [Z 0 0 0]
+	// case 0x2e:
+	// 	cpu.sra(&cpu.HL) // SRA (HL)  [Z 0 0 0]
+	case 0x2d:
+		cpu.sra(&cpu.l) // SRA L  [Z 0 0 0]
+	case 0x3f:
+		cpu.srl(&cpu.a) // SRL A  [Z 0 0 C]
+	case 0x38:
+		cpu.srl(&cpu.b) // SRL B  [Z 0 0 C]
+	case 0x39:
+		cpu.srl(&cpu.c) // SRL C  [Z 0 0 C]
+	case 0x3a:
+		cpu.srl(&cpu.d) // SRL D  [Z 0 0 C]
+	case 0x3b:
+		cpu.srl(&cpu.e) // SRL E  [Z 0 0 C]
+	case 0x3c:
+		cpu.srl(&cpu.h) // SRL H  [Z 0 0 C]
+	// case 0x3e:
+	// 	cpu.srl(&cpu.HL) // SRL (HL)  [Z 0 0 C]
+	case 0x3d:
+		cpu.srl(&cpu.l) // SRL L  [Z 0 0 C]
+	case 0x37:
+		cpu.swap(&cpu.a) // SWAP A  [Z 0 0 0]
+	case 0x30:
+		cpu.swap(&cpu.b) // SWAP B  [Z 0 0 0]
+	case 0x31:
+		cpu.swap(&cpu.c) // SWAP C  [Z 0 0 0]
+	case 0x32:
+		cpu.swap(&cpu.d) // SWAP D  [Z 0 0 0]
+	case 0x33:
+		cpu.swap(&cpu.e) // SWAP E  [Z 0 0 0]
+	case 0x34:
+		cpu.swap(&cpu.h) // SWAP H  [Z 0 0 0]
+	// case 0x36:
+	// 	cpu.swap(&cpu.HL) // SWAP (HL)  [Z 0 0 0]
+	case 0x35:
+		cpu.swap(&cpu.l) // SWAP L  [Z 0 0 0]
+	default:
+		panic(fmt.Sprintf("Missing dispatchPrefixedInstruction: %cb02x", instruction))
 	}
 }
