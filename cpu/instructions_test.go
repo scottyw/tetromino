@@ -10,7 +10,7 @@ func TestDispatchOneByteInstruction(t *testing.T) {
 	for _, test := range dispatchOneByteInstructionTests {
 		initialCPU := test.actualCPU
 		(&test.actualCPU).dispatchOneByteInstruction(test.mem, test.instruction)
-		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+		compareCPUs(t, instructionMetadata[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
 	}
 }
 
@@ -18,7 +18,7 @@ func TestDispatchTwoByteInstruction(t *testing.T) {
 	for _, test := range dispatchTwoByteInstructionTests {
 		initialCPU := test.actualCPU
 		(&test.actualCPU).dispatchTwoByteInstruction(test.mem, test.instruction, test.u8)
-		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+		compareCPUs(t, instructionMetadata[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
 	}
 }
 
@@ -26,7 +26,7 @@ func TestDispatchThreeByteInstruction(t *testing.T) {
 	for _, test := range dispatchThreeByteInstructionTests {
 		initialCPU := test.actualCPU
 		(&test.actualCPU).dispatchThreeByteInstruction(test.mem, test.instruction, test.u16)
-		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+		compareCPUs(t, instructionMetadata[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
 	}
 }
 
@@ -34,23 +34,23 @@ func TestDispatchPrefixedInstruction(t *testing.T) {
 	for _, test := range dispatchPrefixedInstructionTests {
 		initialCPU := test.actualCPU
 		(&test.actualCPU).dispatchPrefixedInstruction(test.mem, test.instruction)
-		compareCPUs(t, prefixedOpcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+		compareCPUs(t, prefixedInstructionMetadata[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
 	}
 }
 
-func validateFlags(t *testing.T, opcode opcodeMetadata, actualCPU CPU) {
-	if len(opcode.Flags) > 0 {
+func validateFlags(t *testing.T, im metadata, actualCPU CPU) {
+	if len(im.Flags) > 0 {
 		actualFlags := []bool{actualCPU.zf, actualCPU.nf, actualCPU.hf, actualCPU.cf}
-		for i, flag := range opcode.Flags {
+		for i, flag := range im.Flags {
 			switch flag {
 			case "0":
 				if actualFlags[i] {
-					t.Error("Flags do not match ", opcode.Flags)
+					t.Error("Flags do not match ", im.Flags)
 					t.Error("  Actual   : ", actualCPU)
 				}
 			case "1":
 				if !actualFlags[i] {
-					t.Error("Flags do not match ", opcode.Flags)
+					t.Error("Flags do not match ", im.Flags)
 					t.Error("  Actual   : ", actualCPU)
 				}
 			}
@@ -58,24 +58,24 @@ func validateFlags(t *testing.T, opcode opcodeMetadata, actualCPU CPU) {
 	}
 }
 
-func validateMemory(t *testing.T, opcode opcodeMetadata, mem testableMemory) {
+func validateMemory(t *testing.T, im metadata, mem testableMemory) {
 	if mem.expected != nil && !reflect.DeepEqual(mem.actual, mem.expected) {
-		t.Error("Memory does not match for: ", opcode)
+		t.Error("Memory does not match for: ", im)
 		t.Error("  Expected : ", mem.expected)
 		t.Error("  Actual   : ", mem.actual)
 	}
 }
 
-func compareCPUs(t *testing.T, opcode opcodeMetadata, initialCPU, expectedCPU, actualCPU CPU, mem *testableMemory) {
+func compareCPUs(t *testing.T, im metadata, initialCPU, expectedCPU, actualCPU CPU, mem *testableMemory) {
 	if actualCPU != expectedCPU {
-		t.Error("CPUs do not match for: ", opcode)
+		t.Error("CPUs do not match for: ", im)
 		t.Error("  Initial  : ", initialCPU)
 		t.Error("  Expected : ", expectedCPU)
 		t.Error("  Actual   : ", actualCPU)
 	}
-	validateFlags(t, opcode, actualCPU)
+	validateFlags(t, im, actualCPU)
 	if mem != nil {
-		validateMemory(t, opcode, *mem)
+		validateMemory(t, im, *mem)
 	}
 }
 

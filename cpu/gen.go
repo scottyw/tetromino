@@ -20,20 +20,20 @@ package cpu
 // 	"6": "bf",
 // 	"7": "7f"}
 
-// if !unprefixed && opcode.Mnemonic == "BIT" {
-// 	fmt.Println(opcode.Mnemonic, opcode.Operand1, opcode.Operand2, opcode.Flags)
+// if !unprefixed && im.Mnemonic == "BIT" {
+// 	fmt.Println(im.Mnemonic, im.Operand1, im.Operand2, im.Flags)
 // 	fmt.Printf("{0x%2x, CPU{%s: 0x%s}, CPU{%s: 0x%s, zf: false, nf: false, hf: true}, nil},\n",
 // 		addr,
-// 		strings.ToLower(opcode.Operand2),
-// 		bits[opcode.Operand1],
-// 		strings.ToLower(opcode.Operand2),
-// 		bits[opcode.Operand1])
+// 		strings.ToLower(im.Operand2),
+// 		bits[im.Operand1],
+// 		strings.ToLower(im.Operand2),
+// 		bits[im.Operand1])
 // 	fmt.Printf("{0x%2x, CPU{%s: 0x%s, zf: true, nf: true, hf: true, cf: true}, CPU{%s: 0x%s, zf: true, nf: false, hf: true, cf: true}, nil},\n",
 // 		addr,
-// 		strings.ToLower(opcode.Operand2),
-// 		nobits[opcode.Operand1],
-// 		strings.ToLower(opcode.Operand2),
-// 		nobits[opcode.Operand1])
+// 		strings.ToLower(im.Operand2),
+// 		nobits[im.Operand1],
+// 		strings.ToLower(im.Operand2),
+// 		nobits[im.Operand1])
 // 	fmt.Println()
 // 	fmt.Println()
 // }

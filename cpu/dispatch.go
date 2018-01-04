@@ -472,7 +472,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	// case 0xad:
 	// 	cpu.xor(cpu.l) // XOR L  [Z 0 0 0]
 	default:
-		panic(fmt.Sprintf("Missing dispatchOneByteInstruction: %s %02x", opcodes[instruction].Mnemonic, instruction))
+		panic(fmt.Sprintf("Missing dispatchOneByteInstruction: %s %02x", instructionMetadata[instruction].Mnemonic, instruction))
 	}
 }
 
@@ -481,7 +481,7 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	case 0xc6:
 		cpu.add(u8) // ADD A d8 [Z 0 H C]
 	default:
-		panic(fmt.Sprintf("Missing dispatchTwoByteInstruction: %s %02x %02x", opcodes[instruction].Mnemonic, instruction, u8))
+		panic(fmt.Sprintf("Missing dispatchTwoByteInstruction: %s %02x %02x", instructionMetadata[instruction].Mnemonic, instruction, u8))
 	}
 }
 
@@ -498,7 +498,7 @@ func (cpu *CPU) dispatchThreeByteInstruction(mem mem.Memory, instruction uint8, 
 	case 0xc2:
 		cpu.jp("NZ", u16) // JP NZ a16 []
 	default:
-		panic(fmt.Sprintf("Missing dispatchThreeByteInstruction: %s %02x %04x", opcodes[instruction].Mnemonic, instruction, u16))
+		panic(fmt.Sprintf("Missing dispatchThreeByteInstruction: %s %02x %04x", instructionMetadata[instruction].Mnemonic, instruction, u16))
 	}
 }
 

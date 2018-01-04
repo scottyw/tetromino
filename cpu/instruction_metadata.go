@@ -9,7 +9,7 @@ import (
 	"github.com/scottyw/goomba/mem"
 )
 
-type opcodeMetadata struct {
+type metadata struct {
 	Mnemonic string   `json:"mnemonic"`
 	Length   uint16   `json:"length"`
 	Cycles   []int    `json:"cycles"`
@@ -20,66 +20,66 @@ type opcodeMetadata struct {
 	Func     func(*CPU, mem.Memory, string, string, uint8, uint16) map[string]bool
 }
 
-type opcodeMetadataContainer struct {
-	Unprefixed map[string]opcodeMetadata `json:"unprefixed"`
-	Cbprefixed map[string]opcodeMetadata `json:"cbprefixed"`
+type metadataContainer struct {
+	Unprefixed map[string]metadata `json:"unprefixed"`
+	Cbprefixed map[string]metadata `json:"cbprefixed"`
 }
 
 func noFlags(flags []string) bool {
 	return flags[0] == "-" && flags[1] == "-" && flags[2] == "-" && flags[3] == "-"
 }
 
-func validateOpcodeCOnsistency(opcode opcodeMetadata) {
-	switch opcode.Length {
+func validateInstructionCOnsistency(im metadata) {
+	switch im.Length {
 	case 1:
-		if (strings.Contains(opcode.Operand1, "8") && !strings.Contains(opcode.Operand1, "8H")) ||
-			(strings.Contains(opcode.Operand2, "8") && !strings.Contains(opcode.Operand2, "8H")) ||
-			strings.Contains(opcode.Operand1, "16") ||
-			strings.Contains(opcode.Operand2, "16") {
-			panic(fmt.Sprintf("Metadata error: Length of 1 implies no operands should be immediate values: %v", opcode))
+		if (strings.Contains(im.Operand1, "8") && !strings.Contains(im.Operand1, "8H")) ||
+			(strings.Contains(im.Operand2, "8") && !strings.Contains(im.Operand2, "8H")) ||
+			strings.Contains(im.Operand1, "16") ||
+			strings.Contains(im.Operand2, "16") {
+			panic(fmt.Sprintf("Metadata error: Length of 1 implies no operands should be immediate values: %v", im))
 		}
 	case 2:
-		if (strings.Contains(opcode.Operand1, "8") == strings.Contains(opcode.Operand2, "8")) ||
-			strings.Contains(opcode.Operand1, "16") ||
-			strings.Contains(opcode.Operand2, "16") {
-			panic(fmt.Sprintf("Metadata error: Length of 2 implies exactly one of the operands should be an 8-bit immediate value: %v", opcode))
+		if (strings.Contains(im.Operand1, "8") == strings.Contains(im.Operand2, "8")) ||
+			strings.Contains(im.Operand1, "16") ||
+			strings.Contains(im.Operand2, "16") {
+			panic(fmt.Sprintf("Metadata error: Length of 2 implies exactly one of the operands should be an 8-bit immediate value: %v", im))
 		}
 	case 3:
-		if (strings.Contains(opcode.Operand1, "16") == strings.Contains(opcode.Operand2, "16")) ||
-			strings.Contains(opcode.Operand1, "8") ||
-			strings.Contains(opcode.Operand2, "8") {
-			panic(fmt.Sprintf("Metadata error: Length of 3 implies exactly one of the operands should be a 16-bit immediate value: %v", opcode))
+		if (strings.Contains(im.Operand1, "16") == strings.Contains(im.Operand2, "16")) ||
+			strings.Contains(im.Operand1, "8") ||
+			strings.Contains(im.Operand2, "8") {
+			panic(fmt.Sprintf("Metadata error: Length of 3 implies exactly one of the operands should be a 16-bit immediate value: %v", im))
 		}
 	default:
-		panic("Metadata error: Unsupported opcode length " + opcode.Mnemonic)
+		panic("Metadata error: Unsupported instruction length " + im.Mnemonic)
 	}
 }
 
-func initOpcodeArray(opcodeMap map[string]opcodeMetadata, arrayToInit *[256]opcodeMetadata, unprefixed bool) {
-	for addrStr, opcode := range opcodeMap {
+func initInstructionArray(instructionMap map[string]metadata, arrayToInit *[256]metadata, unprefixed bool) {
+	for addrStr, instruction := range instructionMap {
 		addr, err := strconv.ParseUint(addrStr, 0, 8)
 		if err != nil {
 			panic(err)
 		}
-		if noFlags(opcode.Flags) {
-			opcode.Flags = nil
+		if noFlags(instruction.Flags) {
+			instruction.Flags = nil
 		}
 		// Divide cycles by 4 because we're counting machine cycles, not clock cycles
-		for i := 0; i < len(opcode.Cycles); i++ {
-			opcode.Cycles[i] /= 4
+		for i := 0; i < len(instruction.Cycles); i++ {
+			instruction.Cycles[i] /= 4
 		}
-		(*arrayToInit)[addr] = opcode
+		(*arrayToInit)[addr] = instruction
 	}
 }
 
 func init() {
-	var opcodeMetadataContainer opcodeMetadataContainer
-	err := json.Unmarshal([]byte(metadataJSON), &opcodeMetadataContainer)
+	var metadataContainer metadataContainer
+	err := json.Unmarshal([]byte(metadataJSON), &metadataContainer)
 	if err != nil {
 		panic(err)
 	}
-	initOpcodeArray(opcodeMetadataContainer.Unprefixed, &opcodes, true)
-	initOpcodeArray(opcodeMetadataContainer.Cbprefixed, &prefixedOpcodes, false)
+	initInstructionArray(metadataContainer.Unprefixed, &instructionMetadata, true)
+	initInstructionArray(metadataContainer.Cbprefixed, &prefixedInstructionMetadata, false)
 }
 
 var metadataJSON = `

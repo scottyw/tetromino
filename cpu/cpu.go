@@ -26,9 +26,9 @@ var bits = [8]uint8{bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7}
 
 var flags = [4]uint8{zFlag, nFlag, hFlag, cFlag}
 
-var opcodes [256]opcodeMetadata
+var instructionMetadata [256]metadata
 
-var prefixedOpcodes [256]opcodeMetadata
+var prefixedInstructionMetadata [256]metadata
 
 var cycles int
 
@@ -171,32 +171,32 @@ func (cpu *CPU) execute(mem mem.Memory) {
 	defer mem.GenerateCrashReport()
 	cpu.checkInterrupts(mem)
 	instruction := mem.Read(cpu.pc)
-	opcode := opcodes[instruction]
+	im := instructionMetadata[instruction]
 	if instruction == 0xcb {
 		instruction := mem.Read(cpu.pc + 1)
-		fmt.Printf("0xcb%02x : %v\n", cpu.pc, opcode)
+		fmt.Printf("0xcb%02x : %v\n", cpu.pc, im)
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
 	} else {
-		switch opcode.Length {
+		switch im.Length {
 		case 1:
-			fmt.Printf("0x%02x : %v\n", cpu.pc, opcode)
+			fmt.Printf("0x%02x : %v\n", cpu.pc, im)
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
-			fmt.Printf("0x%02x : %v u8=0x%02x\n", cpu.pc, opcode, u8)
+			fmt.Printf("0x%02x : %v u8=0x%02x\n", cpu.pc, im, u8)
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
-			fmt.Printf("0x%02x : %v u8=0x%04x\n", cpu.pc, opcode, u16)
+			fmt.Printf("0x%02x : %v u8=0x%04x\n", cpu.pc, im, u16)
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
 		}
 	}
 	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.
-	cycles = opcode.Cycles[0]
+	cycles = im.Cycles[0]
 }
 
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
