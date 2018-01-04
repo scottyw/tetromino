@@ -73,8 +73,8 @@ func NewCPU() CPU {
 }
 
 func (cpu CPU) String() string {
-	return fmt.Sprintf("{ime:%v a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x pc:%04x}",
-		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc)
+	return fmt.Sprintf("{ime:%v a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x pc:%04x zf:%v nf:%v hf:%v cf:%v}",
+		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc, cpu.zf, cpu.nf, cpu.hf, cpu.cf)
 }
 
 func (cpu *CPU) get8(mem mem.Memory, name string) uint8 {
@@ -198,16 +198,8 @@ func c(old, new uint8) bool {
 	return old > new
 }
 
-func setBitByPos(b uint8, pos uint8) {
-	b |= bits[pos]
-}
-
 func setBitByPattern(b uint8, pattern uint8) {
 	b |= pattern
-}
-
-func resetBitByPos(b uint8, pos uint8) {
-	b &^= bits[pos]
 }
 
 func resetBitByPattern(b uint8, pattern uint8) {

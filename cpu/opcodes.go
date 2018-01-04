@@ -18,8 +18,10 @@ func (cpu *CPU) add(value uint8) {
 	cpu.cf = c(a, cpu.a)
 }
 
-func (cpu *CPU) bit(i int, register *uint8) {
-	panic(fmt.Sprintf("Missing implementation for bit: %v %v", i, register))
+func (cpu *CPU) bit(pos uint8, register *uint8) {
+	cpu.zf = *register&bits[pos] == 0
+	cpu.nf = false
+	cpu.hf = true
 }
 
 func (cpu *CPU) jp(kind string, u16 uint16) {
@@ -36,8 +38,8 @@ func (cpu *CPU) nop() {
 	return
 }
 
-func (cpu *CPU) res(i int, register *uint8) {
-	panic(fmt.Sprintf("Missing implementation for res: %v %v", i, register))
+func (cpu *CPU) res(pos int, register *uint8) {
+	*register &^= bits[pos]
 }
 
 func (cpu *CPU) rl(register *uint8) {
@@ -56,8 +58,8 @@ func (cpu *CPU) rrc(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for rrc: %v", register))
 }
 
-func (cpu *CPU) set(i int, register *uint8) {
-	panic(fmt.Sprintf("Missing implementation for set: %v %v", i, register))
+func (cpu *CPU) set(pos int, register *uint8) {
+	*register |= bits[pos]
 }
 
 func (cpu *CPU) sla(register *uint8) {
