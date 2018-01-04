@@ -77,83 +77,31 @@ func (cpu CPU) String() string {
 		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc, cpu.zf, cpu.nf, cpu.hf, cpu.cf)
 }
 
-func (cpu *CPU) get8(mem mem.Memory, name string) uint8 {
-	switch name {
-	case "A":
-		return cpu.a
-	case "B":
-		return cpu.b
-	case "C":
-		return cpu.c
-	case "D":
-		return cpu.d
-	case "E":
-		return cpu.e
-	case "H":
-		return cpu.h
-	case "L":
-		return cpu.l
-	case "(HL)":
-		return mem.Read(cpu.get16(mem, "HL"))
-	case "(a16)":
-		return mem.Read(cpu.get16(mem, "MOOO"))
-	default:
-		panic(fmt.Sprintf("get8: %v", name))
-	}
+func (cpu *CPU) bc() uint16 {
+	return uint16(cpu.b)<<8 + uint16(cpu.c)
 }
 
-func (cpu *CPU) get16(mem mem.Memory, name string) uint16 {
-	switch name {
-	case "BC":
-		return uint16(cpu.b)<<8 + uint16(cpu.c)
-	case "DE":
-		return uint16(cpu.d)<<8 + uint16(cpu.e)
-	case "HL":
-		return uint16(cpu.h)<<8 + uint16(cpu.l)
-	default:
-		panic(fmt.Sprintf("get16: %v", name))
-	}
+func (cpu *CPU) de() uint16 {
+	return uint16(cpu.d)<<8 + uint16(cpu.e)
 }
 
-func (cpu *CPU) set8(mem mem.Memory, name string, val uint8) {
-	switch name {
-	case "A":
-		cpu.a = val
-	case "B":
-		cpu.b = val
-	case "C":
-		cpu.c = val
-	case "D":
-		cpu.d = val
-	case "E":
-		cpu.e = val
-	case "H":
-		cpu.h = val
-	case "L":
-		cpu.l = val
-	case "(HL)":
-		mem.Write(cpu.get16(mem, "HL"), val)
-	default:
-		panic(fmt.Sprintf("set8: %v", name))
-	}
+func (cpu *CPU) hl() uint16 {
+	return uint16(cpu.h)<<8 + uint16(cpu.l)
 }
 
-func (cpu *CPU) set16(mem mem.Memory, name string, val uint16) {
-	switch name {
-	case "BC":
-		cpu.b = uint8(val >> 8)
-		cpu.c = uint8(val)
-	case "DE":
-		cpu.d = uint8(val >> 8)
-		cpu.e = uint8(val)
-	case "HL":
-		cpu.h = uint8(val >> 8)
-		cpu.l = uint8(val)
-	case "SP":
-		cpu.sp = val
-	default:
-		panic(fmt.Sprintf("set16: %v", name))
-	}
+func (cpu *CPU) updateBC(val uint16) {
+	cpu.b = uint8(val >> 8)
+	cpu.c = uint8(val)
+}
+
+func (cpu *CPU) updateDE(val uint16) {
+	cpu.d = uint8(val >> 8)
+	cpu.e = uint8(val)
+}
+
+func (cpu *CPU) updateHL(val uint16) {
+	cpu.h = uint8(val >> 8)
+	cpu.l = uint8(val)
 }
 
 func (cpu *CPU) checkInterrupts(mem mem.Memory) {
@@ -220,7 +168,7 @@ func (cpu *CPU) resetFlag(flagBit uint8) {
 }
 
 func (cpu *CPU) execute(mem mem.Memory) {
-	defer mem.MemoryDump()
+	defer mem.GenerateCrashReport()
 	cpu.checkInterrupts(mem)
 	instruction := mem.Read(cpu.pc)
 	opcode := opcodes[instruction]
@@ -228,23 +176,23 @@ func (cpu *CPU) execute(mem mem.Memory) {
 		instruction := mem.Read(cpu.pc + 1)
 		fmt.Printf("0xcb%02x : %v\n", cpu.pc, opcode)
 		cpu.pc += 2
-		cpu.dispatchPrefixedInstruction(instruction)
+		cpu.dispatchPrefixedInstruction(mem, instruction)
 	} else {
 		switch opcode.Length {
 		case 1:
 			fmt.Printf("0x%02x : %v\n", cpu.pc, opcode)
 			cpu.pc++
-			cpu.dispatchOneByteInstruction(instruction)
+			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
 			fmt.Printf("0x%02x : %v u8=0x%02x\n", cpu.pc, opcode, u8)
 			cpu.pc += 2
-			cpu.dispatchTwoByteInstruction(instruction, u8)
+			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
 			fmt.Printf("0x%02x : %v u8=0x%04x\n", cpu.pc, opcode, u16)
 			cpu.pc += 3
-			cpu.dispatchThreeByteInstruction(instruction, u16)
+			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
 		}
 	}
 	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.

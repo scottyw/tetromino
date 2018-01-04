@@ -1,8 +1,9 @@
 package cpu
 
 import "fmt"
+import "github.com/scottyw/goomba/mem"
 
-func (cpu *CPU) dispatchOneByteInstruction(instruction uint8) {
+func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	switch instruction {
 	// case 0x8f:
 	// 	cpu.adc(cpu.a, cpu.a) // ADC A A [Z 0 H C]
@@ -475,7 +476,7 @@ func (cpu *CPU) dispatchOneByteInstruction(instruction uint8) {
 	}
 }
 
-func (cpu *CPU) dispatchTwoByteInstruction(instruction, u8 uint8) {
+func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8) {
 	switch instruction {
 	case 0xc6:
 		cpu.add(u8) // ADD A d8 [Z 0 H C]
@@ -484,7 +485,7 @@ func (cpu *CPU) dispatchTwoByteInstruction(instruction, u8 uint8) {
 	}
 }
 
-func (cpu *CPU) dispatchThreeByteInstruction(instruction uint8, u16 uint16) {
+func (cpu *CPU) dispatchThreeByteInstruction(mem mem.Memory, instruction uint8, u16 uint16) {
 	switch instruction {
 	case 0xc3:
 		cpu.jp("", u16) // JP a16  []
@@ -501,7 +502,7 @@ func (cpu *CPU) dispatchThreeByteInstruction(instruction uint8, u16 uint16) {
 	}
 }
 
-func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
+func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	switch instruction {
 	case 0x47:
 		cpu.bit(0, &cpu.a) // BIT 0 A [Z 0 1 -]
@@ -515,8 +516,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(0, &cpu.e) // BIT 0 E [Z 0 1 -]
 	case 0x44:
 		cpu.bit(0, &cpu.h) // BIT 0 H [Z 0 1 -]
-	// case 0x46:
-	// 	cpu.bit(0, &cpu.HL) // BIT 0 (HL) [Z 0 1 -]
+	case 0x46:
+		cpu.bitHL(mem, 0) // BIT 0 (HL) [Z 0 1 -]
 	case 0x45:
 		cpu.bit(0, &cpu.l) // BIT 0 L [Z 0 1 -]
 	case 0x4f:
@@ -531,8 +532,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(1, &cpu.e) // BIT 1 E [Z 0 1 -]
 	case 0x4c:
 		cpu.bit(1, &cpu.h) // BIT 1 H [Z 0 1 -]
-	// case 0x4e:
-	// 	cpu.bit(1, &cpu.HL) // BIT 1 (HL) [Z 0 1 -]
+	case 0x4e:
+		cpu.bitHL(mem, 1) // BIT 1 (HL) [Z 0 1 -]
 	case 0x4d:
 		cpu.bit(1, &cpu.l) // BIT 1 L [Z 0 1 -]
 	case 0x57:
@@ -547,8 +548,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(2, &cpu.e) // BIT 2 E [Z 0 1 -]
 	case 0x54:
 		cpu.bit(2, &cpu.h) // BIT 2 H [Z 0 1 -]
-	// case 0x56:
-	// 	cpu.bit(2, &cpu.HL) // BIT 2 (HL) [Z 0 1 -]
+	case 0x56:
+		cpu.bitHL(mem, 2) // BIT 2 (HL) [Z 0 1 -]
 	case 0x55:
 		cpu.bit(2, &cpu.l) // BIT 2 L [Z 0 1 -]
 	case 0x5f:
@@ -563,8 +564,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(3, &cpu.e) // BIT 3 E [Z 0 1 -]
 	case 0x5c:
 		cpu.bit(3, &cpu.h) // BIT 3 H [Z 0 1 -]
-	// case 0x5e:
-	// 	cpu.bit(3, &cpu.HL) // BIT 3 (HL) [Z 0 1 -]
+	case 0x5e:
+		cpu.bitHL(mem, 3) // BIT 3 (HL) [Z 0 1 -]
 	case 0x5d:
 		cpu.bit(3, &cpu.l) // BIT 3 L [Z 0 1 -]
 	case 0x67:
@@ -579,8 +580,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(4, &cpu.e) // BIT 4 E [Z 0 1 -]
 	case 0x64:
 		cpu.bit(4, &cpu.h) // BIT 4 H [Z 0 1 -]
-	// case 0x66:
-	// 	cpu.bit(4, &cpu.HL) // BIT 4 (HL) [Z 0 1 -]
+	case 0x66:
+		cpu.bitHL(mem, 4) // BIT 4 (HL) [Z 0 1 -]
 	case 0x65:
 		cpu.bit(4, &cpu.l) // BIT 4 L [Z 0 1 -]
 	case 0x6f:
@@ -595,8 +596,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(5, &cpu.e) // BIT 5 E [Z 0 1 -]
 	case 0x6c:
 		cpu.bit(5, &cpu.h) // BIT 5 H [Z 0 1 -]
-	// case 0x6e:
-	// 	cpu.bit(5, &cpu.HL) // BIT 5 (HL) [Z 0 1 -]
+	case 0x6e:
+		cpu.bitHL(mem, 5) // BIT 5 (HL) [Z 0 1 -]
 	case 0x6d:
 		cpu.bit(5, &cpu.l) // BIT 5 L [Z 0 1 -]
 	case 0x77:
@@ -611,8 +612,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(6, &cpu.e) // BIT 6 E [Z 0 1 -]
 	case 0x74:
 		cpu.bit(6, &cpu.h) // BIT 6 H [Z 0 1 -]
-	// case 0x76:
-	// 	cpu.bit(6, &cpu.HL) // BIT 6 (HL) [Z 0 1 -]
+	case 0x76:
+		cpu.bitHL(mem, 6) // BIT 6 (HL) [Z 0 1 -]
 	case 0x75:
 		cpu.bit(6, &cpu.l) // BIT 6 L [Z 0 1 -]
 	case 0x7f:
@@ -627,8 +628,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.bit(7, &cpu.e) // BIT 7 E [Z 0 1 -]
 	case 0x7c:
 		cpu.bit(7, &cpu.h) // BIT 7 H [Z 0 1 -]
-	// case 0x7e:
-	// 	cpu.bit(7, &cpu.HL) // BIT 7 (HL) [Z 0 1 -]
+	case 0x7e:
+		cpu.bitHL(mem, 7) // BIT 7 (HL) [Z 0 1 -]
 	case 0x7d:
 		cpu.bit(7, &cpu.l) // BIT 7 L [Z 0 1 -]
 	case 0x87:
@@ -643,8 +644,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(0, &cpu.e) // RES 0 E []
 	case 0x84:
 		cpu.res(0, &cpu.h) // RES 0 H []
-	// case 0x86:
-	// 	cpu.res(0, &cpu.HL) // RES 0 (HL) []
+	case 0x86:
+		cpu.resHL(mem, 0) // RES 0 (HL) []
 	case 0x85:
 		cpu.res(0, &cpu.l) // RES 0 L []
 	case 0x8f:
@@ -659,8 +660,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(1, &cpu.e) // RES 1 E []
 	case 0x8c:
 		cpu.res(1, &cpu.h) // RES 1 H []
-	// case 0x8e:
-	// 	cpu.res(1, &cpu.HL) // RES 1 (HL) []
+	case 0x8e:
+		cpu.resHL(mem, 1) // RES 1 (HL) []
 	case 0x8d:
 		cpu.res(1, &cpu.l) // RES 1 L []
 	case 0x97:
@@ -675,8 +676,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(2, &cpu.e) // RES 2 E []
 	case 0x94:
 		cpu.res(2, &cpu.h) // RES 2 H []
-	// case 0x96:
-	// 	cpu.res(2, &cpu.HL) // RES 2 (HL) []
+	case 0x96:
+		cpu.resHL(mem, 2) // RES 2 (HL) []
 	case 0x95:
 		cpu.res(2, &cpu.l) // RES 2 L []
 	case 0x9f:
@@ -691,8 +692,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(3, &cpu.e) // RES 3 E []
 	case 0x9c:
 		cpu.res(3, &cpu.h) // RES 3 H []
-	// case 0x9e:
-	// 	cpu.res(3, &cpu.HL) // RES 3 (HL) []
+	case 0x9e:
+		cpu.resHL(mem, 3) // RES 3 (HL) []
 	case 0x9d:
 		cpu.res(3, &cpu.l) // RES 3 L []
 	case 0xa7:
@@ -707,8 +708,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(4, &cpu.e) // RES 4 E []
 	case 0xa4:
 		cpu.res(4, &cpu.h) // RES 4 H []
-	// case 0xa6:
-	// 	cpu.res(4, &cpu.HL) // RES 4 (HL) []
+	case 0xa6:
+		cpu.resHL(mem, 4) // RES 4 (HL) []
 	case 0xa5:
 		cpu.res(4, &cpu.l) // RES 4 L []
 	case 0xaf:
@@ -723,8 +724,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(5, &cpu.e) // RES 5 E []
 	case 0xac:
 		cpu.res(5, &cpu.h) // RES 5 H []
-	// case 0xae:
-	// 	cpu.res(5, &cpu.HL) // RES 5 (HL) []
+	case 0xae:
+		cpu.resHL(mem, 5) // RES 5 (HL) []
 	case 0xad:
 		cpu.res(5, &cpu.l) // RES 5 L []
 	case 0xb7:
@@ -739,8 +740,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(6, &cpu.e) // RES 6 E []
 	case 0xb4:
 		cpu.res(6, &cpu.h) // RES 6 H []
-	// case 0xb6:
-	// 	cpu.res(6, &cpu.HL) // RES 6 (HL) []
+	case 0xb6:
+		cpu.resHL(mem, 6) // RES 6 (HL) []
 	case 0xb5:
 		cpu.res(6, &cpu.l) // RES 6 L []
 	case 0xbf:
@@ -755,8 +756,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.res(7, &cpu.e) // RES 7 E []
 	case 0xbc:
 		cpu.res(7, &cpu.h) // RES 7 H []
-	// case 0xbe:
-	// 	cpu.res(7, &cpu.HL) // RES 7 (HL) []
+	case 0xbe:
+		cpu.resHL(mem, 7) // RES 7 (HL) []
 	case 0xbd:
 		cpu.res(7, &cpu.l) // RES 7 L []
 	case 0x17:
@@ -771,7 +772,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.rl(&cpu.e) // RL E  [Z 0 0 C]
 	case 0x14:
 		cpu.rl(&cpu.h) // RL H  [Z 0 0 C]
-	// case 0x16:
+	case 0x16:
 	// 	cpu.rl(&cpu.HL) // RL (HL)  [Z 0 0 C]
 	case 0x15:
 		cpu.rl(&cpu.l) // RL L  [Z 0 0 C]
@@ -787,7 +788,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.rlc(&cpu.e) // RLC E  [Z 0 0 C]
 	case 0x04:
 		cpu.rlc(&cpu.h) // RLC H  [Z 0 0 C]
-	// case 0x06:
+	case 0x06:
 	// 	cpu.rlc(&cpu.HL) // RLC (HL)  [Z 0 0 C]
 	case 0x05:
 		cpu.rlc(&cpu.l) // RLC L  [Z 0 0 C]
@@ -803,7 +804,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.rr(&cpu.e) // RR E  [Z 0 0 C]
 	case 0x1c:
 		cpu.rr(&cpu.h) // RR H  [Z 0 0 C]
-	// case 0x1e:
+	case 0x1e:
 	// 	cpu.rr(&cpu.HL) // RR (HL)  [Z 0 0 C]
 	case 0x1d:
 		cpu.rr(&cpu.l) // RR L  [Z 0 0 C]
@@ -819,7 +820,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.rrc(&cpu.e) // RRC E  [Z 0 0 C]
 	case 0x0c:
 		cpu.rrc(&cpu.h) // RRC H  [Z 0 0 C]
-	// case 0x0e:
+	case 0x0e:
 	// 	cpu.rrc(&cpu.HL) // RRC (HL)  [Z 0 0 C]
 	case 0x0d:
 		cpu.rrc(&cpu.l) // RRC L  [Z 0 0 C]
@@ -835,8 +836,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(0, &cpu.e) // SET 0 E []
 	case 0xc4:
 		cpu.set(0, &cpu.h) // SET 0 H []
-	// case 0xc6:
-	// 	cpu.set(0, &cpu.HL) // SET 0 (HL) []
+	case 0xc6:
+		cpu.setHL(mem, 0) // SET 0 (HL) []
 	case 0xc5:
 		cpu.set(0, &cpu.l) // SET 0 L []
 	case 0xcf:
@@ -851,8 +852,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(1, &cpu.e) // SET 1 E []
 	case 0xcc:
 		cpu.set(1, &cpu.h) // SET 1 H []
-	// case 0xce:
-	// 	cpu.set(1, &cpu.HL) // SET 1 (HL) []
+	case 0xce:
+		cpu.setHL(mem, 1) // SET 1 (HL) []
 	case 0xcd:
 		cpu.set(1, &cpu.l) // SET 1 L []
 	case 0xd7:
@@ -867,8 +868,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(2, &cpu.e) // SET 2 E []
 	case 0xd4:
 		cpu.set(2, &cpu.h) // SET 2 H []
-	// case 0xd6:
-	// 	cpu.set(2, &cpu.HL) // SET 2 (HL) []
+	case 0xd6:
+		cpu.setHL(mem, 2) // SET 2 (HL) []
 	case 0xd5:
 		cpu.set(2, &cpu.l) // SET 2 L []
 	case 0xdf:
@@ -883,8 +884,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(3, &cpu.e) // SET 3 E []
 	case 0xdc:
 		cpu.set(3, &cpu.h) // SET 3 H []
-	// case 0xde:
-	// 	cpu.set(3, &cpu.HL) // SET 3 (HL) []
+	case 0xde:
+		cpu.setHL(mem, 3) // SET 3 (HL) []
 	case 0xdd:
 		cpu.set(3, &cpu.l) // SET 3 L []
 	case 0xe7:
@@ -899,8 +900,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(4, &cpu.e) // SET 4 E []
 	case 0xe4:
 		cpu.set(4, &cpu.h) // SET 4 H []
-	// case 0xe6:
-	// 	cpu.set(4, &cpu.HL) // SET 4 (HL) []
+	case 0xe6:
+		cpu.setHL(mem, 4) // SET 4 (HL) []
 	case 0xe5:
 		cpu.set(4, &cpu.l) // SET 4 L []
 	case 0xef:
@@ -915,8 +916,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(5, &cpu.e) // SET 5 E []
 	case 0xec:
 		cpu.set(5, &cpu.h) // SET 5 H []
-	// case 0xee:
-	// 	cpu.set(5, &cpu.HL) // SET 5 (HL) []
+	case 0xee:
+		cpu.setHL(mem, 5) // SET 5 (HL) []
 	case 0xed:
 		cpu.set(5, &cpu.l) // SET 5 L []
 	case 0xf7:
@@ -931,8 +932,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(6, &cpu.e) // SET 6 E []
 	case 0xf4:
 		cpu.set(6, &cpu.h) // SET 6 H []
-	// case 0xf6:
-	// 	cpu.set(6, &cpu.HL) // SET 6 (HL) []
+	case 0xf6:
+		cpu.setHL(mem, 6) // SET 6 (HL) []
 	case 0xf5:
 		cpu.set(6, &cpu.l) // SET 6 L []
 	case 0xff:
@@ -947,8 +948,8 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.set(7, &cpu.e) // SET 7 E []
 	case 0xfc:
 		cpu.set(7, &cpu.h) // SET 7 H []
-	// case 0xfe:
-	// 	cpu.set(7, &cpu.HL) // SET 7 (HL) []
+	case 0xfe:
+		cpu.setHL(mem, 7) // SET 7 (HL) []
 	case 0xfd:
 		cpu.set(7, &cpu.l) // SET 7 L []
 	case 0x27:
@@ -963,7 +964,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.sla(&cpu.e) // SLA E  [Z 0 0 C]
 	case 0x24:
 		cpu.sla(&cpu.h) // SLA H  [Z 0 0 C]
-	// case 0x26:
+	case 0x26:
 	// 	cpu.sla(&cpu.HL) // SLA (HL)  [Z 0 0 C]
 	case 0x25:
 		cpu.sla(&cpu.l) // SLA L  [Z 0 0 C]
@@ -979,7 +980,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.sra(&cpu.e) // SRA E  [Z 0 0 0]
 	case 0x2c:
 		cpu.sra(&cpu.h) // SRA H  [Z 0 0 0]
-	// case 0x2e:
+	case 0x2e:
 	// 	cpu.sra(&cpu.HL) // SRA (HL)  [Z 0 0 0]
 	case 0x2d:
 		cpu.sra(&cpu.l) // SRA L  [Z 0 0 0]
@@ -995,7 +996,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.srl(&cpu.e) // SRL E  [Z 0 0 C]
 	case 0x3c:
 		cpu.srl(&cpu.h) // SRL H  [Z 0 0 C]
-	// case 0x3e:
+	case 0x3e:
 	// 	cpu.srl(&cpu.HL) // SRL (HL)  [Z 0 0 C]
 	case 0x3d:
 		cpu.srl(&cpu.l) // SRL L  [Z 0 0 C]
@@ -1011,7 +1012,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(instruction uint8) {
 		cpu.swap(&cpu.e) // SWAP E  [Z 0 0 0]
 	case 0x34:
 		cpu.swap(&cpu.h) // SWAP H  [Z 0 0 0]
-	// case 0x36:
+	case 0x36:
 	// 	cpu.swap(&cpu.HL) // SWAP (HL)  [Z 0 0 0]
 	case 0x35:
 		cpu.swap(&cpu.l) // SWAP L  [Z 0 0 0]

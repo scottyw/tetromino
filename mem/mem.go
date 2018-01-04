@@ -8,9 +8,9 @@ import (
 
 // Memory allows read and write access to memory
 type Memory interface {
-	Write(uint16, byte)
 	Read(uint16) byte
-	MemoryDump()
+	Write(uint16, byte)
+	GenerateCrashReport()
 }
 
 type memory struct {
@@ -57,15 +57,6 @@ func NewMemory() Memory {
 	mem[0xff4b] = 0x00
 	mem[0xffff] = 0x00
 	return memory{mem: mem}
-}
-
-// MemoryDump the contents of the whole address space to file
-func (mem memory) MemoryDump() {
-	if r := recover(); r != nil {
-		ioutil.WriteFile("memory.bin", mem.ReadRegion(0x0000, 0x10000), 0644)
-		// drawWindow()
-		panic(r)
-	}
 }
 
 // Debug function
@@ -120,4 +111,13 @@ func (mem memory) Write(addr uint16, b byte) {
 		// 	fmt.Printf("DEBUG: Write %s - 0x%04x\n", region(addr), addr)
 	}
 	mem.mem[addr] = b
+}
+
+// GenerateCrashReport writes the contents of the whole address space to file
+func (mem memory) GenerateCrashReport() {
+	if r := recover(); r != nil {
+		ioutil.WriteFile("memory.bin", mem.ReadRegion(0x0000, 0x10000), 0644)
+		// drawWindow()
+		panic(r)
+	}
 }

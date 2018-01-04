@@ -2,65 +2,40 @@ package cpu
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
-
-	"github.com/scottyw/goomba/mem"
 )
 
-type testMemory struct {
-	mem map[uint16]byte
-}
-
-// MemoryDump the contents of the whole address space to file
-func (mem testMemory) MemoryDump() {
-	fmt.Println(mem.mem)
-}
-
-// Read a byte from the chosen memory location
-func (mem testMemory) Read(addr uint16) byte {
-	val, present := mem.mem[addr]
-	if !present {
-		panic(fmt.Sprintf("Read memory failure: addr=0x%04x mem=%v", addr, mem))
-	}
-	return val
-}
-
-// Write a byte to the chosen memory location
-func (mem testMemory) Write(addr uint16, b byte) {
-	expected, present := mem.mem[addr]
-	if !present || expected != b {
-		panic(fmt.Sprintf("Write memory failure: addr=0x%04x mem=%v", addr, mem))
+func TestDispatchOneByteInstruction(t *testing.T) {
+	for _, test := range dispatchOneByteInstructionTests {
+		initialCPU := test.actualCPU
+		(&test.actualCPU).dispatchOneByteInstruction(test.mem, test.instruction)
+		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
 	}
 }
 
-type dispatchOneByteInstructionTestTable struct {
-	instruction uint8
-	actualCPU   CPU
-	expectedCPU CPU
-	mem         mem.Memory
+func TestDispatchTwoByteInstruction(t *testing.T) {
+	for _, test := range dispatchTwoByteInstructionTests {
+		initialCPU := test.actualCPU
+		(&test.actualCPU).dispatchTwoByteInstruction(test.mem, test.instruction, test.u8)
+		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+	}
 }
 
-type dispatchTwoByteInstructionTestTable struct {
-	instruction uint8
-	u8          uint8
-	actualCPU   CPU
-	expectedCPU CPU
-	mem         mem.Memory
+func TestDispatchThreeByteInstruction(t *testing.T) {
+	for _, test := range dispatchThreeByteInstructionTests {
+		initialCPU := test.actualCPU
+		(&test.actualCPU).dispatchThreeByteInstruction(test.mem, test.instruction, test.u16)
+		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+	}
 }
 
-type dispatchThreeByteInstructionTestTable struct {
-	instruction uint8
-	u16         uint16
-	actualCPU   CPU
-	expectedCPU CPU
-	mem         mem.Memory
-}
-
-type dispatchPrefixedInstructionTestTable struct {
-	instruction uint8
-	actualCPU   CPU
-	expectedCPU CPU
-	mem         mem.Memory
+func TestDispatchPrefixedInstruction(t *testing.T) {
+	for _, test := range dispatchPrefixedInstructionTests {
+		initialCPU := test.actualCPU
+		(&test.actualCPU).dispatchPrefixedInstruction(test.mem, test.instruction)
+		compareCPUs(t, prefixedOpcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU, test.mem)
+	}
 }
 
 func validateFlags(t *testing.T, opcode opcodeMetadata, actualCPU CPU) {
@@ -83,7 +58,15 @@ func validateFlags(t *testing.T, opcode opcodeMetadata, actualCPU CPU) {
 	}
 }
 
-func compareCPUs(t *testing.T, opcode opcodeMetadata, initialCPU, expectedCPU, actualCPU CPU) {
+func validateMemory(t *testing.T, opcode opcodeMetadata, mem testableMemory) {
+	if mem.expected != nil && !reflect.DeepEqual(mem.actual, mem.expected) {
+		t.Error("Memory does not match for: ", opcode)
+		t.Error("  Expected : ", mem.expected)
+		t.Error("  Actual   : ", mem.actual)
+	}
+}
+
+func compareCPUs(t *testing.T, opcode opcodeMetadata, initialCPU, expectedCPU, actualCPU CPU, mem *testableMemory) {
 	if actualCPU != expectedCPU {
 		t.Error("CPUs do not match for: ", opcode)
 		t.Error("  Initial  : ", initialCPU)
@@ -91,38 +74,61 @@ func compareCPUs(t *testing.T, opcode opcodeMetadata, initialCPU, expectedCPU, a
 		t.Error("  Actual   : ", actualCPU)
 	}
 	validateFlags(t, opcode, actualCPU)
-}
-
-func TestDispatchOneByteInstruction(t *testing.T) {
-	for _, test := range dispatchOneByteInstructionTests {
-		initialCPU := test.actualCPU
-		(&test.actualCPU).dispatchOneByteInstruction(test.instruction)
-		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU)
+	if mem != nil {
+		validateMemory(t, opcode, *mem)
 	}
 }
 
-func TestDispatchTwoByteInstruction(t *testing.T) {
-	for _, test := range dispatchTwoByteInstructionTests {
-		initialCPU := test.actualCPU
-		(&test.actualCPU).dispatchTwoByteInstruction(test.instruction, test.u8)
-		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU)
-	}
+type dispatchOneByteInstructionTestTable struct {
+	instruction uint8
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         *testableMemory
 }
 
-func TestDispatchThreeByteInstruction(t *testing.T) {
-	for _, test := range dispatchThreeByteInstructionTests {
-		initialCPU := test.actualCPU
-		(&test.actualCPU).dispatchThreeByteInstruction(test.instruction, test.u16)
-		compareCPUs(t, opcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU)
-	}
+type dispatchTwoByteInstructionTestTable struct {
+	instruction uint8
+	u8          uint8
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         *testableMemory
 }
 
-func TestDispatchPrefixedInstruction(t *testing.T) {
-	for _, test := range dispatchPrefixedInstructionTests {
-		initialCPU := test.actualCPU
-		(&test.actualCPU).dispatchPrefixedInstruction(test.instruction)
-		compareCPUs(t, prefixedOpcodes[test.instruction], initialCPU, test.expectedCPU, test.actualCPU)
+type dispatchThreeByteInstructionTestTable struct {
+	instruction uint8
+	u16         uint16
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         *testableMemory
+}
+
+type dispatchPrefixedInstructionTestTable struct {
+	instruction uint8
+	actualCPU   CPU
+	expectedCPU CPU
+	mem         *testableMemory
+}
+
+type testableMemory struct {
+	actual   map[uint16]byte
+	expected map[uint16]byte
+}
+
+// Read a byte from the chosen memory location
+func (mem testableMemory) Read(addr uint16) byte {
+	return mem.actual[addr]
+}
+
+// Write a byte to the chosen memory location
+func (mem testableMemory) Write(addr uint16, b byte) {
+	if mem.expected == nil {
+		panic("Writes are not permitted if there is no 'expected' memory")
 	}
+	mem.actual[addr] = b
+}
+
+func (mem testableMemory) GenerateCrashReport() {
+	fmt.Println("TestMemory crash: ", mem.actual, mem.expected)
 }
 
 var dispatchOneByteInstructionTests = []dispatchOneByteInstructionTestTable{
@@ -1872,14 +1878,14 @@ var dispatchOneByteInstructionTests = []dispatchOneByteInstructionTestTable{
 
 ///////////////////////
 
-// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x3c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
-// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x0c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
-// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x45, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
-// {"ADC", "A", "(HL)", 0x00, 0x00p00, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": true, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x00}}},
-// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x3d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
-// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x0d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
-// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x46, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
-// {"ADC", "A", "(HL)",  CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": true, "H": true, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xff}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x3c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x22}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x0c, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0xf2}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x45, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": false, "H": true, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x2b}}},
+// {"ADC", "A", "(HL)", 0x00, 0x00p00, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: 0x00}, map[string]bool{"Z": true, "H": false, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x00}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x3d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x22}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x0d, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": false, "C": true},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0xf2}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x46, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": false, "H": true, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x2b}}},
+// {"ADC", "A", "(HL)",  CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, CPU{a: 0x00, h: 0xa7, l: 0xf8, f: cFlag}, map[string]bool{"Z": true, "H": true, "C": true},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0xff}}},
 
 // {"ADC", "A", "A",  CPU{a: 0x12, f: 0x00}, CPU{a: 0x24, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": false}, nil},
 // {"ADC", "A", "A",  CPU{a: 0xa3, f: 0x00}, CPU{a: 0x46, f: 0x00}, map[string]bool{"Z": false, "H": false, "C": true}, nil},
@@ -1894,10 +1900,10 @@ var dispatchOneByteInstructionTests = []dispatchOneByteInstructionTestTable{
 ///////////////////////
 // GOOD
 
-// {"ADD", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x3c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x22}}},
-// {"ADD", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x0c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": true}, testMemory{mem: map[uint16]byte{0xa7f8: 0xf2}}},
-// {"ADD", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x45, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": true, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x2b}}},
-// {"ADD", "A", "(HL)",  CPU{a: 0x00, h: 0xa7, l: 0xf8}, CPU{a: 0x00, h: 0xa7, l: 0xf8}, map[string]bool{"Z": true, "H": false, "C": false}, testMemory{mem: map[uint16]byte{0xa7f8: 0x00}}},
+// {"ADD", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x3c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x22}}},
+// {"ADD", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x0c, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": false, "C": true},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0xf2}}},
+// {"ADD", "A", "(HL)",  CPU{a: 0x1a, h: 0xa7, l: 0xf8}, CPU{a: 0x45, h: 0xa7, l: 0xf8}, map[string]bool{"Z": false, "H": true, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x2b}}},
+// {"ADD", "A", "(HL)",  CPU{a: 0x00, h: 0xa7, l: 0xf8}, CPU{a: 0x00, h: 0xa7, l: 0xf8}, map[string]bool{"Z": true, "H": false, "C": false},  &testableMemory{actual:  map[uint16]byte{0xa7f8: 0x00}}},
 
 ///////////////////////
 
@@ -1921,7 +1927,7 @@ var dispatchOneByteInstructionTests = []dispatchOneByteInstructionTestTable{
 // 	{"AND", "d8", "", 0x33, 0x0000, CPU{a: 0x1a}, CPU{a: 0x12}, map[string]bool{"Z": false}, nil},
 // 	{"AND", "d8", "", 0x21, 0x0000, CPU{a: 0x1a}, CPU{a: 0x00}, map[string]bool{"Z": true}, nil}}
 
-///////////////////////
+///
 
 var dispatchTwoByteInstructionTests = []dispatchTwoByteInstructionTestTable{
 
@@ -1937,260 +1943,642 @@ var dispatchThreeByteInstructionTests = []dispatchThreeByteInstructionTestTable{
 
 var dispatchPrefixedInstructionTests = []dispatchPrefixedInstructionTestTable{
 
+	// BIT 6 (HL) [Z 0 1 -]
+	{0x76, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x40}}},
+	{0x76, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xbf}}},
+
+	// BIT 1 E [Z 0 1 -]
+	{0x4b, CPU{e: 0x02}, CPU{e: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x4b, CPU{e: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 2 D [Z 0 1 -]
+	{0x52, CPU{d: 0x04}, CPU{d: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x52, CPU{d: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 (HL) [Z 0 1 -]
+	{0x5e, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x08}}},
+	{0x5e, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xf7}}},
+
+	// BIT 7 D [Z 0 1 -]
+	{0x7a, CPU{d: 0x80}, CPU{d: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x7a, CPU{d: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 6 H [Z 0 1 -]
+	{0x74, CPU{h: 0x40}, CPU{h: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x74, CPU{h: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 B [Z 0 1 -]
+	{0x58, CPU{b: 0x08}, CPU{b: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x58, CPU{b: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 (HL) [Z 0 1 -]
+	{0x6e, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x20}}},
+	{0x6e, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xdf}}},
+
+	// BIT 4 H [Z 0 1 -]
+	{0x64, CPU{h: 0x10}, CPU{h: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x64, CPU{h: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 6 A [Z 0 1 -]
+	{0x77, CPU{a: 0x40}, CPU{a: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x77, CPU{a: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 1 (HL) [Z 0 1 -]
+	{0x4e, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x02}}},
+	{0x4e, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xfd}}},
+
+	// BIT 2 E [Z 0 1 -]
+	{0x53, CPU{e: 0x04}, CPU{e: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x53, CPU{e: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 (HL) [Z 0 1 -]
+	{0x66, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x10}}},
+	{0x66, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xef}}},
+
+	// BIT 0 L [Z 0 1 -]
+	{0x45, CPU{l: 0x01}, CPU{l: 0x01, zf: false, nf: false, hf: true}, nil},
+	{0x45, CPU{l: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 2 L [Z 0 1 -]
+	{0x55, CPU{l: 0x04}, CPU{l: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x55, CPU{l: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 C [Z 0 1 -]
+	{0x59, CPU{c: 0x08}, CPU{c: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x59, CPU{c: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 A [Z 0 1 -]
+	{0x6f, CPU{a: 0x20}, CPU{a: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x6f, CPU{a: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 2 B [Z 0 1 -]
+	{0x50, CPU{b: 0x04}, CPU{b: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x50, CPU{b: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 D [Z 0 1 -]
+	{0x62, CPU{d: 0x10}, CPU{d: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x62, CPU{d: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 6 B [Z 0 1 -]
+	{0x70, CPU{b: 0x40}, CPU{b: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x70, CPU{b: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 L [Z 0 1 -]
+	{0x5d, CPU{l: 0x08}, CPU{l: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x5d, CPU{l: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 E [Z 0 1 -]
+	{0x6b, CPU{e: 0x20}, CPU{e: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x6b, CPU{e: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 7 E [Z 0 1 -]
+	{0x7b, CPU{e: 0x80}, CPU{e: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x7b, CPU{e: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 7 C [Z 0 1 -]
+	{0x79, CPU{c: 0x80}, CPU{c: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x79, CPU{c: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 1 B [Z 0 1 -]
+	{0x48, CPU{b: 0x02}, CPU{b: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x48, CPU{b: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 6 L [Z 0 1 -]
+	{0x75, CPU{l: 0x40}, CPU{l: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x75, CPU{l: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 6 E [Z 0 1 -]
+	{0x73, CPU{e: 0x40}, CPU{e: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x73, CPU{e: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 2 (HL) [Z 0 1 -]
+	{0x56, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x04}}},
+	{0x56, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xfb}}},
+
+	// BIT 6 C [Z 0 1 -]
+	{0x71, CPU{c: 0x40}, CPU{c: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x71, CPU{c: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 0 (HL) [Z 0 1 -]
+	{0x46, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x01}}},
+	{0x46, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xfe}}},
+
+	// BIT 1 D [Z 0 1 -]
+	{0x4a, CPU{d: 0x02}, CPU{d: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x4a, CPU{d: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 1 L [Z 0 1 -]
+	{0x4d, CPU{l: 0x02}, CPU{l: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x4d, CPU{l: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 C [Z 0 1 -]
+	{0x69, CPU{c: 0x20}, CPU{c: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x69, CPU{c: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 E [Z 0 1 -]
+	{0x63, CPU{e: 0x10}, CPU{e: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x63, CPU{e: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 0 H [Z 0 1 -]
+	{0x44, CPU{h: 0x01}, CPU{h: 0x01, zf: false, nf: false, hf: true}, nil},
+	{0x44, CPU{h: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 B [Z 0 1 -]
+	{0x68, CPU{b: 0x20}, CPU{b: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x68, CPU{b: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 2 H [Z 0 1 -]
+	{0x54, CPU{h: 0x04}, CPU{h: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x54, CPU{h: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 B [Z 0 1 -]
+	{0x60, CPU{b: 0x10}, CPU{b: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x60, CPU{b: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
 	// BIT 0 A [Z 0 1 -]
 	{0x47, CPU{a: 0x01}, CPU{a: 0x01, zf: false, nf: false, hf: true}, nil},
 	{0x47, CPU{a: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
 
-	// BIT 0 B [Z 0 1 -]
-	// {0x40,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x40,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 0 C [Z 0 1 -]
-	// {0x41,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x41,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 0 D [Z 0 1 -]
-	// {0x42,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x42,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 0 E [Z 0 1 -]
-	// {0x43,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x43,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 0 H [Z 0 1 -]
-	// {0x44,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x44,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 0 (HL) [Z 0 1 -]
-	// {0x46,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x46,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 0 L [Z 0 1 -]
-	// {0x45,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x45,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 A [Z 0 1 -]
-	// {0x4f,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x4f,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 B [Z 0 1 -]
-	// {0x48,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x48,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 C [Z 0 1 -]
-	// {0x49,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x49,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 D [Z 0 1 -]
-	// {0x4a,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x4a,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 E [Z 0 1 -]
-	// {0x4b,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x4b,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
 	// BIT 1 H [Z 0 1 -]
-	// {0x4c,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x4c,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 (HL) [Z 0 1 -]
-	// {0x4e,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x4e,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 1 L [Z 0 1 -]
-	// {0x4d,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x4d,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 A [Z 0 1 -]
-	// {0x57,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x57,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 B [Z 0 1 -]
-	// {0x50,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x50,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 C [Z 0 1 -]
-	// {0x51,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x51,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 D [Z 0 1 -]
-	// {0x52,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x52,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 E [Z 0 1 -]
-	// {0x53,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x53,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 H [Z 0 1 -]
-	// {0x54,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x54,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 (HL) [Z 0 1 -]
-	// {0x56,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x56,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 2 L [Z 0 1 -]
-	// {0x55,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x55,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 A [Z 0 1 -]
-	// {0x5f,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x5f,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 B [Z 0 1 -]
-	// {0x58,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x58,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 C [Z 0 1 -]
-	// {0x59,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x59,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 D [Z 0 1 -]
-	// {0x5a,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x5a,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 E [Z 0 1 -]
-	// {0x5b,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x5b,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 H [Z 0 1 -]
-	// {0x5c,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x5c,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 (HL) [Z 0 1 -]
-	// {0x5e,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x5e,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 3 L [Z 0 1 -]
-	// {0x5d,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x5d,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 A [Z 0 1 -]
-	// {0x67,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x67,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 B [Z 0 1 -]
-	// {0x60,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x60,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 C [Z 0 1 -]
-	// {0x61,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x61,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 D [Z 0 1 -]
-	// {0x62,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x62,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 E [Z 0 1 -]
-	// {0x63,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x63,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 H [Z 0 1 -]
-	// {0x64,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x64,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 (HL) [Z 0 1 -]
-	// {0x66,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x66,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 4 L [Z 0 1 -]
-	// {0x65,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x65,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 A [Z 0 1 -]
-	// {0x6f,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x6f,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 B [Z 0 1 -]
-	// {0x68,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x68,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 C [Z 0 1 -]
-	// {0x69,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x69,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 D [Z 0 1 -]
-	// {0x6a,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x6a,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 E [Z 0 1 -]
-	// {0x6b,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x6b,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 H [Z 0 1 -]
-	// {0x6c,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x6c,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 (HL) [Z 0 1 -]
-	// {0x6e,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x6e,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 5 L [Z 0 1 -]
-	// {0x6d,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x6d,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 A [Z 0 1 -]
-	// {0x77,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x77,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 B [Z 0 1 -]
-	// {0x70,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x70,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 C [Z 0 1 -]
-	// {0x71,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x71,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 D [Z 0 1 -]
-	// {0x72,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x72,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 E [Z 0 1 -]
-	// {0x73,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x73,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 H [Z 0 1 -]
-	// {0x74,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x74,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 (HL) [Z 0 1 -]
-	// {0x76,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x76,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 6 L [Z 0 1 -]
-	// {0x75,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x75,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 7 A [Z 0 1 -]
-	// {0x7f,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x7f,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 7 B [Z 0 1 -]
-	// {0x78,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x78,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 7 C [Z 0 1 -]
-	// {0x79,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x79,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 7 D [Z 0 1 -]
-	// {0x7a,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x7a,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
-
-	// BIT 7 E [Z 0 1 -]
-	// {0x7b,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x7b,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
+	{0x4c, CPU{h: 0x02}, CPU{h: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x4c, CPU{h: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
 
 	// BIT 7 H [Z 0 1 -]
-	// {0x7c,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x7c,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
+	{0x7c, CPU{h: 0x80}, CPU{h: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x7c, CPU{h: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 0 D [Z 0 1 -]
+	{0x42, CPU{d: 0x01}, CPU{d: 0x01, zf: false, nf: false, hf: true}, nil},
+	{0x42, CPU{d: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 1 C [Z 0 1 -]
+	{0x49, CPU{c: 0x02}, CPU{c: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x49, CPU{c: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 7 B [Z 0 1 -]
+	{0x78, CPU{b: 0x80}, CPU{b: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x78, CPU{b: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 0 E [Z 0 1 -]
+	{0x43, CPU{e: 0x01}, CPU{e: 0x01, zf: false, nf: false, hf: true}, nil},
+	{0x43, CPU{e: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 A [Z 0 1 -]
+	{0x5f, CPU{a: 0x08}, CPU{a: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x5f, CPU{a: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 6 D [Z 0 1 -]
+	{0x72, CPU{d: 0x40}, CPU{d: 0x40, zf: false, nf: false, hf: true}, nil},
+	{0x72, CPU{d: 0xbf, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xbf, zf: true, nf: false, hf: true, cf: true}, nil},
 
 	// BIT 7 (HL) [Z 0 1 -]
-	// {0x7e,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x7e,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
+	{0x7e, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, zf: false, nf: false, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x80}}},
+	{0x7e, CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x7f}}},
+
+	// BIT 5 D [Z 0 1 -]
+	{0x6a, CPU{d: 0x20}, CPU{d: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x6a, CPU{d: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 2 A [Z 0 1 -]
+	{0x57, CPU{a: 0x04}, CPU{a: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x57, CPU{a: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 1 A [Z 0 1 -]
+	{0x4f, CPU{a: 0x02}, CPU{a: 0x02, zf: false, nf: false, hf: true}, nil},
+	{0x4f, CPU{a: 0xfd, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xfd, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 D [Z 0 1 -]
+	{0x5a, CPU{d: 0x08}, CPU{d: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x5a, CPU{d: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{d: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 H [Z 0 1 -]
+	{0x5c, CPU{h: 0x08}, CPU{h: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x5c, CPU{h: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 0 B [Z 0 1 -]
+	{0x40, CPU{b: 0x01}, CPU{b: 0x01, zf: false, nf: false, hf: true}, nil},
+	{0x40, CPU{b: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{b: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 7 A [Z 0 1 -]
+	{0x7f, CPU{a: 0x80}, CPU{a: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x7f, CPU{a: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 C [Z 0 1 -]
+	{0x61, CPU{c: 0x10}, CPU{c: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x61, CPU{c: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 H [Z 0 1 -]
+	{0x6c, CPU{h: 0x20}, CPU{h: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x6c, CPU{h: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 L [Z 0 1 -]
+	{0x65, CPU{l: 0x10}, CPU{l: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x65, CPU{l: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 0 C [Z 0 1 -]
+	{0x41, CPU{c: 0x01}, CPU{c: 0x01, zf: false, nf: false, hf: true}, nil},
+	{0x41, CPU{c: 0xfe, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xfe, zf: true, nf: false, hf: true, cf: true}, nil},
 
 	// BIT 7 L [Z 0 1 -]
-	// {0x7d,  CPU{a: 0x00}, CPU{a: 0x00}, nil},
-	// {0x7d,  CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0x00, zf: true, nf: true, hf: true, cf: true}, nil},
+	{0x7d, CPU{l: 0x80}, CPU{l: 0x80, zf: false, nf: false, hf: true}, nil},
+	{0x7d, CPU{l: 0x7f, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0x7f, zf: true, nf: false, hf: true, cf: true}, nil},
 
-}
+	// BIT 2 C [Z 0 1 -]
+	{0x51, CPU{c: 0x04}, CPU{c: 0x04, zf: false, nf: false, hf: true}, nil},
+	{0x51, CPU{c: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xfb, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 3 E [Z 0 1 -]
+	{0x5b, CPU{e: 0x08}, CPU{e: 0x08, zf: false, nf: false, hf: true}, nil},
+	{0x5b, CPU{e: 0xf7, zf: true, nf: true, hf: true, cf: true}, CPU{e: 0xf7, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 4 A [Z 0 1 -]
+	{0x67, CPU{a: 0x10}, CPU{a: 0x10, zf: false, nf: false, hf: true}, nil},
+	{0x67, CPU{a: 0xef, zf: true, nf: true, hf: true, cf: true}, CPU{a: 0xef, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// BIT 5 L [Z 0 1 -]
+	{0x6d, CPU{l: 0x20}, CPU{l: 0x20, zf: false, nf: false, hf: true}, nil},
+	{0x6d, CPU{l: 0xdf, zf: true, nf: true, hf: true, cf: true}, CPU{l: 0xdf, zf: true, nf: false, hf: true, cf: true}, nil},
+
+	// RES 1 A []
+	{0x8f, CPU{a: 0x02}, CPU{a: 0x00}, nil},
+
+	// RES 3 H []
+	{0x9c, CPU{h: 0x08}, CPU{h: 0x00}, nil},
+
+	// RES 3 L []
+	{0x9d, CPU{l: 0x08}, CPU{l: 0x00}, nil},
+
+	// RES 3 E []
+	{0x9b, CPU{e: 0x08}, CPU{e: 0x00}, nil},
+
+	// RES 4 C []
+	{0xa1, CPU{c: 0x10}, CPU{c: 0x00}, nil},
+
+	// RES 3 (HL) []
+	{0x9e, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x08}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 7 L []
+	{0xbd, CPU{l: 0x80}, CPU{l: 0x00}, nil},
+
+	// RES 5 (HL) []
+	{0xae, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x20}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 7 B []
+	{0xb8, CPU{b: 0x80}, CPU{b: 0x00}, nil},
+
+	// RES 1 D []
+	{0x8a, CPU{d: 0x02}, CPU{d: 0x00}, nil},
+
+	// RES 0 E []
+	{0x83, CPU{e: 0x01}, CPU{e: 0x00}, nil},
+
+	// RES 2 C []
+	{0x91, CPU{c: 0x04}, CPU{c: 0x00}, nil},
+
+	// RES 2 A []
+	{0x97, CPU{a: 0x04}, CPU{a: 0x00}, nil},
+
+	// RES 4 L []
+	{0xa5, CPU{l: 0x10}, CPU{l: 0x00}, nil},
+
+	// RES 7 E []
+	{0xbb, CPU{e: 0x80}, CPU{e: 0x00}, nil},
+
+	// RES 1 E []
+	{0x8b, CPU{e: 0x02}, CPU{e: 0x00}, nil},
+
+	// RES 5 B []
+	{0xa8, CPU{b: 0x20}, CPU{b: 0x00}, nil},
+
+	// RES 7 D []
+	{0xba, CPU{d: 0x80}, CPU{d: 0x00}, nil},
+
+	// RES 6 B []
+	{0xb0, CPU{b: 0x40}, CPU{b: 0x00}, nil},
+
+	// RES 0 L []
+	{0x85, CPU{l: 0x01}, CPU{l: 0x00}, nil},
+
+	// RES 7 A []
+	{0xbf, CPU{a: 0x80}, CPU{a: 0x00}, nil},
+
+	// RES 1 L []
+	{0x8d, CPU{l: 0x02}, CPU{l: 0x00}, nil},
+
+	// RES 1 C []
+	{0x89, CPU{c: 0x02}, CPU{c: 0x00}, nil},
+
+	// RES 2 L []
+	{0x95, CPU{l: 0x04}, CPU{l: 0x00}, nil},
+
+	// RES 1 B []
+	{0x88, CPU{b: 0x02}, CPU{b: 0x00}, nil},
+
+	// RES 6 E []
+	{0xb3, CPU{e: 0x40}, CPU{e: 0x00}, nil},
+
+	// RES 1 H []
+	{0x8c, CPU{h: 0x02}, CPU{h: 0x00}, nil},
+
+	// RES 2 D []
+	{0x92, CPU{d: 0x04}, CPU{d: 0x00}, nil},
+
+	// RES 2 H []
+	{0x94, CPU{h: 0x04}, CPU{h: 0x00}, nil},
+
+	// RES 5 L []
+	{0xad, CPU{l: 0x20}, CPU{l: 0x00}, nil},
+
+	// RES 7 (HL) []
+	{0xbe, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x80}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 2 B []
+	{0x90, CPU{b: 0x04}, CPU{b: 0x00}, nil},
+
+	// RES 6 H []
+	{0xb4, CPU{h: 0x40}, CPU{h: 0x00}, nil},
+
+	// RES 6 C []
+	{0xb1, CPU{c: 0x40}, CPU{c: 0x00}, nil},
+
+	// RES 7 H []
+	{0xbc, CPU{h: 0x80}, CPU{h: 0x00}, nil},
+
+	// RES 5 E []
+	{0xab, CPU{e: 0x20}, CPU{e: 0x00}, nil},
+
+	// RES 6 L []
+	{0xb5, CPU{l: 0x40}, CPU{l: 0x00}, nil},
+
+	// RES 0 D []
+	{0x82, CPU{d: 0x01}, CPU{d: 0x00}, nil},
+
+	// RES 1 (HL) []
+	{0x8e, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x02}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 4 A []
+	{0xa7, CPU{a: 0x10}, CPU{a: 0x00}, nil},
+
+	// RES 4 D []
+	{0xa2, CPU{d: 0x10}, CPU{d: 0x00}, nil},
+
+	// RES 3 B []
+	{0x98, CPU{b: 0x08}, CPU{b: 0x00}, nil},
+
+	// RES 6 D []
+	{0xb2, CPU{d: 0x40}, CPU{d: 0x00}, nil},
+
+	// RES 5 D []
+	{0xaa, CPU{d: 0x20}, CPU{d: 0x00}, nil},
+
+	// RES 3 A []
+	{0x9f, CPU{a: 0x08}, CPU{a: 0x00}, nil},
+
+	// RES 5 H []
+	{0xac, CPU{h: 0x20}, CPU{h: 0x00}, nil},
+
+	// RES 4 E []
+	{0xa3, CPU{e: 0x10}, CPU{e: 0x00}, nil},
+
+	// RES 6 (HL) []
+	{0xb6, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x40}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 3 C []
+	{0x99, CPU{c: 0x08}, CPU{c: 0x00}, nil},
+
+	// RES 7 C []
+	{0xb9, CPU{c: 0x80}, CPU{c: 0x00}, nil},
+
+	// RES 4 B []
+	{0xa0, CPU{b: 0x10}, CPU{b: 0x00}, nil},
+
+	// RES 0 A []
+	{0x87, CPU{a: 0x01}, CPU{a: 0x00}, nil},
+
+	// RES 2 (HL) []
+	{0x96, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x04}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 5 C []
+	{0xa9, CPU{c: 0x20}, CPU{c: 0x00}, nil},
+
+	// RES 0 B []
+	{0x80, CPU{b: 0x01}, CPU{b: 0x00}, nil},
+
+	// RES 3 D []
+	{0x9a, CPU{d: 0x08}, CPU{d: 0x00}, nil},
+
+	// RES 4 H []
+	{0xa4, CPU{h: 0x10}, CPU{h: 0x00}, nil},
+
+	// RES 0 C []
+	{0x81, CPU{c: 0x01}, CPU{c: 0x00}, nil},
+
+	// RES 0 (HL) []
+	{0x86, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x01}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 4 (HL) []
+	{0xa6, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x10}, expected: map[uint16]byte{0xa7f8: 0x00}}},
+
+	// RES 5 A []
+	{0xaf, CPU{a: 0x20}, CPU{a: 0x00}, nil},
+
+	// RES 6 A []
+	{0xb7, CPU{a: 0x40}, CPU{a: 0x00}, nil},
+
+	// RES 0 H []
+	{0x84, CPU{h: 0x01}, CPU{h: 0x00}, nil},
+
+	// RES 2 E []
+	{0x93, CPU{e: 0x04}, CPU{e: 0x00}, nil},
+
+	// SET 4 E []
+	{0xe3, CPU{e: 0x00}, CPU{e: 0x10}, nil},
+
+	// SET 6 H []
+	{0xf4, CPU{h: 0x00}, CPU{h: 0x40}, nil},
+
+	// SET 4 C []
+	{0xe1, CPU{c: 0x00}, CPU{c: 0x10}, nil},
+
+	// SET 5 C []
+	{0xe9, CPU{c: 0x00}, CPU{c: 0x20}, nil},
+
+	// SET 0 D []
+	{0xc2, CPU{d: 0x00}, CPU{d: 0x01}, nil},
+
+	// SET 5 E []
+	{0xeb, CPU{e: 0x00}, CPU{e: 0x20}, nil},
+
+	// SET 6 L []
+	{0xf5, CPU{l: 0x00}, CPU{l: 0x40}, nil},
+
+	// SET 1 E []
+	{0xcb, CPU{e: 0x00}, CPU{e: 0x02}, nil},
+
+	// SET 7 L []
+	{0xfd, CPU{l: 0x00}, CPU{l: 0x80}, nil},
+
+	// SET 0 H []
+	{0xc4, CPU{h: 0x00}, CPU{h: 0x01}, nil},
+
+	// SET 1 D []
+	{0xca, CPU{d: 0x00}, CPU{d: 0x02}, nil},
+
+	// SET 0 E []
+	{0xc3, CPU{e: 0x00}, CPU{e: 0x01}, nil},
+
+	// SET 3 B []
+	{0xd8, CPU{b: 0x00}, CPU{b: 0x08}, nil},
+
+	// SET 1 B []
+	{0xc8, CPU{b: 0x00}, CPU{b: 0x02}, nil},
+
+	// SET 7 C []
+	{0xf9, CPU{c: 0x00}, CPU{c: 0x80}, nil},
+
+	// SET 7 A []
+	{0xff, CPU{a: 0x00}, CPU{a: 0x80}, nil},
+
+	// SET 1 C []
+	{0xc9, CPU{c: 0x00}, CPU{c: 0x02}, nil},
+
+	// SET 4 H []
+	{0xe4, CPU{h: 0x00}, CPU{h: 0x10}, nil},
+
+	// SET 5 H []
+	{0xec, CPU{h: 0x00}, CPU{h: 0x20}, nil},
+
+	// SET 3 L []
+	{0xdd, CPU{l: 0x00}, CPU{l: 0x08}, nil},
+
+	// SET 2 B []
+	{0xd0, CPU{b: 0x00}, CPU{b: 0x04}, nil},
+
+	// SET 5 B []
+	{0xe8, CPU{b: 0x00}, CPU{b: 0x20}, nil},
+
+	// SET 5 (HL) []
+	{0xee, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x20}}},
+
+	// SET 0 (HL) []
+	{0xc6, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x01}}},
+
+	// SET 2 C []
+	{0xd1, CPU{c: 0x00}, CPU{c: 0x04}, nil},
+
+	// SET 2 D []
+	{0xd2, CPU{d: 0x00}, CPU{d: 0x04}, nil},
+
+	// SET 1 (HL) []
+	{0xce, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x02}}},
+
+	// SET 7 B []
+	{0xf8, CPU{b: 0x00}, CPU{b: 0x80}, nil},
+
+	// SET 2 H []
+	{0xd4, CPU{h: 0x00}, CPU{h: 0x04}, nil},
+
+	// SET 2 L []
+	{0xd5, CPU{l: 0x00}, CPU{l: 0x04}, nil},
+
+	// SET 3 (HL) []
+	{0xde, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x08}}},
+
+	// SET 2 (HL) []
+	{0xd6, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x04}}},
+
+	// SET 6 (HL) []
+	{0xf6, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x40}}},
+
+	// SET 4 A []
+	{0xe7, CPU{a: 0x00}, CPU{a: 0x10}, nil},
+
+	// SET 1 L []
+	{0xcd, CPU{l: 0x00}, CPU{l: 0x02}, nil},
+
+	// SET 2 A []
+	{0xd7, CPU{a: 0x00}, CPU{a: 0x04}, nil},
+
+	// SET 4 (HL) []
+	{0xe6, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x10}}},
+
+	// SET 7 (HL) []
+	{0xfe, CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x00}, expected: map[uint16]byte{0xa7f8: 0x80}}},
+
+	// SET 4 D []
+	{0xe2, CPU{d: 0x00}, CPU{d: 0x10}, nil},
+
+	// SET 0 C []
+	{0xc1, CPU{c: 0x00}, CPU{c: 0x01}, nil},
+
+	// SET 0 A []
+	{0xc7, CPU{a: 0x00}, CPU{a: 0x01}, nil},
+
+	// SET 7 D []
+	{0xfa, CPU{d: 0x00}, CPU{d: 0x80}, nil},
+
+	// SET 1 A []
+	{0xcf, CPU{a: 0x00}, CPU{a: 0x02}, nil},
+
+	// SET 5 D []
+	{0xea, CPU{d: 0x00}, CPU{d: 0x20}, nil},
+
+	// SET 6 B []
+	{0xf0, CPU{b: 0x00}, CPU{b: 0x40}, nil},
+
+	// SET 6 C []
+	{0xf1, CPU{c: 0x00}, CPU{c: 0x40}, nil},
+
+	// SET 6 D []
+	{0xf2, CPU{d: 0x00}, CPU{d: 0x40}, nil},
+
+	// SET 3 A []
+	{0xdf, CPU{a: 0x00}, CPU{a: 0x08}, nil},
+
+	// SET 0 B []
+	{0xc0, CPU{b: 0x00}, CPU{b: 0x01}, nil},
+
+	// SET 4 L []
+	{0xe5, CPU{l: 0x00}, CPU{l: 0x10}, nil},
+
+	// SET 4 B []
+	{0xe0, CPU{b: 0x00}, CPU{b: 0x10}, nil},
+
+	// SET 3 E []
+	{0xdb, CPU{e: 0x00}, CPU{e: 0x08}, nil},
+
+	// SET 7 H []
+	{0xfc, CPU{h: 0x00}, CPU{h: 0x80}, nil},
+
+	// SET 1 H []
+	{0xcc, CPU{h: 0x00}, CPU{h: 0x02}, nil},
+
+	// SET 3 C []
+	{0xd9, CPU{c: 0x00}, CPU{c: 0x08}, nil},
+
+	// SET 5 L []
+	{0xed, CPU{l: 0x00}, CPU{l: 0x20}, nil},
+
+	// SET 5 A []
+	{0xef, CPU{a: 0x00}, CPU{a: 0x20}, nil},
+
+	// SET 6 A []
+	{0xf7, CPU{a: 0x00}, CPU{a: 0x40}, nil},
+
+	// SET 3 D []
+	{0xda, CPU{d: 0x00}, CPU{d: 0x08}, nil},
+
+	// SET 3 H []
+	{0xdc, CPU{h: 0x00}, CPU{h: 0x08}, nil},
+
+	// SET 6 E []
+	{0xf3, CPU{e: 0x00}, CPU{e: 0x40}, nil},
+
+	// SET 7 E []
+	{0xfb, CPU{e: 0x00}, CPU{e: 0x80}, nil},
+
+	// SET 0 L []
+	{0xc5, CPU{l: 0x00}, CPU{l: 0x01}, nil},
+
+	// SET 2 E []
+	{0xd3, CPU{e: 0x00}, CPU{e: 0x04}, nil}}
