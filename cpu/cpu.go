@@ -32,9 +32,14 @@ var prefixedInstructionMetadata [256]metadata
 
 var cycles int
 
+type register16 interface {
+	Get() uint16
+	Set(uint16)
+}
+
 // CPU stores the internal CPU state
 type CPU struct {
-	// Registers
+	// 8-bit registers
 	a uint8
 	b uint8
 	c uint8
@@ -77,31 +82,53 @@ func (cpu CPU) String() string {
 		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc, cpu.zf, cpu.nf, cpu.hf, cpu.cf)
 }
 
-func (cpu *CPU) bc() uint16 {
-	return uint16(cpu.b)<<8 + uint16(cpu.c)
+func (cpu *CPU) bc() register16 {
+	return newRegister16(&cpu.b, &cpu.c)
 }
 
-func (cpu *CPU) de() uint16 {
-	return uint16(cpu.d)<<8 + uint16(cpu.e)
+func (cpu *CPU) de() register16 {
+	return newRegister16(&cpu.d, &cpu.e)
 }
 
-func (cpu *CPU) hl() uint16 {
-	return uint16(cpu.h)<<8 + uint16(cpu.l)
+func (cpu *CPU) af() register16 {
+	return newRegister16(&cpu.a, &cpu.f)
 }
 
-func (cpu *CPU) updateBC(val uint16) {
-	cpu.b = uint8(val >> 8)
-	cpu.c = uint8(val)
+func (cpu *CPU) hl() register16 {
+	return newRegister16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) updateDE(val uint16) {
-	cpu.d = uint8(val >> 8)
-	cpu.e = uint8(val)
+func z(new uint8) bool {
+	return new == 0
 }
 
-func (cpu *CPU) updateHL(val uint16) {
-	cpu.h = uint8(val >> 8)
-	cpu.l = uint8(val)
+func h(old, new uint8) bool {
+	return old&0xf > new&0xf
+}
+
+func c(old, new uint8) bool {
+	return old > new
+}
+
+func setBitByPattern(b uint8, pattern uint8) {
+	b |= pattern
+}
+
+func resetBitByPattern(b uint8, pattern uint8) {
+	b &^= pattern
+}
+
+// Return true if the flag is set and false if not
+func (cpu *CPU) isFlagSet(flag uint8) bool {
+	return cpu.f&uint8(flag) > 0
+}
+
+func (cpu *CPU) setFlag(flag uint8) {
+	cpu.f |= uint8(flag)
+}
+
+func (cpu *CPU) resetFlag(flagBit uint8) {
+	cpu.f &^= uint8(flagBit)
 }
 
 func (cpu *CPU) checkInterrupts(mem mem.Memory) {
@@ -132,39 +159,6 @@ func (cpu *CPU) checkInterrupts(mem mem.Memory) {
 			}
 		}
 	}
-}
-
-func z(new uint8) bool {
-	return new == 0
-}
-
-func h(old, new uint8) bool {
-	return old&0xf > new&0xf
-}
-
-func c(old, new uint8) bool {
-	return old > new
-}
-
-func setBitByPattern(b uint8, pattern uint8) {
-	b |= pattern
-}
-
-func resetBitByPattern(b uint8, pattern uint8) {
-	b &^= pattern
-}
-
-// Return true if the flag is set and false if not
-func (cpu *CPU) isFlagSet(flag uint8) bool {
-	return cpu.f&flag > 0
-}
-
-func (cpu *CPU) setFlag(flag uint8) {
-	cpu.f |= flag
-}
-
-func (cpu *CPU) resetFlag(flagBit uint8) {
-	cpu.f &^= flagBit
 }
 
 func (cpu *CPU) execute(mem mem.Memory) {

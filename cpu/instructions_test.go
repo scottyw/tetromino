@@ -96,21 +96,27 @@ func TestBit(t *testing.T) {
 		{CPU{c: 0x04}, CPU{c: 0x04, zf: false, nf: false, hf: true}},
 		{CPU{c: 0xfb, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0xfb, zf: true, nf: false, hf: true, cf: true}},
 	} {
-		test.cpu.bit(2, &test.cpu.c)
+		test.cpu.bit(2, test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func TestBitHL(t *testing.T) {
+func TestBitAddr(t *testing.T) {
 	// Flags: [Z 0 1 -]
 	for _, test := range []struct {
 		cpu, expectedCPU CPU
 		mem              mem.Memory
 	}{
-		{CPU{h: 0xa7, l: 0xf8}, CPU{h: 0xa7, l: 0xf8, hf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0x04}}},
-		{CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true}, CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true}, &testableMemory{actual: map[uint16]byte{0xa7f8: 0xfb}}},
+		{
+			CPU{h: 0xa7, l: 0xf8},
+			CPU{h: 0xa7, l: 0xf8, hf: true},
+			&testableMemory{actual: map[uint16]byte{0xa7f8: 0x04}}},
+		{
+			CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true},
+			CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true},
+			&testableMemory{actual: map[uint16]byte{0xa7f8: 0xfb}}},
 	} {
-		test.cpu.bitHL(test.mem, 2)
+		test.cpu.bitAddr(2, test.cpu.hl(), test.mem)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
