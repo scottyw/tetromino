@@ -10,12 +10,24 @@ func (cpu *CPU) xxxx(xxxx uint8) {
 	panic(fmt.Sprintf("Missing implementation for XXXX: %v", xxxx))
 }
 
+func (cpu *CPU) adc(value uint8) {
+	panic(fmt.Sprintf("Missing implementation for adc: %v", value))
+}
+
+func (cpu *CPU) adcHL() {
+	panic(fmt.Sprintf("Missing implementation for adc: (HL)"))
+}
+
 func (cpu *CPU) add(value uint8) {
 	a := cpu.a
 	cpu.a += value
 	cpu.zf = z(cpu.a)
 	cpu.hf = h(a, cpu.a)
 	cpu.cf = c(a, cpu.a)
+}
+
+func (cpu *CPU) addHL() {
+	panic(fmt.Sprintf("Missing implementation for add: (HL)"))
 }
 
 func (cpu *CPU) bit(pos uint8, register *uint8) {
@@ -57,16 +69,32 @@ func (cpu *CPU) rl(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for rl: %v", register))
 }
 
+func (cpu *CPU) rlHL() {
+	panic(fmt.Sprintf("Missing implementation for rl: (HL)"))
+}
+
 func (cpu *CPU) rlc(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for rlc: %v", register))
+}
+
+func (cpu *CPU) rlcHL() {
+	panic(fmt.Sprintf("Missing implementation for rlc: (HL)"))
 }
 
 func (cpu *CPU) rr(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for rr: %v", register))
 }
 
+func (cpu *CPU) rrHL() {
+	panic(fmt.Sprintf("Missing implementation for rr: (HL)"))
+}
+
 func (cpu *CPU) rrc(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for rrc: %v", register))
+}
+
+func (cpu *CPU) rrcHL() {
+	panic(fmt.Sprintf("Missing implementation for rrc: (HL)"))
 }
 
 func (cpu *CPU) set(pos uint8, register *uint8) {
@@ -83,16 +111,32 @@ func (cpu *CPU) sla(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for sla: %v", register))
 }
 
+func (cpu *CPU) slaHL() {
+	panic(fmt.Sprintf("Missing implementation for sla: (HL)"))
+}
+
 func (cpu *CPU) sra(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for sra: %v", register))
+}
+
+func (cpu *CPU) sraHL() {
+	panic(fmt.Sprintf("Missing implementation for sra: (HL)"))
 }
 
 func (cpu *CPU) srl(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for srl: %v", register))
 }
 
+func (cpu *CPU) srlHL() {
+	panic(fmt.Sprintf("Missing implementation for srl: (HL)"))
+}
+
 func (cpu *CPU) swap(register *uint8) {
 	panic(fmt.Sprintf("Missing implementation for swap: %v", register))
+}
+
+func (cpu *CPU) swapHL() {
+	panic(fmt.Sprintf("Missing implementation for swap: (HL)"))
 }
 
 ////////////////

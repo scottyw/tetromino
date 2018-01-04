@@ -5,24 +5,22 @@ import "github.com/scottyw/goomba/mem"
 
 func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	switch instruction {
-	// case 0x8f:
-	// 	cpu.adc(cpu.a, cpu.a) // ADC A A [Z 0 H C]
-	// case 0x88:
-	// 	cpu.adc(cpu.a, cpu.b) // ADC A B [Z 0 H C]
-	// case 0x89:
-	// 	cpu.adc(cpu.a, cpu.c) // ADC A C [Z 0 H C]
-	// case 0x8a:
-	// 	cpu.adc(cpu.a, cpu.d) // ADC A D [Z 0 H C]
-	// case 0xce:
-	// 	cpu.adc(cpu.a, cpu.d8) // ADC A d8 [Z 0 H C]
-	// case 0x8b:
-	// 	cpu.adc(cpu.a, cpu.e) // ADC A E [Z 0 H C]
-	// case 0x8c:
-	// 	cpu.adc(cpu.a, cpu.h) // ADC A H [Z 0 H C]
-	// case 0x8e:
-	// 	cpu.adc(cpu.a, cpu.HL) // ADC A (HL) [Z 0 H C]
-	// case 0x8d:
-	// 	cpu.adc(cpu.a, cpu.l) // ADC A L [Z 0 H C]
+	case 0x8f:
+		cpu.adc(cpu.a) // ADC A A [Z 0 H C]
+	case 0x88:
+		cpu.adc(cpu.b) // ADC A B [Z 0 H C]
+	case 0x89:
+		cpu.adc(cpu.c) // ADC A C [Z 0 H C]
+	case 0x8a:
+		cpu.adc(cpu.d) // ADC A D [Z 0 H C]
+	case 0x8b:
+		cpu.adc(cpu.e) // ADC A E [Z 0 H C]
+	case 0x8c:
+		cpu.adc(cpu.h) // ADC A H [Z 0 H C]
+	case 0x8e:
+		cpu.adcHL() // ADC A (HL) [Z 0 H C]
+	case 0x8d:
+		cpu.adc(cpu.l) // ADC A L [Z 0 H C]
 	case 0x87:
 		cpu.add(cpu.a) // ADD A A [Z 0 H C]
 	case 0x80:
@@ -37,8 +35,8 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 		cpu.add(cpu.h) // ADD A H [Z 0 H C]
 	case 0x85:
 		cpu.add(cpu.l) // ADD A L [Z 0 H C]
-	// case 0x86:
-	// 	cpu.add(cpu.HL) // ADD A (HL) [Z 0 H C]
+	case 0x86:
+		cpu.addHL() // ADD A (HL) [Z 0 H C]
 	// case 0x09:
 	// 	cpu.add(cpu.hl, cpu.bc) // ADD HL BC [- 0 H C]
 	// case 0x19:
@@ -478,6 +476,8 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 
 func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8) {
 	switch instruction {
+	case 0xce:
+		cpu.adc(u8) // ADC A d8 [Z 0 H C]
 	case 0xc6:
 		cpu.add(u8) // ADD A d8 [Z 0 H C]
 	default:
@@ -773,7 +773,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x14:
 		cpu.rl(&cpu.h) // RL H  [Z 0 0 C]
 	case 0x16:
-	// 	cpu.rl(&cpu.HL) // RL (HL)  [Z 0 0 C]
+		cpu.rlHL() // RL (HL)  [Z 0 0 C]
 	case 0x15:
 		cpu.rl(&cpu.l) // RL L  [Z 0 0 C]
 	case 0x07:
@@ -789,7 +789,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x04:
 		cpu.rlc(&cpu.h) // RLC H  [Z 0 0 C]
 	case 0x06:
-	// 	cpu.rlc(&cpu.HL) // RLC (HL)  [Z 0 0 C]
+		cpu.rlcHL() // RLC (HL)  [Z 0 0 C]
 	case 0x05:
 		cpu.rlc(&cpu.l) // RLC L  [Z 0 0 C]
 	case 0x1f:
@@ -805,7 +805,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x1c:
 		cpu.rr(&cpu.h) // RR H  [Z 0 0 C]
 	case 0x1e:
-	// 	cpu.rr(&cpu.HL) // RR (HL)  [Z 0 0 C]
+		cpu.rrHL() // RR (HL)  [Z 0 0 C]
 	case 0x1d:
 		cpu.rr(&cpu.l) // RR L  [Z 0 0 C]
 	case 0x0f:
@@ -821,7 +821,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x0c:
 		cpu.rrc(&cpu.h) // RRC H  [Z 0 0 C]
 	case 0x0e:
-	// 	cpu.rrc(&cpu.HL) // RRC (HL)  [Z 0 0 C]
+		cpu.rrcHL() // RRC (HL)  [Z 0 0 C]
 	case 0x0d:
 		cpu.rrc(&cpu.l) // RRC L  [Z 0 0 C]
 	case 0xc7:
@@ -965,7 +965,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x24:
 		cpu.sla(&cpu.h) // SLA H  [Z 0 0 C]
 	case 0x26:
-	// 	cpu.sla(&cpu.HL) // SLA (HL)  [Z 0 0 C]
+		cpu.slaHL() // SLA (HL)  [Z 0 0 C]
 	case 0x25:
 		cpu.sla(&cpu.l) // SLA L  [Z 0 0 C]
 	case 0x2f:
@@ -981,7 +981,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x2c:
 		cpu.sra(&cpu.h) // SRA H  [Z 0 0 0]
 	case 0x2e:
-	// 	cpu.sra(&cpu.HL) // SRA (HL)  [Z 0 0 0]
+		cpu.sraHL() // SRA (HL)  [Z 0 0 0]
 	case 0x2d:
 		cpu.sra(&cpu.l) // SRA L  [Z 0 0 0]
 	case 0x3f:
@@ -997,7 +997,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x3c:
 		cpu.srl(&cpu.h) // SRL H  [Z 0 0 C]
 	case 0x3e:
-	// 	cpu.srl(&cpu.HL) // SRL (HL)  [Z 0 0 C]
+		cpu.srlHL() // SRL (HL)  [Z 0 0 C]
 	case 0x3d:
 		cpu.srl(&cpu.l) // SRL L  [Z 0 0 C]
 	case 0x37:
@@ -1013,7 +1013,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x34:
 		cpu.swap(&cpu.h) // SWAP H  [Z 0 0 0]
 	case 0x36:
-	// 	cpu.swap(&cpu.HL) // SWAP (HL)  [Z 0 0 0]
+		cpu.swapHL() // SWAP (HL)  [Z 0 0 0]
 	case 0x35:
 		cpu.swap(&cpu.l) // SWAP L  [Z 0 0 0]
 	default:
