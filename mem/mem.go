@@ -1,15 +1,13 @@
 package mem
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 )
 
 // Memory allows read and write access to memory
 type Memory interface {
-	Read(uint16) byte
-	Write(uint16, byte)
+	Read(uint16) *byte
 	GenerateCrashReport()
 }
 
@@ -90,33 +88,17 @@ func region(addr uint16) string {
 }
 
 // Read a byte from the chosen memory location
-func (mem memory) Read(addr uint16) byte {
+func (mem memory) Read(addr uint16) *byte {
 	// if addr >= 0x8000 {
 	// 	fmt.Printf("DEBUG: Read %s - 0x%04x\n", region(addr), addr)
 	// }
-	return mem.mem[addr]
-}
-
-// ReadRegion of memory
-func (mem memory) ReadRegion(addr uint16, length uint) []byte {
-	return mem.mem[addr:(uint(addr) + length)]
-}
-
-// Write a byte to the chosen memory location
-func (mem memory) Write(addr uint16, b byte) {
-	// Ignore writes of 0x01 to 0x2000 which are MBC future proofing
-	if addr < 0x8000 && !(addr == 0x2000 && b == 0x01) {
-		panic(fmt.Sprintf("Can't write byte %v to address less than 0x8000: %04x", b, addr))
-		// } else {
-		// 	fmt.Printf("DEBUG: Write %s - 0x%04x\n", region(addr), addr)
-	}
-	mem.mem[addr] = b
+	return &mem.mem[addr]
 }
 
 // GenerateCrashReport writes the contents of the whole address space to file
 func (mem memory) GenerateCrashReport() {
 	if r := recover(); r != nil {
-		ioutil.WriteFile("memory.bin", mem.ReadRegion(0x0000, 0x10000), 0644)
+		ioutil.WriteFile("memory.bin", mem.mem, 0644)
 		// drawWindow()
 		panic(r)
 	}

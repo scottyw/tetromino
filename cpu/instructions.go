@@ -46,7 +46,7 @@ func (cpu *CPU) bit(pos uint8, u8 uint8) {
 }
 
 func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	cpu.bit(pos, mem.Read(a16))
+	cpu.bit(pos, *mem.Read(a16))
 }
 
 func (cpu *CPU) call(kind string, u16 uint16) {
@@ -220,9 +220,7 @@ func (cpu *CPU) res(pos uint8, r8 *uint8) {
 }
 
 func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	val := mem.Read(16)
-	cpu.res(pos, &val)
-	mem.Write(a16, val)
+	cpu.res(pos, mem.Read(a16))
 }
 
 func (cpu *CPU) ret(kind string) {
@@ -290,9 +288,7 @@ func (cpu *CPU) set(pos uint8, r8 *uint8) {
 }
 
 func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	val := mem.Read(a16)
-	cpu.set(pos, &val)
-	mem.Write(a16, val)
+	cpu.set(pos, mem.Read(a16))
 }
 
 func (cpu *CPU) sla(r8 *uint8) {

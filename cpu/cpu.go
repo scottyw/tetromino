@@ -121,29 +121,29 @@ func (cpu *CPU) isFlagSet(flag uint8) bool {
 
 func (cpu *CPU) checkInterrupts(mem mem.Memory) {
 	if cpu.ime {
-		interrupts := mem.Read(0xffff) & mem.Read(0xff0f)
+		interrupts := *mem.Read(0xffff) & *mem.Read(0xff0f)
 		if interrupts > 0 {
 			cpu.ime = false
-			mem.Write(cpu.sp, uint8(cpu.pc))
+			*mem.Read(cpu.sp) = uint8(cpu.pc)
 			cpu.sp--
-			mem.Write(cpu.sp, uint8(cpu.pc>>8))
+			*mem.Read(cpu.sp) = uint8(cpu.pc >> 8)
 			cpu.sp--
 			switch {
 			case interrupts&0x01 > 0:
-				cpu.pc = 0x0040                     // V-Blank
-				mem.Write(0xff0f, interrupts&^0x01) // Reset IF
+				cpu.pc = 0x0040                        // V-Blank
+				*mem.Read(0xff0f) = interrupts &^ 0x01 // Reset IF
 			case interrupts&0x02 > 0:
-				cpu.pc = 0x0048                     // LCDC status
-				mem.Write(0xff0f, interrupts&^0x02) // Reset IF
+				cpu.pc = 0x0048                        // LCDC status
+				*mem.Read(0xff0f) = interrupts &^ 0x02 // Reset IF
 			case interrupts&0x04 > 0:
-				cpu.pc = 0x0050                     // Timer Overflow
-				mem.Write(0xff0f, interrupts&^0x04) // Reset IF
+				cpu.pc = 0x0050                        // Timer Overflow
+				*mem.Read(0xff0f) = interrupts &^ 0x04 // Reset IF
 			case interrupts&0x08 > 0:
-				cpu.pc = 0x0058                     // Serial Transfer
-				mem.Write(0xff0f, interrupts&^0x08) // Reset IF
+				cpu.pc = 0x0058                        // Serial Transfer
+				*mem.Read(0xff0f) = interrupts &^ 0x08 // Reset IF
 			case interrupts&0x10 > 0:
-				cpu.pc = 0x0060                     // Hi-Lo of P10-P13
-				mem.Write(0xff0f, interrupts&^0x10) // Reset IF
+				cpu.pc = 0x0060                        // Hi-Lo of P10-P13
+				*mem.Read(0xff0f) = interrupts &^ 0x10 // Reset IF
 			}
 		}
 	}
@@ -152,10 +152,10 @@ func (cpu *CPU) checkInterrupts(mem mem.Memory) {
 func (cpu *CPU) execute(mem mem.Memory) {
 	defer mem.GenerateCrashReport()
 	cpu.checkInterrupts(mem)
-	instruction := mem.Read(cpu.pc)
+	instruction := *mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
 	if instruction == 0xcb {
-		instruction := mem.Read(cpu.pc + 1)
+		instruction := *mem.Read(cpu.pc + 1)
 		fmt.Printf("0xcb%02x : %v\n", cpu.pc, im)
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
@@ -166,12 +166,12 @@ func (cpu *CPU) execute(mem mem.Memory) {
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
-			u8 := mem.Read(cpu.pc + 1)
+			u8 := *mem.Read(cpu.pc + 1)
 			fmt.Printf("0x%02x : %v u8=0x%02x\n", cpu.pc, im, u8)
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
-			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
+			u16 := uint16(*mem.Read(cpu.pc + 1)) | uint16(*mem.Read(cpu.pc + 2))<<8
 			fmt.Printf("0x%02x : %v u8=0x%04x\n", cpu.pc, im, u16)
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)

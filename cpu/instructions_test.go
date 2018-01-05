@@ -13,26 +13,28 @@ import (
 ////////////////////////////////////////////////////////////////
 
 type testableMemory struct {
-	actual   map[uint16]byte
-	expected map[uint16]byte
+	actual   map[uint16]*byte
+	expected map[uint16]*byte
 }
 
 // Read a byte from the chosen memory location
-func (mem testableMemory) Read(addr uint16) byte {
-	return mem.actual[addr]
-}
-
-// Write a byte to the chosen memory location
-func (mem testableMemory) Write(addr uint16, b byte) {
-	if mem.expected == nil {
-		panic("Writes are not permitted if there is no 'expected' memory")
+func (mem testableMemory) Read(addr uint16) *byte {
+	result, present := mem.actual[addr]
+	if !present {
+		b := byte(0)
+		mem.actual[addr] = &b
+		return &b
 	}
-	mem.actual[addr] = b
+	return result
 }
 
 // GenerateCrashReport to show memory state
 func (mem testableMemory) GenerateCrashReport() {
 	fmt.Println("TestMemory crash: ", mem.actual, mem.expected)
+}
+
+func bytePtr(b byte) *byte {
+	return &b
 }
 
 ////////////////////////////////////////////////////////////////
@@ -110,11 +112,11 @@ func TestBitAddr(t *testing.T) {
 		{
 			CPU{h: 0xa7, l: 0xf8},
 			CPU{h: 0xa7, l: 0xf8, hf: true},
-			&testableMemory{actual: map[uint16]byte{0xa7f8: 0x04}}},
+			&testableMemory{actual: map[uint16]*byte{0xa7f8: bytePtr(0x04)}}},
 		{
 			CPU{h: 0xa7, l: 0xf8, zf: true, nf: true, hf: true, cf: true},
 			CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true},
-			&testableMemory{actual: map[uint16]byte{0xa7f8: 0xfb}}},
+			&testableMemory{actual: map[uint16]*byte{0xa7f8: bytePtr(0xfb)}}},
 	} {
 		test.cpu.bitAddr(2, test.cpu.hl().Get(), test.mem)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)

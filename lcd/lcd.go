@@ -21,7 +21,7 @@ func Tick(mem mem.Memory, cycle int) {
 		panic("LCD driver error setting mode")
 	}
 	// Set coincidence flag and coincidence interrupt on stat register
-	if ly == uint8(mem.Read(0xff45)) {
+	if ly == uint8(*mem.Read(0xff45)) {
 		stat |= 0x44
 	} else {
 		stat &^= 0x44
@@ -35,6 +35,6 @@ func Tick(mem mem.Memory, cycle int) {
 	case lyRemainder == 63:
 		stat |= 0x08
 	}
-	mem.Write(0xff41, stat) // STAT register
-	mem.Write(0xff44, ly)   // LY register
+	*mem.Read(0xff41) = stat // STAT register
+	*mem.Read(0xff44) = ly   // LY register
 }
