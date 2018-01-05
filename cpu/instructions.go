@@ -7,7 +7,7 @@ import (
 )
 
 func (cpu *CPU) adc(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for adc: %v", u8))
+	// cpu.flags(z(cpu.a), false, h(a, cpu.a), c(a, cpu.a)) // [Z 0 H C]
 }
 
 func (cpu *CPU) adcAddr(a16 uint16) {
@@ -17,9 +17,7 @@ func (cpu *CPU) adcAddr(a16 uint16) {
 func (cpu *CPU) add(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
-	cpu.zf = z(cpu.a)
-	cpu.hf = h(a, cpu.a)
-	cpu.cf = c(a, cpu.a)
+	cpu.flags(z(cpu.a), false, h(a, cpu.a), c(a, cpu.a)) // [Z 0 H C]
 }
 
 func (cpu *CPU) addHL(u16 uint16) {
@@ -43,9 +41,8 @@ func (cpu *CPU) andAddr(a16 uint16) {
 }
 
 func (cpu *CPU) bit(pos uint8, u8 uint8) {
-	cpu.zf = u8&bits[pos] == 0
-	cpu.nf = false
-	cpu.hf = true
+	zero := u8&bits[pos] == 0
+	cpu.flags(zero, false, true, cpu.cf) // [Z 0 1 -]
 }
 
 func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
@@ -53,12 +50,7 @@ func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) call(kind string, u16 uint16) {
-	switch kind {
-	case "":
-		cpu.pc = u16
-	default:
-		panic(fmt.Sprintf("Missing implementation for call: %v %v", kind, u16))
-	}
+	panic(fmt.Sprintf("Missing implementation for call: %v %v", kind, u16))
 }
 
 func (cpu *CPU) ccf() {
@@ -135,10 +127,7 @@ func (cpu *CPU) jp(kind string, u16 uint16) {
 }
 
 func (cpu *CPU) jr(kind string, u8 uint8) {
-	switch kind {
-	default:
-		panic(fmt.Sprintf("Missing implementation for jr: %v %v", kind, u8))
-	}
+	panic(fmt.Sprintf("Missing implementation for jr: %v %v", kind, u8))
 }
 
 func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
@@ -231,10 +220,9 @@ func (cpu *CPU) res(pos uint8, r8 *uint8) {
 }
 
 func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	addr := a16
-	val := mem.Read(addr)
+	val := mem.Read(16)
 	cpu.res(pos, &val)
-	mem.Write(addr, val)
+	mem.Write(a16, val)
 }
 
 func (cpu *CPU) ret(kind string) {
@@ -302,10 +290,9 @@ func (cpu *CPU) set(pos uint8, r8 *uint8) {
 }
 
 func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	addr := a16
-	val := mem.Read(addr)
+	val := mem.Read(a16)
 	cpu.set(pos, &val)
-	mem.Write(addr, val)
+	mem.Write(a16, val)
 }
 
 func (cpu *CPU) sla(r8 *uint8) {
@@ -365,7 +352,8 @@ func (cpu *CPU) subAddr(a16 uint16) {
 }
 
 func (cpu *CPU) xor(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for xor: %v", u8))
+	cpu.a = cpu.a ^ u8
+	cpu.flags(z(cpu.a), false, false, false) // [Z 0 0 0]
 }
 
 func (cpu *CPU) xorAddr(a16 uint16) {
@@ -523,9 +511,4 @@ func (cpu *CPU) xorAddr(a16 uint16) {
 // 		panic(fmt.Sprintf("Missing implementation for ldh: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
 // 	}
 // 	return
-// }
-
-// func (cpu *CPU) xor(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	cpu.a = cpu.a ^ cpu.get8(mem, operand1)
-// 	return map[string]bool{"Z": cpu.a == 0}
 // }

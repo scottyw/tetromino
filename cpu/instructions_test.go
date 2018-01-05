@@ -116,7 +116,7 @@ func TestBitAddr(t *testing.T) {
 			CPU{h: 0xa7, l: 0xf8, zf: true, nf: false, hf: true, cf: true},
 			&testableMemory{actual: map[uint16]byte{0xa7f8: 0xfb}}},
 	} {
-		test.cpu.bitAddr(2, test.cpu.hl(), test.mem)
+		test.cpu.bitAddr(2, test.cpu.hl().Get(), test.mem)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }

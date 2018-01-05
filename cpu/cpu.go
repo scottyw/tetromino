@@ -24,8 +24,6 @@ const (
 
 var bits = [8]uint8{bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7}
 
-var flags = [4]uint8{zFlag, nFlag, hFlag, cFlag}
-
 var instructionMetadata [256]metadata
 
 var prefixedInstructionMetadata [256]metadata
@@ -110,25 +108,15 @@ func c(old, new uint8) bool {
 	return old > new
 }
 
-func setBitByPattern(b uint8, pattern uint8) {
-	b |= pattern
+func (cpu *CPU) flags(zf, nf, hf, cf bool) {
+	cpu.zf = zf
+	cpu.nf = nf
+	cpu.hf = hf
+	cpu.cf = cf
 }
 
-func resetBitByPattern(b uint8, pattern uint8) {
-	b &^= pattern
-}
-
-// Return true if the flag is set and false if not
 func (cpu *CPU) isFlagSet(flag uint8) bool {
 	return cpu.f&uint8(flag) > 0
-}
-
-func (cpu *CPU) setFlag(flag uint8) {
-	cpu.f |= uint8(flag)
-}
-
-func (cpu *CPU) resetFlag(flagBit uint8) {
-	cpu.f &^= uint8(flagBit)
 }
 
 func (cpu *CPU) checkInterrupts(mem mem.Memory) {
