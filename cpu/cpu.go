@@ -104,8 +104,16 @@ func h(old, new uint8) bool {
 	return old&0xf > new&0xf
 }
 
+func h16(old, new uint16) bool {
+	return h(uint8(old>>4), uint8(new>>4))
+}
+
 func c(old, new uint8) bool {
 	return old > new
+}
+
+func c16(old, new uint16) bool {
+	return c(uint8(old>>4), uint8(new>>4))
 }
 
 func (cpu *CPU) flags(zf, nf, hf, cf bool) {

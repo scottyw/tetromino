@@ -21,7 +21,10 @@ func (cpu *CPU) add(u8 uint8) {
 }
 
 func (cpu *CPU) addHL(u16 uint16) {
-	panic(fmt.Sprintf("Missing implementation for addHL: %v", u16))
+	hl := cpu.hl()
+	old := hl.Get()
+	hl.Set(old + u16)
+	cpu.flags(cpu.zf, false, h16(old, hl.Get()), c16(old, hl.Get())) // [- 0 H C]
 }
 
 func (cpu *CPU) addSP(u8 uint8) {
@@ -33,11 +36,12 @@ func (cpu *CPU) addAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) and(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for and: %v", u8))
+	cpu.a &= u8
+	cpu.flags(z(cpu.a), false, true, false) // [Z 0 1 0]
 }
 
 func (cpu *CPU) andAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for andAddr: %v", a16))
+	cpu.and(*mem.Read(a16))
 }
 
 func (cpu *CPU) bit(pos uint8, u8 uint8) {
@@ -58,11 +62,11 @@ func (cpu *CPU) ccf() {
 }
 
 func (cpu *CPU) cp(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for cp: %v", u8))
+	cpu.flags(cpu.a == u8, true, h(u8, cpu.a), c(u8, cpu.a)) // [Z 1 H C]
 }
 
 func (cpu *CPU) cpAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for cp: %v", a16))
+	cpu.cp(*mem.Read(a16))
 }
 
 func (cpu *CPU) cpl() {
@@ -74,9 +78,9 @@ func (cpu *CPU) daa() {
 }
 
 func (cpu *CPU) dec(r8 *uint8) {
-	initial := *r8
+	old := *r8
 	*r8--
-	cpu.flags(z(*r8), true, h(initial, *r8), cpu.cf) //	[Z 1 H -]
+	cpu.flags(z(*r8), true, h(*r8, old), cpu.cf) //	[Z 1 H -]
 }
 
 func (cpu *CPU) dec16(r16 register16) {
@@ -92,11 +96,11 @@ func (cpu *CPU) decAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) di() {
-	panic(fmt.Sprintf("Missing implementation for di"))
+	cpu.ime = false
 }
 
 func (cpu *CPU) ei() {
-	panic(fmt.Sprintf("Missing implementation for ei"))
+	cpu.ime = true
 }
 
 func (cpu *CPU) halt() {
@@ -104,11 +108,13 @@ func (cpu *CPU) halt() {
 }
 
 func (cpu *CPU) inc(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for inc8: %v", r8))
+	old := *r8
+	*r8++
+	cpu.flags(z(*r8), true, h(old, *r8), cpu.cf) // [Z 0 H -]
 }
 
 func (cpu *CPU) inc16(r16 register16) {
-	panic(fmt.Sprintf("Missing implementation for incAddr: %v", r16))
+	r16.Set(r16.Get() + 1)
 }
 
 func (cpu *CPU) incSP() {
@@ -222,11 +228,12 @@ func (cpu *CPU) nop() {
 }
 
 func (cpu *CPU) or(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for or: %v", u8))
+	cpu.a |= u8
+	cpu.flags(z(cpu.a), false, false, false) // [Z 0 0 0]
 }
 
 func (cpu *CPU) orAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for orAddr: %v", a16))
+	cpu.or(*mem.Read(a16))
 }
 
 func (cpu *CPU) pop(r16 register16) {
@@ -278,11 +285,18 @@ func (cpu *CPU) rlcAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) rr(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for rr: %v", r8))
+	cf := *r8&1 == 1
+	*r8 >>= 1
+	if cpu.cf {
+		*r8 |= 0x80
+	} else {
+		*r8 &^= 0x80
+	}
+	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
 func (cpu *CPU) rra() {
-	panic(fmt.Sprintf("Missing implementation for rra"))
+	cpu.rr(&cpu.a)
 }
 
 func (cpu *CPU) rrAddr(a16 uint16, mem mem.Memory) {
@@ -408,84 +422,4 @@ func (cpu *CPU) xorAddr(a16 uint16, mem mem.Memory) {
 // 	default:
 // 		panic(fmt.Sprintf("Missing implementation for adc: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
 // 	}
-// }
-
-// func (cpu *CPU) and(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	switch operand1 {
-// 	case "d8":
-// 		cpu.a &= u8
-// 	default:
-// 		cpu.a &= cpu.get8(mem, operand1)
-// 	}
-// 	return map[string]bool{"Z": cpu.a == 0}
-// }
-
-// func (cpu *CPU) cp(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	var val uint8
-// 	switch operand1 {
-// 	case "d8":
-// 		val = u8
-// 	case "(HL)":
-// 		val = mem.Read(cpu.get16(mem, "HL"))
-// 	default:
-// 		val = cpu.get8(mem, operand1)
-// 	}
-// 	return map[string]bool{
-// 		"Z": val == cpu.a,
-// 		"H": (val & 0xf) > (cpu.a & 0xf),
-// 		"C": val > cpu.a}
-// }
-
-// func (cpu *CPU) cpl(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	panic(fmt.Sprintf("Missing implementation for cpl: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
-// }
-
-// func (cpu *CPU) daa(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	panic(fmt.Sprintf("Missing implementation for daa: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
-// }
-
-// func (cpu *CPU) dec(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	val := cpu.get8(mem, operand1)
-// 	val--
-// 	cpu.set8(mem, operand1, val)
-// 	return map[string]bool{
-// 		"Z": val == 0,
-// 		"H": (val & 0xf) == 0xf}
-// }
-
-// func (cpu *CPU) di(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	cpu.ime = false
-// 	return
-// }
-
-// func (cpu *CPU) ei(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	cpu.ime = true
-// 	return
-// }
-
-// func (cpu *CPU) jr(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	switch operand1 {
-// 	case "Z":
-// 		if cpu.isFlagSet(zFlag) {
-// 			cpu.pc = register16(int32(cpu.pc) + int32(int8(u8)))
-// 		}
-// 	case "NZ":
-// 		if !cpu.isFlagSet(zFlag) {
-// 			cpu.pc = register16(int32(cpu.pc) + int32(int8(u8)))
-// 		}
-// 	default:
-// 		panic(fmt.Sprintf("Missing implementation for jr: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
-// 	}
-// 	return
-// }
-
-// func (cpu *CPU) ldh(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	if operand1 == "(a8)" && operand2 == "A" {
-// 		mem.Write(0xff00+register16(int8(u8)), cpu.a)
-// 	} else if operand1 == "A" && operand2 == "(a8)" {
-// 		cpu.a = mem.Read(0xff00 + register16(int8(u8)))
-// 	} else {
-// 		panic(fmt.Sprintf("Missing implementation for ldh: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
-// 	}
-// 	return
 // }
