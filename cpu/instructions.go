@@ -7,11 +7,21 @@ import (
 )
 
 func (cpu *CPU) adc(u8 uint8) {
-	// cpu.flags(z(cpu.a), false, h(a, cpu.a), c(a, cpu.a)) // [Z 0 H C]
+	a := cpu.a
+	cpu.a += u8
+	hf := h(a, cpu.a)
+	cf := c(a, cpu.a)
+	if cpu.cf {
+		a = cpu.a
+		cpu.a++
+		hf = hf || h(a, cpu.a)
+		cf = cf || c(a, cpu.a)
+	}
+	cpu.flags(z(cpu.a), false, hf, cf) // [Z 0 H C]
 }
 
 func (cpu *CPU) adcAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for adcAddr: %v", a16))
+	cpu.adc(*mem.Read(a16))
 }
 
 func (cpu *CPU) add(u8 uint8) {
@@ -391,35 +401,3 @@ func (cpu *CPU) xor(u8 uint8) {
 func (cpu *CPU) xorAddr(a16 uint16, mem mem.Memory) {
 	panic(fmt.Sprintf("Missing implementation for xorAddr: %v", a16))
 }
-
-////////////////
-////////////////
-// OLD
-////////////////
-////////////////
-
-// func (cpu *CPU) adc(mem mem.Memory, operand1, operand2 string, u8 uint8, r16 register16) (flags map[string]bool) {
-// 	switch operand1 {
-// 	case "A":
-// 		a := cpu.a
-// 		if operand2 == "d8" {
-// 			cpu.a += u8
-// 		} else {
-// 			cpu.a += cpu.get8(mem, operand2)
-// 		}
-// 		halfCarry := h(a, cpu.a)
-// 		carry := c(a, cpu.a)
-// 		if cpu.isFlagSet(cFlag) {
-// 			a = cpu.a
-// 			cpu.a++
-// 			halfCarry = halfCarry || h(a, cpu.a)
-// 			carry = carry || c(a, cpu.a)
-// 		}
-// 		return map[string]bool{
-// 			"Z": z(cpu.a),
-// 			"H": halfCarry,
-// 			"C": carry}
-// 	default:
-// 		panic(fmt.Sprintf("Missing implementation for adc: op1=%v op2=%v u8=%v u16=%v", operand1, operand2, u8, u16))
-// 	}
-// }

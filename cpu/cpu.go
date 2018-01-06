@@ -123,10 +123,6 @@ func (cpu *CPU) flags(zf, nf, hf, cf bool) {
 	cpu.cf = cf
 }
 
-func (cpu *CPU) isFlagSet(flag uint8) bool {
-	return cpu.f&uint8(flag) > 0
-}
-
 func (cpu *CPU) checkInterrupts(mem mem.Memory) {
 	if cpu.ime {
 		interrupts := *mem.Read(0xffff) & *mem.Read(0xff0f)
