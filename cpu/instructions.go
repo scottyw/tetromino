@@ -307,7 +307,12 @@ func (cpu *CPU) rlcAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) rr(r8 *uint8) {
-
+	cf := (*r8 & 0x01) > 0
+	*r8 >>= 1
+	if cpu.cf {
+		*r8 |= 0x80
+	}
+	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
 func (cpu *CPU) rra() {
@@ -319,11 +324,16 @@ func (cpu *CPU) rrAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) rrc(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for rrc: %v", r8))
+	cf := (*r8 & 0x01) > 0
+	*r8 >>= 1
+	if cf {
+		*r8 |= 0x80
+	}
+	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
 func (cpu *CPU) rrca() {
-	panic(fmt.Sprintf("Missing implementation for rrca"))
+	cpu.rrc(&cpu.a)
 }
 
 func (cpu *CPU) rrcAddr(a16 uint16, mem mem.Memory) {

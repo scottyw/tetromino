@@ -611,20 +611,28 @@ func TestXrlcAddr(t *testing.T) {
 	}
 }
 
-func TestXrr(t *testing.T) {
+func TestRr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{c: 0x15, cf: false}, CPU{c: 0x0a, cf: true}},
+		{CPU{c: 0x15, cf: true}, CPU{c: 0x8a, cf: true}},
+		{CPU{c: 0xa8, cf: false}, CPU{c: 0x54, cf: false}},
+		{CPU{c: 0xa8, cf: true}, CPU{c: 0xd4, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
 	} {
-		// test.cpu.rr()
+		test.cpu.rr(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func TestXrra(t *testing.T) {
+func TestRra(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{a: 0x15, cf: false}, CPU{a: 0x0a, cf: true}},
+		{CPU{a: 0x15, cf: true}, CPU{a: 0x8a, cf: true}},
+		{CPU{a: 0xa8, cf: false}, CPU{a: 0x54, cf: false}},
+		{CPU{a: 0xa8, cf: true}, CPU{a: 0xd4, cf: false}},
+		{CPU{a: 0x00}, CPU{a: 0x00, zf: true}},
 	} {
-		// test.cpu.rra()
+		test.cpu.rra()
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
@@ -638,20 +646,28 @@ func TestXrrAddr(t *testing.T) {
 	}
 }
 
-func TestXrrc(t *testing.T) {
+func TestRrc(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{c: 0x15, cf: false}, CPU{c: 0x8a, cf: true}},
+		{CPU{c: 0x15, cf: true}, CPU{c: 0x8a, cf: true}},
+		{CPU{c: 0xa8, cf: false}, CPU{c: 0x54, cf: false}},
+		{CPU{c: 0xa8, cf: true}, CPU{c: 0x54, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
 	} {
-		// test.cpu.rrc()
+		test.cpu.rrc(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func TestXrrca(t *testing.T) {
+func TestRrca(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{a: 0x15, cf: false}, CPU{a: 0x8a, cf: true}},
+		{CPU{a: 0x15, cf: true}, CPU{a: 0x8a, cf: true}},
+		{CPU{a: 0xa8, cf: false}, CPU{a: 0x54, cf: false}},
+		{CPU{a: 0xa8, cf: true}, CPU{a: 0x54, cf: false}},
+		{CPU{a: 0x00}, CPU{a: 0x00, zf: true}},
 	} {
-		// test.cpu.rrca()
+		test.cpu.rrca()
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
