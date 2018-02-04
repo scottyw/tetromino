@@ -145,7 +145,7 @@ func TestBit(t *testing.T) {
 	}
 }
 
-func Testcall(t *testing.T) {
+func TestXcall(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -154,7 +154,7 @@ func Testcall(t *testing.T) {
 	}
 }
 
-func Testccf(t *testing.T) {
+func TestXccf(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -163,7 +163,7 @@ func Testccf(t *testing.T) {
 	}
 }
 
-func Testcp(t *testing.T) {
+func TestXcp(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -172,7 +172,7 @@ func Testcp(t *testing.T) {
 	}
 }
 
-func TestcpAddr(t *testing.T) {
+func TestXcpAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -181,7 +181,7 @@ func TestcpAddr(t *testing.T) {
 	}
 }
 
-func Testcpl(t *testing.T) {
+func TestXcpl(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -190,7 +190,7 @@ func Testcpl(t *testing.T) {
 	}
 }
 
-func Testdaa(t *testing.T) {
+func TestXdaa(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -199,7 +199,7 @@ func Testdaa(t *testing.T) {
 	}
 }
 
-func Testdec(t *testing.T) {
+func TestXdec(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -208,7 +208,7 @@ func Testdec(t *testing.T) {
 	}
 }
 
-func Testdec16(t *testing.T) {
+func TestXdec16(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -217,7 +217,7 @@ func Testdec16(t *testing.T) {
 	}
 }
 
-func TestdecSP(t *testing.T) {
+func TestXdecSP(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -226,7 +226,7 @@ func TestdecSP(t *testing.T) {
 	}
 }
 
-func TestdecAddr(t *testing.T) {
+func TestXdecAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -235,7 +235,7 @@ func TestdecAddr(t *testing.T) {
 	}
 }
 
-func Testdi(t *testing.T) {
+func TestXdi(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -244,7 +244,7 @@ func Testdi(t *testing.T) {
 	}
 }
 
-func Testei(t *testing.T) {
+func TestXei(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -253,7 +253,7 @@ func Testei(t *testing.T) {
 	}
 }
 
-func Testhalt(t *testing.T) {
+func TestXhalt(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -262,7 +262,7 @@ func Testhalt(t *testing.T) {
 	}
 }
 
-func Testinc(t *testing.T) {
+func TestXinc(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -271,7 +271,7 @@ func Testinc(t *testing.T) {
 	}
 }
 
-func Testinc16(t *testing.T) {
+func TestXinc16(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -280,7 +280,7 @@ func Testinc16(t *testing.T) {
 	}
 }
 
-func TestincSP(t *testing.T) {
+func TestXincSP(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -289,7 +289,7 @@ func TestincSP(t *testing.T) {
 	}
 }
 
-func TestincAddr(t *testing.T) {
+func TestXincAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -298,7 +298,7 @@ func TestincAddr(t *testing.T) {
 	}
 }
 
-func Testjp(t *testing.T) {
+func TestXjp(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -307,7 +307,7 @@ func Testjp(t *testing.T) {
 	}
 }
 
-func Testjr(t *testing.T) {
+func TestXjr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -316,7 +316,7 @@ func Testjr(t *testing.T) {
 	}
 }
 
-func Testld(t *testing.T) {
+func TestXld(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -325,7 +325,7 @@ func Testld(t *testing.T) {
 	}
 }
 
-func Testld16(t *testing.T) {
+func TestXld16(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -334,7 +334,7 @@ func Testld16(t *testing.T) {
 	}
 }
 
-func TestldFromAddr(t *testing.T) {
+func TestXldFromAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -343,7 +343,7 @@ func TestldFromAddr(t *testing.T) {
 	}
 }
 
-func TestldToAddr(t *testing.T) {
+func TestXldToAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -352,7 +352,7 @@ func TestldToAddr(t *testing.T) {
 	}
 }
 
-func TestldhFromAddr(t *testing.T) {
+func TestXldhFromAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -361,7 +361,7 @@ func TestldhFromAddr(t *testing.T) {
 	}
 }
 
-func TestldhToAddr(t *testing.T) {
+func TestXldhToAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -370,7 +370,7 @@ func TestldhToAddr(t *testing.T) {
 	}
 }
 
-func TestldAFromAddrC(t *testing.T) {
+func TestXldAFromAddrC(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -379,7 +379,7 @@ func TestldAFromAddrC(t *testing.T) {
 	}
 }
 
-func TestldAToAddrC(t *testing.T) {
+func TestXldAToAddrC(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -388,7 +388,7 @@ func TestldAToAddrC(t *testing.T) {
 	}
 }
 
-func TestldSP(t *testing.T) {
+func TestXldSP(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -397,7 +397,7 @@ func TestldSP(t *testing.T) {
 	}
 }
 
-func TestldHLToSP(t *testing.T) {
+func TestXldHLToSP(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -406,7 +406,7 @@ func TestldHLToSP(t *testing.T) {
 	}
 }
 
-func TestldSPToAddr(t *testing.T) {
+func TestXldSPToAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -415,7 +415,7 @@ func TestldSPToAddr(t *testing.T) {
 	}
 }
 
-func TestldSPToHL(t *testing.T) {
+func TestXldSPToHL(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -424,7 +424,7 @@ func TestldSPToHL(t *testing.T) {
 	}
 }
 
-func TestlddFromAddr(t *testing.T) {
+func TestXlddFromAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -433,7 +433,7 @@ func TestlddFromAddr(t *testing.T) {
 	}
 }
 
-func TestlddToAddr(t *testing.T) {
+func TestXlddToAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -442,7 +442,7 @@ func TestlddToAddr(t *testing.T) {
 	}
 }
 
-func TestldiFromAddr(t *testing.T) {
+func TestXldiFromAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -451,7 +451,7 @@ func TestldiFromAddr(t *testing.T) {
 	}
 }
 
-func TestldiToAddr(t *testing.T) {
+func TestXldiToAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -460,7 +460,7 @@ func TestldiToAddr(t *testing.T) {
 	}
 }
 
-func Testnop(t *testing.T) {
+func TestXnop(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -469,7 +469,7 @@ func Testnop(t *testing.T) {
 	}
 }
 
-func Testor(t *testing.T) {
+func TestXor(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -478,7 +478,7 @@ func Testor(t *testing.T) {
 	}
 }
 
-func TestorAddr(t *testing.T) {
+func TestXorAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -487,7 +487,7 @@ func TestorAddr(t *testing.T) {
 	}
 }
 
-func Testpop(t *testing.T) {
+func TestXpop(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -496,7 +496,7 @@ func Testpop(t *testing.T) {
 	}
 }
 
-func Testpush(t *testing.T) {
+func TestXpush(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -505,7 +505,7 @@ func Testpush(t *testing.T) {
 	}
 }
 
-func Testres(t *testing.T) {
+func TestXres(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -514,7 +514,7 @@ func Testres(t *testing.T) {
 	}
 }
 
-func TestresAddr(t *testing.T) {
+func TestXresAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -523,7 +523,7 @@ func TestresAddr(t *testing.T) {
 	}
 }
 
-func Testret(t *testing.T) {
+func TestXret(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -532,7 +532,7 @@ func Testret(t *testing.T) {
 	}
 }
 
-func Testreti(t *testing.T) {
+func TestXreti(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -541,16 +541,20 @@ func Testreti(t *testing.T) {
 	}
 }
 
-func Testrl(t *testing.T) {
+func TestRl(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{c: 0xa8, cf: false}, CPU{c: 0x50, cf: true}},
+		{CPU{c: 0xa8, cf: true}, CPU{c: 0x51, cf: true}},
+		{CPU{c: 0x15, cf: false}, CPU{c: 0x2a, cf: false}},
+		{CPU{c: 0x15, cf: true}, CPU{c: 0x2b, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
 	} {
-		// test.cpu.rl()
+		test.cpu.rl(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func TestrlAddr(t *testing.T) {
+func TestXrlAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -559,34 +563,46 @@ func TestrlAddr(t *testing.T) {
 	}
 }
 
-func Testrla(t *testing.T) {
+func TestRla(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{a: 0xa8, cf: false}, CPU{a: 0x50, cf: true}},
+		{CPU{a: 0xa8, cf: true}, CPU{a: 0x51, cf: true}},
+		{CPU{a: 0x15, cf: false}, CPU{a: 0x2a, cf: false}},
+		{CPU{a: 0x15, cf: true}, CPU{a: 0x2b, cf: false}},
+		{CPU{a: 0x00}, CPU{a: 0x00}},
 	} {
-		// test.cpu.rla()
+		test.cpu.rla()
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func Testrlc(t *testing.T) {
+func TestRlc(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{c: 0xa8, cf: false}, CPU{c: 0x51, cf: true}},
+		{CPU{c: 0xa8, cf: true}, CPU{c: 0x51, cf: true}},
+		{CPU{c: 0x15, cf: false}, CPU{c: 0x2a, cf: false}},
+		{CPU{c: 0x15, cf: true}, CPU{c: 0x2a, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
 	} {
-		// test.cpu.rlc()
+		test.cpu.rlc(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func Testrlca(t *testing.T) {
+func TestRlca(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{a: 0xa8, cf: false}, CPU{a: 0x51, cf: true}},
+		{CPU{a: 0xa8, cf: true}, CPU{a: 0x51, cf: true}},
+		{CPU{a: 0x15, cf: false}, CPU{a: 0x2a, cf: false}},
+		{CPU{a: 0x15, cf: true}, CPU{a: 0x2a, cf: false}},
+		{CPU{a: 0x00}, CPU{a: 0x00}},
 	} {
-		// test.cpu.rlca()
+		test.cpu.rlca()
 		compareCPUs(t, &test.expectedCPU, &test.cpu, nil)
 	}
 }
 
-func TestrlcAddr(t *testing.T) {
+func TestXrlcAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -595,7 +611,7 @@ func TestrlcAddr(t *testing.T) {
 	}
 }
 
-func Testrr(t *testing.T) {
+func TestXrr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -604,7 +620,7 @@ func Testrr(t *testing.T) {
 	}
 }
 
-func Testrra(t *testing.T) {
+func TestXrra(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -613,7 +629,7 @@ func Testrra(t *testing.T) {
 	}
 }
 
-func TestrrAddr(t *testing.T) {
+func TestXrrAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -622,7 +638,7 @@ func TestrrAddr(t *testing.T) {
 	}
 }
 
-func Testrrc(t *testing.T) {
+func TestXrrc(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -631,7 +647,7 @@ func Testrrc(t *testing.T) {
 	}
 }
 
-func Testrrca(t *testing.T) {
+func TestXrrca(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -640,7 +656,7 @@ func Testrrca(t *testing.T) {
 	}
 }
 
-func TestrrcAddr(t *testing.T) {
+func TestXrrcAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -649,7 +665,7 @@ func TestrrcAddr(t *testing.T) {
 	}
 }
 
-func Testrst(t *testing.T) {
+func TestXrst(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -673,7 +689,7 @@ func TestSet(t *testing.T) {
 	}
 }
 
-func Testsla(t *testing.T) {
+func TestXsla(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -682,7 +698,7 @@ func Testsla(t *testing.T) {
 	}
 }
 
-func TestslaAddr(t *testing.T) {
+func TestXslaAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -691,7 +707,7 @@ func TestslaAddr(t *testing.T) {
 	}
 }
 
-func Testsra(t *testing.T) {
+func TestXsra(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -700,7 +716,7 @@ func Testsra(t *testing.T) {
 	}
 }
 
-func TestsraAddr(t *testing.T) {
+func TestXsraAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -709,7 +725,7 @@ func TestsraAddr(t *testing.T) {
 	}
 }
 
-func Testsrl(t *testing.T) {
+func TestXsrl(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -718,7 +734,7 @@ func Testsrl(t *testing.T) {
 	}
 }
 
-func TestsrlAddr(t *testing.T) {
+func TestXsrlAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -727,7 +743,7 @@ func TestsrlAddr(t *testing.T) {
 	}
 }
 
-func Testswap(t *testing.T) {
+func TestXswap(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -736,7 +752,7 @@ func Testswap(t *testing.T) {
 	}
 }
 
-func TestswapAddr(t *testing.T) {
+func TestXswapAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -745,7 +761,7 @@ func TestswapAddr(t *testing.T) {
 	}
 }
 
-func Testscf(t *testing.T) {
+func TestXscf(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -754,7 +770,7 @@ func Testscf(t *testing.T) {
 	}
 }
 
-func Teststop(t *testing.T) {
+func TestXstop(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -763,7 +779,7 @@ func Teststop(t *testing.T) {
 	}
 }
 
-func Testsbc(t *testing.T) {
+func TestXsbc(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -772,7 +788,7 @@ func Testsbc(t *testing.T) {
 	}
 }
 
-func TestsbcAddr(t *testing.T) {
+func TestXsbcAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -781,7 +797,7 @@ func TestsbcAddr(t *testing.T) {
 	}
 }
 
-func Testsub(t *testing.T) {
+func TestXsub(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -790,7 +806,7 @@ func Testsub(t *testing.T) {
 	}
 }
 
-func TestsubAddr(t *testing.T) {
+func TestXsubAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -799,7 +815,7 @@ func TestsubAddr(t *testing.T) {
 	}
 }
 
-func Testxor(t *testing.T) {
+func TestXxor(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
@@ -808,7 +824,7 @@ func Testxor(t *testing.T) {
 	}
 }
 
-func TestxorAddr(t *testing.T) {
+func TestXxorAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{}},
 	} {
