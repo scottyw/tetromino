@@ -455,9 +455,9 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	case 0xf8:
 		cpu.ldSPToHL(int8(u8)) // LD HL SP+r8 [0 0 H C]
 	case 0xe0:
-		cpu.ldhToAddr(u8, mem) // LDH (a8) A []
+		cpu.ldhToAddr(int8(u8), mem) // LDH (a8) A []
 	case 0xf0:
-		cpu.ldhFromAddr(u8, mem) // LDH A (a8) []
+		cpu.ldhFromAddr(int8(u8), mem) // LDH A (a8) []
 	case 0xf6:
 		cpu.or(u8) // OR d8  [Z 0 0 0]
 	case 0xde:

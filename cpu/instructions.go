@@ -161,8 +161,8 @@ func (cpu *CPU) jp(kind string, u16 uint16) {
 }
 
 func (cpu *CPU) jr(kind string, i8 int8) {
-	address := int16(cpu.pc) + int16(i8)
-	cpu.jp(kind, uint16(address))
+	address := uint16(int16(cpu.pc) + int16(i8))
+	cpu.jp(kind, address)
 }
 
 func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
@@ -181,12 +181,14 @@ func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem mem.Memory) {
 	*mem.Read(a16) = u8
 }
 
-func (cpu *CPU) ldhFromAddr(a8 uint8, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for ldhFromAddr: %v", a8))
+func (cpu *CPU) ldhFromAddr(i8 int8, mem mem.Memory) {
+	address := uint16(0xff + int16(i8))
+	cpu.a = *mem.Read(address)
 }
 
-func (cpu *CPU) ldhToAddr(a8 uint8, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for ldhToAddr: %v", a8))
+func (cpu *CPU) ldhToAddr(i8 int8, mem mem.Memory) {
+	address := uint16(0xff + int16(i8))
+	*mem.Read(address) = cpu.a
 }
 
 func (cpu *CPU) ldAFromAddrC() {
