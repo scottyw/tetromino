@@ -37,8 +37,8 @@ func (cpu *CPU) addHL(u16 uint16) {
 	cpu.flags(cpu.zf, false, h16(old, hl.Get()), c16(old, hl.Get())) // [- 0 H C]
 }
 
-func (cpu *CPU) addSP(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for addSP: %v", u8))
+func (cpu *CPU) addSP(i8 int8) {
+	panic(fmt.Sprintf("Missing implementation for addSP: %v", i8))
 }
 
 func (cpu *CPU) addAddr(a16 uint16, mem mem.Memory) {
@@ -160,8 +160,9 @@ func (cpu *CPU) jp(kind string, u16 uint16) {
 	}
 }
 
-func (cpu *CPU) jr(kind string, u8 uint8) {
-	cpu.jp(kind, cpu.pc+uint16(u8))
+func (cpu *CPU) jr(kind string, i8 int8) {
+	address := int16(cpu.pc) + int16(i8)
+	cpu.jp(kind, uint16(address))
 }
 
 func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
@@ -197,7 +198,7 @@ func (cpu *CPU) ldAToAddrC() {
 }
 
 func (cpu *CPU) ldSP(u16 uint16) {
-	panic(fmt.Sprintf("Missing implementation for ldSP: %v", u16))
+	cpu.sp = u16
 }
 
 func (cpu *CPU) ldHLToSP() {
@@ -205,11 +206,12 @@ func (cpu *CPU) ldHLToSP() {
 }
 
 func (cpu *CPU) ldSPToAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for ldSPToAddr: %v", a16))
+	*mem.Read(a16) = uint8(cpu.sp >> 8)
+	*mem.Read(a16 + 1) = uint8(cpu.sp | 0x0f)
 }
 
-func (cpu *CPU) ldSPToHL(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for ldSPToHL: %v", u8))
+func (cpu *CPU) ldSPToHL(i8 int8) {
+	panic(fmt.Sprintf("Missing implementation for ldSPToHL: %v", i8))
 }
 
 func (cpu *CPU) lddFromAddr(mem mem.Memory) {
@@ -280,7 +282,7 @@ func (cpu *CPU) rl(r8 *uint8) {
 }
 
 func (cpu *CPU) rlAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for rlAddr: %v", a16))
+	cpu.rl(mem.Read(a16))
 }
 
 func (cpu *CPU) rla() {
@@ -303,7 +305,7 @@ func (cpu *CPU) rlca() {
 }
 
 func (cpu *CPU) rlcAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for rlcAddr: %v", a16))
+	cpu.rlc(mem.Read(a16))
 }
 
 func (cpu *CPU) rr(r8 *uint8) {
@@ -320,7 +322,7 @@ func (cpu *CPU) rra() {
 }
 
 func (cpu *CPU) rrAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for rrAddr: %v", a16))
+	cpu.rr(mem.Read(a16))
 }
 
 func (cpu *CPU) rrc(r8 *uint8) {
@@ -337,7 +339,7 @@ func (cpu *CPU) rrca() {
 }
 
 func (cpu *CPU) rrcAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for rrcAddr: %v", a16))
+	cpu.rrc(mem.Read(a16))
 }
 
 func (cpu *CPU) rst(u8 uint8) {
@@ -401,7 +403,9 @@ func (cpu *CPU) sbcAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) sub(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for sub: %v", u8))
+	a := cpu.a
+	cpu.a -= u8
+	cpu.flags(z(cpu.a), false, h(cpu.a, a), c(cpu.a, a)) // [Z 0 H C]
 }
 
 func (cpu *CPU) subAddr(a16 uint16, mem mem.Memory) {

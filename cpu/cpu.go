@@ -158,6 +158,9 @@ func (cpu *CPU) execute(mem mem.Memory) {
 	cpu.checkInterrupts(mem)
 	instruction := *mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
+	if im.Addr == "" {
+		panic(fmt.Sprintf("Unknown instruction opcode: %v", instruction))
+	}
 	if instruction == 0xcb {
 		instruction := *mem.Read(cpu.pc + 1)
 		fmt.Printf("0xcb%02x : %v\n", cpu.pc, im)
@@ -166,17 +169,17 @@ func (cpu *CPU) execute(mem mem.Memory) {
 	} else {
 		switch im.Length {
 		case 1:
-			fmt.Printf("0x%02x : %v\n", cpu.pc, im)
+			fmt.Printf("0x%04x : %v\n", cpu.pc, im)
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
 			u8 := *mem.Read(cpu.pc + 1)
-			fmt.Printf("0x%02x : %v u8=0x%02x\n", cpu.pc, im, u8)
+			fmt.Printf("0x%04x : %v u8=0x%02x\n", cpu.pc, im, u8)
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
 			u16 := uint16(*mem.Read(cpu.pc + 1)) | uint16(*mem.Read(cpu.pc + 2))<<8
-			fmt.Printf("0x%02x : %v u8=0x%04x\n", cpu.pc, im, u16)
+			fmt.Printf("0x%04x : %v u16=0x%04x\n", cpu.pc, im, u16)
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
 		}

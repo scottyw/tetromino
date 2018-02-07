@@ -423,19 +423,19 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	case 0xe6:
 		cpu.and(u8) // AND d8  [Z 0 1 0]
 	case 0xe8:
-		cpu.addSP(u8) // ADD SP r8 [0 0 H C]
+		cpu.addSP(int8(u8)) // ADD SP r8 [0 0 H C]
 	case 0xfe:
 		cpu.cp(u8) // CP d8  [Z 1 H C]
 	case 0x38:
-		cpu.jr("C", u8) // JR C r8 []
+		cpu.jr("C", int8(u8)) // JR C r8 []
 	case 0x30:
-		cpu.jr("NC", u8) // JR NC r8 []
+		cpu.jr("NC", int8(u8)) // JR NC r8 []
 	case 0x20:
-		cpu.jr("NZ", u8) // JR NZ r8 []
+		cpu.jr("NZ", int8(u8)) // JR NZ r8 []
 	case 0x18:
-		cpu.jr("", u8) // JR r8  []
+		cpu.jr("", int8(u8)) // JR r8  []
 	case 0x28:
-		cpu.jr("Z", u8) // JR Z r8 []
+		cpu.jr("Z", int8(u8)) // JR Z r8 []
 	case 0x3e:
 		cpu.ld(&cpu.a, u8) // LD A d8 []
 	case 0x06:
@@ -453,7 +453,7 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	case 0x36:
 		cpu.ldToAddr(cpu.hl().Get(), u8, mem) // LD (HL) d8 []
 	case 0xf8:
-		cpu.ldSPToHL(u8) // LD HL SP+r8 [0 0 H C]
+		cpu.ldSPToHL(int8(u8)) // LD HL SP+r8 [0 0 H C]
 	case 0xe0:
 		cpu.ldhToAddr(u8, mem) // LDH (a8) A []
 	case 0xf0:
