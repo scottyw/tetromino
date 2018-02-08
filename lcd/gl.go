@@ -5,8 +5,9 @@ import (
 	"image"
 	"image/color"
 	"log"
-	"math/rand"
 	"runtime"
+
+	"github.com/scottyw/goomba/mem"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -73,17 +74,42 @@ func drawBuffer(window *glfw.Window) {
 	gl.End()
 }
 
-func makeImage() *image.RGBA {
+func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
+	switch pixel {
+	case 0:
+		im.SetRGBA(x, y, color.RGBA{0xff, 0xff, 0xff, 0xff})
+	case 1:
+		im.SetRGBA(x, y, color.RGBA{0xa8, 0xa8, 0xa8, 0xff})
+	case 2:
+		im.SetRGBA(x, y, color.RGBA{0x54, 0x54, 0x54, 0xff})
+	case 3:
+		im.SetRGBA(x, y, color.RGBA{0x00, 0x00, 0x00, 0xff})
+	default:
+		panic(fmt.Sprintf("Bad pixel: %v", pixel))
+	}
+}
+
+func makeImage(mem mem.Memory) *image.RGBA {
 	im := image.NewRGBA(image.Rect(0, 0, 256, 256))
-	for x := 0; x < 256; x++ {
-		for y := 0; y < 256; y++ {
-			im.SetRGBA(x, y, color.RGBA{uint8(rand.Intn(256)), uint8(rand.Intn(256)), uint8(rand.Intn(256)), 0xFF})
+	var i uint16
+	for i = 0x0000; i < 0x4000; i += 16 {
+		tile := (int(i) - 0x0000) / 16
+		xOffset := (tile % 32) * 8
+		yOffset := (tile / 32) * 8
+		for y := 0; y < 8; y++ {
+			a := *mem.Read(i + uint16((y * 2)))
+			b := *mem.Read(i + uint16((y*2)+1))
+			for x := 0; x < 8; x++ {
+				pixel := (a>>uint(7-x))&1 | ((b>>uint(7-x))&1)<<1
+				renderPixel(im, xOffset+x, yOffset+y, pixel)
+			}
 		}
 	}
 	return im
 }
 
-func Run() {
+// Run the render frantically, not merely once per frame ...
+func Run(mem mem.Memory) {
 
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
@@ -94,6 +120,7 @@ func Run() {
 	// create window
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.Resizable, 0)
 	window, err := glfw.CreateWindow(512, 512, "goomba", nil, nil)
 	if err != nil {
 		log.Fatalln(err)
@@ -112,7 +139,8 @@ func Run() {
 	for !window.ShouldClose() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.BindTexture(gl.TEXTURE_2D, texture)
-		setTexture(makeImage())
+		image := makeImage(mem)
+		setTexture(image)
 		drawBuffer(window)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 		window.SwapBuffers()
