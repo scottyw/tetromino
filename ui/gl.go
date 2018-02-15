@@ -1,4 +1,4 @@
-package lcd
+package ui
 
 import (
 	"fmt"
@@ -7,11 +7,68 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/scottyw/goomba/mem"
-
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/scottyw/goomba/lcd"
 )
+
+// GL maintains state for the GL UI implementation
+type GL struct {
+	window  *glfw.Window
+	texture uint32
+}
+
+// NewGL implements a user interface in GL
+func NewGL() UI {
+	// initialize glfw
+	if err := glfw.Init(); err != nil {
+		log.Fatalln(err)
+	}
+
+	// create window
+	glfw.WindowHint(glfw.ContextVersionMajor, 2)
+	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.Resizable, 0)
+	window, err := glfw.CreateWindow(512, 512, "goomba", nil, nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	window.MakeContextCurrent()
+
+	// initialize gl
+	if err := gl.Init(); err != nil {
+		log.Fatalln(err)
+	}
+	gl.Enable(gl.TEXTURE_2D)
+
+	// window.SetKeyCallback(onKey) // FIXME
+	return &GL{
+		window:  window,
+		texture: createTexture(),
+	}
+}
+
+// ShouldRun indicates whether the emulator should be running e.g. stop when the GL window is closed
+func (glx *GL) ShouldRun() bool {
+	return !glx.window.ShouldClose()
+}
+
+// Shutdown the GL framework
+func (glx *GL) Shutdown() {
+	glfw.Terminate()
+}
+
+// DrawFrame draws a frame to the GL window
+func (glx *GL) DrawFrame(lcd *lcd.LCD) {
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
+	image := renderFrame(lcd.FrameData())
+	setTexture(image)
+	drawBuffer(glx.window)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+	glx.window.SwapBuffers()
+	glfw.PollEvents()
+}
 
 func init() {
 	// we need a parallel OS thread to avoid audio stuttering
@@ -19,15 +76,6 @@ func init() {
 
 	// we need to keep OpenGL calls on a single thread
 	runtime.LockOSThread()
-}
-
-func onKey(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-	if action == glfw.Press {
-		if key == glfw.KeySpace {
-			fmt.Println("Pressed space")
-		}
-	}
-	fmt.Printf("Pressed %v\n", key)
 }
 
 func createTexture() uint32 {
@@ -89,62 +137,22 @@ func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
 	}
 }
 
-func makeImage(mem mem.Memory) *image.RGBA {
+func renderFrame(data [65536]uint8) *image.RGBA {
 	im := image.NewRGBA(image.Rect(0, 0, 256, 256))
-	var i uint16
-	for i = 0x0000; i < 0x4000; i += 16 {
-		tile := (int(i) - 0x0000) / 16
-		xOffset := (tile % 32) * 8
-		yOffset := (tile / 32) * 8
-		for y := 0; y < 8; y++ {
-			a := *mem.Read(i + uint16((y * 2)))
-			b := *mem.Read(i + uint16((y*2)+1))
-			for x := 0; x < 8; x++ {
-				pixel := (a>>uint(7-x))&1 | ((b>>uint(7-x))&1)<<1
-				renderPixel(im, xOffset+x, yOffset+y, pixel)
-			}
+	for y := 0; y < 256; y++ {
+		for x := 0; x < 256; x++ {
+			pixel := data[y*256+x]
+			renderPixel(im, x, y, pixel)
 		}
 	}
 	return im
 }
 
-// Run the render frantically, not merely once per frame ...
-func Run(mem mem.Memory) {
-
-	// initialize glfw
-	if err := glfw.Init(); err != nil {
-		log.Fatalln(err)
-	}
-	defer glfw.Terminate()
-
-	// create window
-	glfw.WindowHint(glfw.ContextVersionMajor, 2)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
-	glfw.WindowHint(glfw.Resizable, 0)
-	window, err := glfw.CreateWindow(512, 512, "goomba", nil, nil)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	window.MakeContextCurrent()
-
-	// initialize gl
-	if err := gl.Init(); err != nil {
-		log.Fatalln(err)
-	}
-	gl.Enable(gl.TEXTURE_2D)
-
-	window.SetKeyCallback(onKey)
-	texture := createTexture()
-
-	for !window.ShouldClose() {
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-		gl.BindTexture(gl.TEXTURE_2D, texture)
-		image := makeImage(mem)
-		setTexture(image)
-		drawBuffer(window)
-		gl.BindTexture(gl.TEXTURE_2D, 0)
-		window.SwapBuffers()
-		glfw.PollEvents()
-	}
-
-}
+// func onKey(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+// 	if action == glfw.Press {
+// 		if key == glfw.KeySpace {
+// 			fmt.Println("Pressed space")
+// 		}
+// 	}
+// 	fmt.Printf("Pressed %v\n", key)
+// }
