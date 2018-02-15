@@ -154,7 +154,6 @@ func (cpu *CPU) checkInterrupts(mem mem.Memory) {
 }
 
 func (cpu *CPU) execute(mem mem.Memory) {
-	defer mem.GenerateCrashReport()
 	cpu.checkInterrupts(mem)
 	instruction := *mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
@@ -163,23 +162,23 @@ func (cpu *CPU) execute(mem mem.Memory) {
 	}
 	if instruction == 0xcb {
 		instruction := *mem.Read(cpu.pc + 1)
-		fmt.Printf("0xcb%02x : %v\n", cpu.pc, im)
+		fmt.Printf("0xcb%02x : %v\n%v\n\n", cpu.pc, im, cpu)
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
 	} else {
 		switch im.Length {
 		case 1:
-			fmt.Printf("0x%04x : %v\n", cpu.pc, im)
+			fmt.Printf("0x%04x : %v\n%v\n\n", cpu.pc, im, cpu)
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
 			u8 := *mem.Read(cpu.pc + 1)
-			fmt.Printf("0x%04x : %v u8=0x%02x\n", cpu.pc, im, u8)
+			fmt.Printf("0x%04x : %v u8=0x%02x\n%v\n\n", cpu.pc, im, u8, cpu)
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
 			u16 := uint16(*mem.Read(cpu.pc + 1)) | uint16(*mem.Read(cpu.pc + 2))<<8
-			fmt.Printf("0x%04x : %v u16=0x%04x\n", cpu.pc, im, u16)
+			fmt.Printf("0x%04x : %v u16=0x%04x\n%v\n\n", cpu.pc, im, u16, cpu)
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
 		}

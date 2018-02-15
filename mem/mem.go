@@ -9,7 +9,6 @@ import (
 type Memory interface {
 	Read(uint16) *byte
 	ReadRegion(uint16, uint16) []byte
-	GenerateCrashReport()
 }
 
 type memory struct {
@@ -105,7 +104,6 @@ func (mem memory) ReadRegion(addr uint16, size uint16) []byte {
 func (mem memory) GenerateCrashReport() {
 	if r := recover(); r != nil {
 		ioutil.WriteFile("memory.bin", mem.mem, 0644)
-		// drawWindow()
 		panic(r)
 	}
 }

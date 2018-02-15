@@ -182,12 +182,12 @@ func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem mem.Memory) {
 }
 
 func (cpu *CPU) ldhFromAddr(i8 int8, mem mem.Memory) {
-	address := uint16(0xff + int16(i8))
+	address := uint16(0xff00 + int(i8))
 	cpu.a = *mem.Read(address)
 }
 
 func (cpu *CPU) ldhToAddr(i8 int8, mem mem.Memory) {
-	address := uint16(0xff + int16(i8))
+	address := uint16(0xff00 + int(i8))
 	*mem.Read(address) = cpu.a
 }
 
