@@ -8,6 +8,7 @@ import (
 // Memory allows read and write access to memory
 type Memory interface {
 	Read(uint16) *byte
+	ReadRegion(uint16, uint16) []byte
 	GenerateCrashReport()
 }
 
@@ -93,6 +94,11 @@ func (mem memory) Read(addr uint16) *byte {
 	// 	fmt.Printf("DEBUG: Read %s - 0x%04x\n", region(addr), addr)
 	// }
 	return &mem.mem[addr]
+}
+
+// ReadRegion of memory
+func (mem memory) ReadRegion(addr uint16, size uint16) []byte {
+	return mem.mem[addr : addr+size]
 }
 
 // GenerateCrashReport writes the contents of the whole address space to file

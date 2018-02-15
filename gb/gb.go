@@ -32,7 +32,7 @@ func (gb Gameboy) runFrame() {
 		gb.lcd.Tick(gb.mem, cycle)
 		gb.cpu.Tick(gb.mem)
 	}
-	gb.ui.DrawFrame(gb.lcd)
+	gb.ui.DrawFrame(gb.lcd, gb.mem)
 }
 
 // Run the Gameboy

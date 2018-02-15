@@ -7,6 +7,8 @@ import (
 	"log"
 	"runtime"
 
+	"github.com/scottyw/goomba/mem"
+
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/scottyw/goomba/lcd"
@@ -59,10 +61,10 @@ func (glx *GL) Shutdown() {
 }
 
 // DrawFrame draws a frame to the GL window
-func (glx *GL) DrawFrame(lcd *lcd.LCD) {
+func (glx *GL) DrawFrame(lcd *lcd.LCD, mem mem.Memory) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
-	image := renderFrame(lcd.FrameData())
+	image := renderFrame(lcd.FrameData(mem))
 	setTexture(image)
 	drawBuffer(glx.window)
 	gl.BindTexture(gl.TEXTURE_2D, 0)

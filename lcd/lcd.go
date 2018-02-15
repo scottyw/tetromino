@@ -47,26 +47,49 @@ func (lcd *LCD) Tick(mem mem.Memory, cycle int) {
 	case lyRemainder == 63:
 		stat |= 0x08
 	}
-	*mem.Read(0xff41) = stat // STAT register
-	*mem.Read(0xff44) = ly   // LY register
+	*mem.Read(statReg) = stat
+	*mem.Read(lyReg) = ly
 }
 
 // FrameData returns the frame data as a 256x256 array of bytes where each element is a colour value between 0 and 3
-func (lcd *LCD) FrameData() [65536]uint8 {
-	lcd.drawBackground()
+func (lcd *LCD) FrameData(mem mem.Memory) [65536]uint8 {
+	lcd.drawTiles(mem, highBgTileMapDisplaySelect)
+	if windowDisplayEnable(mem) {
+		lcd.drawTiles(mem, highWindowTileMapDisplaySelect)
+	}
 	return lcd.data
 }
 
-func (lcd *LCD) drawBackground() {
-
-	// a := *mem.Read(i + uint16((y * 2)))
-	// 		b := *mem.Read(i + uint16((y*2)+1))
-	// 		for x := 0; x < 8; x++ {
-	// 			pixel := (a>>uint(7-x))&1 | ((b>>uint(7-x))&1)<<1
-	// 		}
-
-	for i := 0; i < 65536; i++ {
-		lcd.data[i] = uint8(i % 4)
+// Returns 16 bytes representing one 8x8 tile
+func tileData(mem mem.Memory, tile uint16, displaySelect func(mem.Memory) bool) []byte {
+	var tileAddr uint16
+	if displaySelect(mem) {
+		tileAddr = 0x9c00 + tile
+	} else {
+		tileAddr = 0x9800 + tile
 	}
+	tileIndex := mem.Read(tileAddr)
+	if lowTileDataSelect(mem) {
+		return mem.ReadRegion(uint16(0x8000+uint(*tileIndex)), 16)
+	}
+	return mem.ReadRegion(uint16(0x9000+int(*tileIndex)), 16)
+}
 
+func (lcd *LCD) drawTiles(mem mem.Memory, displaySelect func(mem.Memory) bool) {
+	var x, y, row, col uint16
+	var pixel uint8
+	for y = 0; y < 32; y++ {
+		for x = 0; x < 32; x++ {
+			tile := tileData(mem, y*32+x, displaySelect)
+			for row = 0; row < 8; row++ {
+				a := tile[row*2]
+				b := tile[row*2+1]
+				for col = 0; col < 8; col++ {
+					pixel = (a>>uint(7-col))&1 | ((b>>uint(7-col))&1)<<1
+					index := (((y * 8) + row) * 256) + ((x * 8) + col)
+					lcd.data[index] = pixel
+				}
+			}
+		}
+	}
 }
