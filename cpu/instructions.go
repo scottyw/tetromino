@@ -229,11 +229,15 @@ func (cpu *CPU) lddToAddr(mem mem.Memory) {
 }
 
 func (cpu *CPU) ldiFromAddr(mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for ldiFromAddr"))
+	hl := cpu.hl()
+	cpu.ldFromAddr(&cpu.a, hl.Get(), mem)
+	cpu.inc16(hl)
 }
 
 func (cpu *CPU) ldiToAddr(mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for ldiToAddr"))
+	hl := cpu.hl()
+	cpu.ldToAddr(hl.Get(), cpu.a, mem)
+	cpu.inc16(hl)
 }
 
 func (cpu *CPU) nop() {
