@@ -63,8 +63,33 @@ func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
 	cpu.bit(pos, *mem.Read(a16))
 }
 
-func (cpu *CPU) call(kind string, u16 uint16) {
-	panic(fmt.Sprintf("Missing implementation for call: %v %v", kind, u16))
+func (cpu *CPU) call(kind string, u16 uint16, mem mem.Memory) {
+	switch kind {
+	case "":
+		*mem.Read(cpu.sp) = byte(cpu.pc & 0xff)
+		cpu.sp--
+		*mem.Read(cpu.sp) = byte(cpu.pc >> 8)
+		cpu.sp--
+		cpu.pc = u16
+	case "NZ":
+		if !cpu.zf {
+			cpu.call("", u16, mem)
+		}
+	case "Z":
+		if cpu.zf {
+			cpu.call("", u16, mem)
+		}
+	case "NC":
+		if !cpu.cf {
+			cpu.call("", u16, mem)
+		}
+	case "C":
+		if cpu.cf {
+			cpu.call("", u16, mem)
+		}
+	default:
+		panic(fmt.Sprintf("Missing implementation for call: %v %v", kind, u16))
+	}
 }
 
 func (cpu *CPU) ccf() {
@@ -102,7 +127,7 @@ func (cpu *CPU) decSP() {
 }
 
 func (cpu *CPU) decAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for decAddr: %v", a16))
+	cpu.dec(mem.Read(a16))
 }
 
 func (cpu *CPU) di() {
@@ -132,7 +157,7 @@ func (cpu *CPU) incSP() {
 }
 
 func (cpu *CPU) incAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for incAddr: %v", a16))
+	cpu.inc(mem.Read(a16))
 }
 
 func (cpu *CPU) jp(kind string, u16 uint16) {
@@ -254,12 +279,26 @@ func (cpu *CPU) orAddr(a16 uint16, mem mem.Memory) {
 	cpu.or(*mem.Read(a16))
 }
 
-func (cpu *CPU) pop(r16 register16) {
-	panic(fmt.Sprintf("Missing implementation for pop:   %v", r16))
+func (cpu *CPU) pop(r16 register16, mem mem.Memory) {
+	cpu.sp++
+	r16.SetMsb(*mem.Read(cpu.sp))
+	cpu.sp++
+	r16.SetLsb(*mem.Read(cpu.sp))
 }
 
-func (cpu *CPU) push(r16 register16) {
-	panic(fmt.Sprintf("Missing implementation for push:   %v", r16))
+func (cpu *CPU) popAF(mem mem.Memory) {
+	cpu.pop(cpu.af(), mem)
+	cpu.zf = cpu.f&8 > 1
+	cpu.nf = cpu.f&4 > 1
+	cpu.hf = cpu.f&2 > 1
+	cpu.cf = cpu.f&1 > 1
+}
+
+func (cpu *CPU) push(r16 register16, mem mem.Memory) {
+	*mem.Read(cpu.sp) = r16.GetLsb()
+	cpu.sp--
+	*mem.Read(cpu.sp) = r16.GetMsb()
+	cpu.sp--
 }
 
 func (cpu *CPU) res(pos uint8, r8 *uint8) {
@@ -270,12 +309,38 @@ func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem mem.Memory) {
 	cpu.res(pos, mem.Read(a16))
 }
 
-func (cpu *CPU) ret(kind string) {
-	panic(fmt.Sprintf("Missing implementation for ret:   %v", kind))
+func (cpu *CPU) ret(kind string, mem mem.Memory) {
+	switch kind {
+	case "":
+		cpu.sp++
+		msb := *mem.Read(cpu.sp)
+		cpu.sp++
+		lsb := *mem.Read(cpu.sp)
+		cpu.pc = uint16(msb)<<8 | uint16(lsb)
+	case "NZ":
+		if !cpu.zf {
+			cpu.ret("", mem)
+		}
+	case "Z":
+		if cpu.zf {
+			cpu.ret("", mem)
+		}
+	case "NC":
+		if !cpu.cf {
+			cpu.ret("", mem)
+		}
+	case "C":
+		if cpu.cf {
+			cpu.ret("", mem)
+		}
+	default:
+		panic(fmt.Sprintf("Missing implementation for ret"))
+	}
 }
 
-func (cpu *CPU) reti() {
-	panic(fmt.Sprintf("Missing implementation for reti"))
+func (cpu *CPU) reti(mem mem.Memory) {
+	cpu.ret("", mem)
+	cpu.ei()
 }
 
 func (cpu *CPU) rl(r8 *uint8) {

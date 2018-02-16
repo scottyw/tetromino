@@ -96,8 +96,8 @@ func (mem memory) Read(addr uint16) *byte {
 }
 
 // ReadRegion of memory
-func (mem memory) ReadRegion(addr uint16, size uint16) []byte {
-	return mem.mem[addr : addr+size]
+func (mem memory) ReadRegion(startAddr, length uint16) []byte {
+	return mem.mem[startAddr : startAddr+length]
 }
 
 // GenerateCrashReport writes the contents of the whole address space to file

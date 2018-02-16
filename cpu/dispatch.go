@@ -306,33 +306,33 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0xb5:
 		cpu.or(cpu.l) // OR L  [Z 0 0 0]
 	case 0xf1:
-		cpu.pop(cpu.af()) // POP AF  [Z N H C]
+		cpu.popAF(mem) // POP AF  [Z N H C]
 	case 0xc1:
-		cpu.pop(cpu.bc()) // POP BC  []
+		cpu.pop(cpu.bc(), mem) // POP BC  []
 	case 0xd1:
-		cpu.pop(cpu.de()) // POP DE  []
+		cpu.pop(cpu.de(), mem) // POP DE  []
 	case 0xe1:
-		cpu.pop(cpu.hl()) // POP HL  []
+		cpu.pop(cpu.hl(), mem) // POP HL  []
 	case 0xf5:
-		cpu.push(cpu.af()) // PUSH AF  []
+		cpu.push(cpu.af(), mem) // PUSH AF  []
 	case 0xc5:
-		cpu.push(cpu.bc()) // PUSH BC  []
+		cpu.push(cpu.bc(), mem) // PUSH BC  []
 	case 0xd5:
-		cpu.push(cpu.de()) // PUSH DE  []
+		cpu.push(cpu.de(), mem) // PUSH DE  []
 	case 0xe5:
-		cpu.push(cpu.hl()) // PUSH HL  []
+		cpu.push(cpu.hl(), mem) // PUSH HL  []
 	case 0xc9:
-		cpu.ret("") // RET   []
+		cpu.ret("", mem) // RET   []
 	case 0xd8:
-		cpu.ret("C") // RET C  []
+		cpu.ret("C", mem) // RET C  []
 	case 0xd0:
-		cpu.ret("NC") // RET NC  []
+		cpu.ret("NC", mem) // RET NC  []
 	case 0xc0:
-		cpu.ret("NZ") // RET NZ  []
+		cpu.ret("NZ", mem) // RET NZ  []
 	case 0xc8:
-		cpu.ret("Z") // RET Z  []
+		cpu.ret("Z", mem) // RET Z  []
 	case 0xd9:
-		cpu.reti() // RETI   []
+		cpu.reti(mem) // RETI   []
 	case 0x17:
 		cpu.rla() // RLA   [0 0 0 C]
 	case 0x07:
@@ -474,15 +474,15 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 func (cpu *CPU) dispatchThreeByteInstruction(mem mem.Memory, instruction uint8, u16 uint16) {
 	switch instruction {
 	case 0xcd:
-		cpu.call("", u16) // CALL a16  []
+		cpu.call("", u16, mem) // CALL a16  []
 	case 0xdc:
-		cpu.call("C", u16) // CALL C a16 []
+		cpu.call("C", u16, mem) // CALL C a16 []
 	case 0xd4:
-		cpu.call("NC", u16) // CALL NC a16 []
+		cpu.call("NC", u16, mem) // CALL NC a16 []
 	case 0xc4:
-		cpu.call("NZ", u16) // CALL NZ a16 []
+		cpu.call("NZ", u16, mem) // CALL NZ a16 []
 	case 0xcc:
-		cpu.call("Z", u16) // CALL Z a16 []
+		cpu.call("Z", u16, mem) // CALL Z a16 []
 	case 0xc3:
 		cpu.jp("", u16) // JP a16  []
 	case 0xda:
