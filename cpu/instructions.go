@@ -451,11 +451,13 @@ func (cpu *CPU) srlAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) swap(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for swap: %v", r8))
+	u8 := *r8
+	*r8 = u8<<4 | u8>>4
+	cpu.flags(z(*r8), false, false, false)
 }
 
 func (cpu *CPU) swapAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for swapAddr: %v", a16))
+	cpu.swap(mem.Read(a16))
 }
 
 func (cpu *CPU) scf() {

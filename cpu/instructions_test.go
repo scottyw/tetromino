@@ -748,20 +748,25 @@ func TestXsrlAddr(t *testing.T) {
 	}
 }
 
-func TestXswap(t *testing.T) {
+func TestSwap(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{c: 0x15, cf: true}, CPU{c: 0x51}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
 	} {
-		// test.cpu.swap()
+		test.cpu.swap(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
 
-func TestXswapAddr(t *testing.T) {
+func TestSwapAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{cf: true}, CPU{}},
 	} {
-		// test.cpu.swapAddr()
+		actual := mem.NewMemory()
+		*actual.Read(0x1233) = 0xba
+		test.cpu.swapAddr(0x1233, actual)
+		expected := mem.NewMemory()
+		*expected.Read(0x1233) = 0xab
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
