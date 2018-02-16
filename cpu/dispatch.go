@@ -342,21 +342,21 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x0f:
 		cpu.rrca() // RRCA   [0 0 0 C]
 	case 0xc7:
-		cpu.rst(0x00) // RST 00H  []
+		cpu.rst(0x0000, mem) // RST 00H  []
 	case 0xcf:
-		cpu.rst(0x08) // RST 08H  []
+		cpu.rst(0x0008, mem) // RST 08H  []
 	case 0xd7:
-		cpu.rst(0x10) // RST 10H  []
+		cpu.rst(0x0010, mem) // RST 10H  []
 	case 0xdf:
-		cpu.rst(0x18) // RST 18H  []
+		cpu.rst(0x0018, mem) // RST 18H  []
 	case 0xe7:
-		cpu.rst(0x20) // RST 20H  []
+		cpu.rst(0x0020, mem) // RST 20H  []
 	case 0xef:
-		cpu.rst(0x28) // RST 28H  []
+		cpu.rst(0x0028, mem) // RST 28H  []
 	case 0xf7:
-		cpu.rst(0x30) // RST 30H  []
+		cpu.rst(0x0030, mem) // RST 30H  []
 	case 0xff:
-		cpu.rst(0x38) // RST 38H  []
+		cpu.rst(0x0038, mem) // RST 38H  []
 	case 0x9f:
 		cpu.sbc(cpu.a) // SBC A A [Z 1 H C]
 	case 0x98:

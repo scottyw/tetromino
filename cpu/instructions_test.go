@@ -670,12 +670,16 @@ func TestXrrcAddr(t *testing.T) {
 	}
 }
 
-func TestXrst(t *testing.T) {
+func TestRst(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{pc: 0xabcd, sp: 0x1234}, CPU{pc: 0x0008, sp: 0x1232}},
 	} {
-		// test.cpu.rst()
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
+		actual := mem.NewMemory()
+		test.cpu.rst(0x0008, actual)
+		expected := mem.NewMemory()
+		*expected.Read(0x1233) = 0xab
+		*expected.Read(0x1234) = 0xcd
+		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x1232, 0xf)
 	}
 }
 
