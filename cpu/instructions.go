@@ -181,22 +181,22 @@ func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem mem.Memory) {
 	*mem.Read(a16) = u8
 }
 
-func (cpu *CPU) ldhFromAddr(i8 int8, mem mem.Memory) {
-	address := uint16(0xff00 + int(i8))
+func (cpu *CPU) ldhFromAddr(u8 uint8, mem mem.Memory) {
+	address := uint16(0xff00 + uint16(u8))
 	cpu.a = *mem.Read(address)
 }
 
-func (cpu *CPU) ldhToAddr(i8 int8, mem mem.Memory) {
-	address := uint16(0xff00 + int(i8))
+func (cpu *CPU) ldhToAddr(u8 uint8, mem mem.Memory) {
+	address := uint16(0xff00 + uint16(u8))
 	*mem.Read(address) = cpu.a
 }
 
-func (cpu *CPU) ldAFromAddrC() {
-	panic(fmt.Sprintf("Missing implementation for ldAFromAddrC"))
+func (cpu *CPU) ldAFromAddrC(mem mem.Memory) {
+	cpu.ldhFromAddr(cpu.c, mem)
 }
 
-func (cpu *CPU) ldAToAddrC() {
-	panic(fmt.Sprintf("Missing implementation for ldAToAddrC"))
+func (cpu *CPU) ldAToAddrC(mem mem.Memory) {
+	cpu.ldhToAddr(cpu.c, mem)
 }
 
 func (cpu *CPU) ldSP(u16 uint16) {

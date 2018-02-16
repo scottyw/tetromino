@@ -140,11 +140,11 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0xe9:
 		cpu.jp("", cpu.hl().Get()) // JP (HL)  []
 	case 0xe2:
-		cpu.ldAToAddrC() // LD (C) A []
+		cpu.ldAToAddrC(mem) // LD (C) A []
 	case 0x12:
 		cpu.ldToAddr(cpu.de().Get(), cpu.a, mem) // LD (DE) A []
 	case 0xf2:
-		cpu.ldAFromAddrC() // LD A (C) []
+		cpu.ldAFromAddrC(mem) // LD A (C) []
 	case 0x1a:
 		cpu.ldFromAddr(&cpu.a, cpu.de().Get(), mem) // LD A (DE) []
 	case 0x3a:
@@ -455,9 +455,9 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	case 0xf8:
 		cpu.ldSPToHL(int8(u8)) // LD HL SP+r8 [0 0 H C]
 	case 0xe0:
-		cpu.ldhToAddr(int8(u8), mem) // LDH (a8) A []
+		cpu.ldhToAddr(u8, mem) // LDH (a8) A []
 	case 0xf0:
-		cpu.ldhFromAddr(int8(u8), mem) // LDH A (a8) []
+		cpu.ldhFromAddr(u8, mem) // LDH A (a8) []
 	case 0xf6:
 		cpu.or(u8) // OR d8  [Z 0 0 0]
 	case 0xde:
