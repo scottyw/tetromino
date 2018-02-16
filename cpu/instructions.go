@@ -105,7 +105,8 @@ func (cpu *CPU) cpAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) cpl() {
-	panic(fmt.Sprintf("Missing implementation for cpl"))
+	cpu.a = ^cpu.a
+	cpu.flags(cpu.zf, true, true, cpu.cf)
 }
 
 func (cpu *CPU) daa() {

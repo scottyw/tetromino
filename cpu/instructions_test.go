@@ -157,11 +157,11 @@ func TestXcpAddr(t *testing.T) {
 	}
 }
 
-func TestXcpl(t *testing.T) {
+func TestCpl(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{a: 0xb1}, CPU{a: 0x4e, nf: true, hf: true}},
 	} {
-		// test.cpu.cpl()
+		test.cpu.cpl()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
