@@ -54,9 +54,9 @@ func (lcd *LCD) Tick(mem mem.Memory, cycle int) {
 // FrameData returns the frame data as a 256x256 array of bytes where each element is a colour value between 0 and 3
 func (lcd *LCD) FrameData(mem mem.Memory) [65536]uint8 {
 	lcd.drawTiles(mem, highBgTileMapDisplaySelect)
-	if windowDisplayEnable(mem) {
-		lcd.drawTiles(mem, highWindowTileMapDisplaySelect)
-	}
+	// if windowDisplayEnable(mem) {
+	// 	lcd.drawTiles(mem, highWindowTileMapDisplaySelect)
+	// }
 	return lcd.data
 }
 
@@ -68,11 +68,11 @@ func tileData(mem mem.Memory, tile uint16, displaySelect func(mem.Memory) bool) 
 	} else {
 		tileAddr = 0x9800 + tile
 	}
-	tileIndex := mem.Read(tileAddr)
+	tileIndex := *mem.Read(tileAddr)
 	if lowTileDataSelect(mem) {
-		return mem.ReadRegion(uint16(0x8000+uint(*tileIndex)), 16)
+		return mem.ReadRegion(0x8000+uint16(tileIndex)*16, 16)
 	}
-	return mem.ReadRegion(uint16(0x9000+int(*tileIndex)), 16)
+	return mem.ReadRegion(uint16(0x9000+int(tileIndex)*16), 16)
 }
 
 func (lcd *LCD) drawTiles(mem mem.Memory, displaySelect func(mem.Memory) bool) {
