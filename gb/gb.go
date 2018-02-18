@@ -45,7 +45,7 @@ func (gb Gameboy) Run() {
 
 // Time the Gameboy as it runs
 func (gb Gameboy) Time() {
-	for {
+	for gb.ui.ShouldRun() {
 		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
 		// On a real Gameboy this would take 1 second
 		t0 := time.Now()
@@ -55,4 +55,5 @@ func (gb Gameboy) Time() {
 		t1 := time.Now()
 		fmt.Println("=========>", (t1.Sub(t0)))
 	}
+	gb.ui.Shutdown()
 }
