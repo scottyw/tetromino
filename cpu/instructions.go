@@ -484,27 +484,37 @@ func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) sla(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for sla: %v", r8))
+	cf := (*r8 & 0x80) > 0
+	*r8 <<= 1
+	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
 func (cpu *CPU) slaAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for slaAddr: %v", a16))
+	cpu.sla(mem.Read(a16))
 }
 
 func (cpu *CPU) sra(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for sra: %v", r8))
+	cf := (*r8 & 0x01) > 0
+	bit7 := (*r8 & 0x80) > 0
+	*r8 >>= 1
+	if bit7 {
+		*r8 |= 0x80
+	}
+	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
 func (cpu *CPU) sraAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for sraAddr: %v", a16))
+	cpu.sra(mem.Read(a16))
 }
 
 func (cpu *CPU) srl(r8 *uint8) {
-	panic(fmt.Sprintf("Missing implementation for srl: %v", r8))
+	cf := (*r8 & 0x01) > 0
+	*r8 >>= 1
+	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
 func (cpu *CPU) srlAddr(a16 uint16, mem mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for srlAddr: %v", a16))
+	cpu.srl(mem.Read(a16))
 }
 
 func (cpu *CPU) swap(r8 *uint8) {

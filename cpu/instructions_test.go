@@ -698,57 +698,75 @@ func TestSet(t *testing.T) {
 	}
 }
 
-func TestXsla(t *testing.T) {
+func TestSla(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{c: 0xa9, cf: false}, CPU{c: 0x52, cf: true}},
+		{CPU{c: 0x15, cf: true}, CPU{c: 0x2a, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
 	} {
-		// test.cpu.sla()
+		test.cpu.sla(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
 
-func TestXslaAddr(t *testing.T) {
+func TestSlaAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{cf: false}, CPU{cf: true}},
 	} {
-		// test.cpu.slaAddr()
+		actual := mem.NewMemory()
+		*actual.Read(0x1234) = 0xa9
+		test.cpu.slaAddr(0x1234, actual)
+		expected := mem.NewMemory()
+		*expected.Read(0x1234) = 0x52
+		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x1234, 0x1)
+	}
+}
+
+func TestSra(t *testing.T) {
+	for _, test := range []struct{ cpu, expectedCPU CPU }{
+		{CPU{c: 0x55, cf: false}, CPU{c: 0x2a, cf: true}},
+		{CPU{c: 0xa8, cf: true}, CPU{c: 0xd4, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
+	} {
+		test.cpu.sra(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
 
-func TestXsra(t *testing.T) {
+func TestSraAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{cf: false}, CPU{cf: true}},
 	} {
-		// test.cpu.sra()
+		actual := mem.NewMemory()
+		*actual.Read(0x1234) = 0x55
+		test.cpu.sraAddr(0x1234, actual)
+		expected := mem.NewMemory()
+		*expected.Read(0x1234) = 0x2a
+		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x1234, 0x1)
+	}
+}
+
+func TestSrl(t *testing.T) {
+	for _, test := range []struct{ cpu, expectedCPU CPU }{
+		{CPU{c: 0x55, cf: false}, CPU{c: 0x2a, cf: true}},
+		{CPU{c: 0xa8, cf: true}, CPU{c: 0x54, cf: false}},
+		{CPU{c: 0x00}, CPU{c: 0x00, zf: true}},
+	} {
+		test.cpu.srl(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
 
-func TestXsraAddr(t *testing.T) {
+func TestSrlAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+		{CPU{cf: true}, CPU{}},
 	} {
-		// test.cpu.sraAddr()
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
-func TestXsrl(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
-	} {
-		// test.cpu.srl()
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
-func TestXsrlAddr(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
-	} {
-		// test.cpu.srlAddr()
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
+		actual := mem.NewMemory()
+		*actual.Read(0x1234) = 0xa8
+		test.cpu.srlAddr(0x1234, actual)
+		expected := mem.NewMemory()
+		*expected.Read(0x1234) = 0x54
+		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x1234, 0x1)
 	}
 }
 
