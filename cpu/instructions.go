@@ -3,6 +3,8 @@ package cpu
 import (
 	"fmt"
 
+	"github.com/scottyw/goomba/debug"
+
 	"github.com/scottyw/goomba/mem"
 )
 
@@ -66,6 +68,9 @@ func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
 func (cpu *CPU) call(kind string, a16 uint16, mem mem.Memory) {
 	switch kind {
 	case "":
+		if debug.FlowControl() {
+			fmt.Printf("==== CALL %04x --> %04x\n", cpu.pc, a16)
+		}
 		*mem.Read(cpu.sp) = byte(cpu.pc & 0xff)
 		cpu.sp--
 		*mem.Read(cpu.sp) = byte(cpu.pc >> 8)
@@ -73,18 +78,30 @@ func (cpu *CPU) call(kind string, a16 uint16, mem mem.Memory) {
 		cpu.pc = a16
 	case "NZ":
 		if !cpu.zf {
+			if debug.FlowControl() {
+				fmt.Printf("==== CALL NZ ...\n")
+			}
 			cpu.call("", a16, mem)
 		}
 	case "Z":
 		if cpu.zf {
+			if debug.FlowControl() {
+				fmt.Printf("==== CALL Z ...\n")
+			}
 			cpu.call("", a16, mem)
 		}
 	case "NC":
 		if !cpu.cf {
+			if debug.FlowControl() {
+				fmt.Printf("==== CALL NC ...\n")
+			}
 			cpu.call("", a16, mem)
 		}
 	case "C":
 		if cpu.cf {
+			if debug.FlowControl() {
+				fmt.Printf("==== CALL C ...\n")
+			}
 			cpu.call("", a16, mem)
 		}
 	default:
@@ -161,33 +178,51 @@ func (cpu *CPU) incAddr(a16 uint16, mem mem.Memory) {
 	cpu.inc(mem.Read(a16))
 }
 
-func (cpu *CPU) jp(kind string, u16 uint16) {
+func (cpu *CPU) jp(kind string, a16 uint16) {
 	switch kind {
 	case "":
-		cpu.pc = u16
+		if debug.Jumps() {
+			fmt.Printf("==== JP %04x --> %04x\n", cpu.pc, a16)
+		}
+		cpu.pc = a16
 	case "NZ":
 		if !cpu.zf {
-			cpu.pc = u16
+			if debug.Jumps() {
+				fmt.Printf("==== JP NZ\n")
+			}
+			cpu.jp("", a16)
 		}
 	case "Z":
 		if cpu.zf {
-			cpu.pc = u16
+			if debug.Jumps() {
+				fmt.Printf("==== JP Z\n")
+			}
+			cpu.jp("", a16)
 		}
 	case "NC":
 		if !cpu.cf {
-			cpu.pc = u16
+			if debug.Jumps() {
+				fmt.Printf("==== JP NC\n")
+			}
+			cpu.jp("", a16)
 		}
 	case "C":
 		if cpu.cf {
-			cpu.pc = u16
+			if debug.Jumps() {
+				fmt.Printf("==== JP C\n")
+			}
+			cpu.jp("", a16)
 		}
 	default:
-		panic(fmt.Sprintf("Missing implementation for jp: %v %v", kind, u16))
+		panic(fmt.Sprintf("Missing implementation for jp: %v %v", kind, a16))
 	}
 }
 
 func (cpu *CPU) jr(kind string, i8 int8) {
 	address := uint16(int16(cpu.pc) + int16(i8))
+	if debug.Jumps() {
+		fmt.Printf("==== JR %02x\n", i8)
+	}
 	cpu.jp(kind, address)
 }
 
@@ -317,21 +352,37 @@ func (cpu *CPU) ret(kind string, mem mem.Memory) {
 		msb := *mem.Read(cpu.sp)
 		cpu.sp++
 		lsb := *mem.Read(cpu.sp)
-		cpu.pc = uint16(msb)<<8 | uint16(lsb)
+		retAddr := uint16(msb)<<8 | uint16(lsb)
+		cpu.pc = retAddr
+		if debug.FlowControl() {
+			fmt.Printf("==== RET %04x --> %04x\n", retAddr, cpu.pc)
+		}
 	case "NZ":
 		if !cpu.zf {
+			if debug.FlowControl() {
+				fmt.Printf("==== RET NZ ...\n")
+			}
 			cpu.ret("", mem)
 		}
 	case "Z":
 		if cpu.zf {
+			if debug.FlowControl() {
+				fmt.Printf("==== RET Z ...\n")
+			}
 			cpu.ret("", mem)
 		}
 	case "NC":
 		if !cpu.cf {
+			if debug.FlowControl() {
+				fmt.Printf("==== RET NC ...\n")
+			}
 			cpu.ret("", mem)
 		}
 	case "C":
 		if cpu.cf {
+			if debug.FlowControl() {
+				fmt.Printf("==== RET C ...\n")
+			}
 			cpu.ret("", mem)
 		}
 	default:
@@ -340,6 +391,9 @@ func (cpu *CPU) ret(kind string, mem mem.Memory) {
 }
 
 func (cpu *CPU) reti(mem mem.Memory) {
+	if debug.FlowControl() {
+		fmt.Printf("==== RETI ...\n")
+	}
 	cpu.ret("", mem)
 	cpu.ei()
 }
@@ -415,6 +469,9 @@ func (cpu *CPU) rrcAddr(a16 uint16, mem mem.Memory) {
 }
 
 func (cpu *CPU) rst(a16 uint16, mem mem.Memory) {
+	if debug.FlowControl() {
+		fmt.Printf("==== RST %04x ...\n", a16)
+	}
 	cpu.call("", a16, mem)
 }
 
