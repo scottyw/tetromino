@@ -15,25 +15,33 @@ func NewLCD() *LCD {
 }
 
 // Tick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) Tick(mem mem.Memory, cycle int) {
+func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 	ly := uint8(cycle / 114)
 	lyRemainder := cycle % 114
 	var stat uint8
 	// Set mode on stat register
 	switch {
-	case ly >= 144:
+	case ly == 144:
+		// V-Blank period starts
+		stat = 1
+		*memory.Read(mem.IF) |= 0x01
+	case ly > 144:
+		// V-Blank period
 		stat = 1
 	case lyRemainder < 20:
+		// OAM period starts
 		stat = 2
 	case lyRemainder < 63:
+		// LCD data transfer period starts
 		stat = 3
 	case lyRemainder < 114:
+		// H-Blank period starts
 		stat = 0
 	default:
 		panic("LCD driver error setting mode")
 	}
 	// Set coincidence flag and coincidence interrupt on stat register
-	if ly == uint8(*mem.Read(0xff45)) {
+	if ly == uint8(*memory.Read(0xff45)) {
 		stat |= 0x44
 	} else {
 		stat &^= 0x44
@@ -47,8 +55,8 @@ func (lcd *LCD) Tick(mem mem.Memory, cycle int) {
 	case lyRemainder == 63:
 		stat |= 0x08
 	}
-	*mem.Read(statReg) = stat
-	*mem.Read(lyReg) = ly
+	*memory.Read(mem.STAT) = stat
+	*memory.Read(mem.LY) = ly
 }
 
 // FrameData returns the frame data as a 256x256 array of bytes where each element is a colour value between 0 and 3

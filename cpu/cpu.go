@@ -128,31 +128,20 @@ func (cpu *CPU) flags(zf, nf, hf, cf bool) {
 	cpu.cf = cf
 }
 
-func (cpu *CPU) checkInterrupts(mem mem.Memory) {
+func (cpu *CPU) checkInterrupts(memory mem.Memory) {
 	if cpu.ime {
-		interrupts := *mem.Read(0xffff) & *mem.Read(0xff0f)
+		ieReg := *memory.Read(mem.IE)
+		ifReg := *memory.Read(mem.IF)
+		interrupts := ifReg & ieReg
 		if interrupts > 0 {
 			cpu.ime = false
-			*mem.Read(cpu.sp) = uint8(cpu.pc)
-			cpu.sp--
-			*mem.Read(cpu.sp) = uint8(cpu.pc >> 8)
-			cpu.sp--
 			switch {
-			case interrupts&0x01 > 0:
-				cpu.pc = 0x0040                        // V-Blank
-				*mem.Read(0xff0f) = interrupts &^ 0x01 // Reset IF
-			case interrupts&0x02 > 0:
-				cpu.pc = 0x0048                        // LCDC status
-				*mem.Read(0xff0f) = interrupts &^ 0x02 // Reset IF
-			case interrupts&0x04 > 0:
-				cpu.pc = 0x0050                        // Timer Overflow
-				*mem.Read(0xff0f) = interrupts &^ 0x04 // Reset IF
-			case interrupts&0x08 > 0:
-				cpu.pc = 0x0058                        // Serial Transfer
-				*mem.Read(0xff0f) = interrupts &^ 0x08 // Reset IF
-			case interrupts&0x10 > 0:
-				cpu.pc = 0x0060                        // Hi-Lo of P10-P13
-				*mem.Read(0xff0f) = interrupts &^ 0x10 // Reset IF
+			case interrupts&0x01 > 0: // V-Blank
+				if debug.FlowControl() {
+					fmt.Printf("==== V-Blank interrupt ...\n")
+				}
+				cpu.rst(0x0040, memory)
+				*memory.Read(mem.IF) &^= 0x01 // Reset IF
 			}
 		}
 	}
