@@ -37,6 +37,9 @@ func NewGL() UI {
 	}
 	window.MakeContextCurrent()
 
+	// For now let's max out speed and worry about locking the framerate later
+	glfw.SwapInterval(0)
+
 	// initialize gl
 	if err := gl.Init(); err != nil {
 		log.Fatalln(err)
