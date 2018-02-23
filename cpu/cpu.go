@@ -3,8 +3,8 @@ package cpu
 import (
 	"fmt"
 
-	"github.com/scottyw/goomba/debug"
-	"github.com/scottyw/goomba/mem"
+	"github.com/scottyw/tetromino/debug"
+	"github.com/scottyw/tetromino/mem"
 )
 
 const (

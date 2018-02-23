@@ -1,11 +1,11 @@
 package main
 
 import (
-	"github.com/scottyw/goomba/cpu"
-	"github.com/scottyw/goomba/gb"
-	"github.com/scottyw/goomba/lcd"
-	"github.com/scottyw/goomba/mem"
-	"github.com/scottyw/goomba/ui"
+	"github.com/scottyw/tetromino/cpu"
+	"github.com/scottyw/tetromino/gb"
+	"github.com/scottyw/tetromino/lcd"
+	"github.com/scottyw/tetromino/mem"
+	"github.com/scottyw/tetromino/ui"
 )
 
 func main() {

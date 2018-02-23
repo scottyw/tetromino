@@ -7,11 +7,11 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/scottyw/goomba/mem"
+	"github.com/scottyw/tetromino/mem"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/scottyw/goomba/lcd"
+	"github.com/scottyw/tetromino/lcd"
 )
 
 // GL maintains state for the GL UI implementation
@@ -31,7 +31,7 @@ func NewGL() UI {
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.Resizable, 0)
-	window, err := glfw.CreateWindow(512, 512, "goomba", nil, nil)
+	window, err := glfw.CreateWindow(512, 512, "Tetromino", nil, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}

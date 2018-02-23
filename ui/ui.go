@@ -1,8 +1,8 @@
 package ui
 
 import (
-	"github.com/scottyw/goomba/lcd"
-	"github.com/scottyw/goomba/mem"
+	"github.com/scottyw/tetromino/lcd"
+	"github.com/scottyw/tetromino/mem"
 )
 
 // UI abstracts over the user interface

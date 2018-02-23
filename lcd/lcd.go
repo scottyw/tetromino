@@ -1,7 +1,7 @@
 package lcd
 
 import (
-	"github.com/scottyw/goomba/mem"
+	"github.com/scottyw/tetromino/mem"
 )
 
 // LCD represents the LCD display of the Gameboy

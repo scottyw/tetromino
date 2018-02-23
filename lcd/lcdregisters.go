@@ -1,6 +1,6 @@
 package lcd
 
-import "github.com/scottyw/goomba/mem"
+import "github.com/scottyw/tetromino/mem"
 
 // FF40 - LCDC - LCD Control (R/W)
 // Bit 7 - LCD Display Enable             (0=Off, 1=On)

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/scottyw/goomba/mem"
+	"github.com/scottyw/tetromino/mem"
 )
 
 ////////////////////////////////////////////////////////////////
