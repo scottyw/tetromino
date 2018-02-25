@@ -31,15 +31,6 @@ var prefixedInstructionMetadata [256]metadata
 
 var cycles int
 
-type register16 interface {
-	Get() uint16
-	GetMsb() uint8
-	GetLsb() uint8
-	Set(uint16)
-	SetMsb(val uint8)
-	SetLsb(val uint8)
-}
-
 // CPU stores the internal CPU state
 type CPU struct {
 	// 8-bit registers
@@ -85,23 +76,27 @@ func (cpu CPU) String() string {
 		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc, cpu.zf, cpu.nf, cpu.hf, cpu.cf)
 }
 
-func (cpu *CPU) bc() register16 {
-	return newRegister16(&cpu.b, &cpu.c)
+func (cpu *CPU) bc() uint16 {
+	return uint16(cpu.b)<<8 + uint16(cpu.c)
 }
 
-func (cpu *CPU) de() register16 {
-	return newRegister16(&cpu.d, &cpu.e)
+func (cpu *CPU) de() uint16 {
+	return uint16(cpu.d)<<8 + uint16(cpu.e)
 }
 
-func (cpu *CPU) af() register16 {
-	return newRegister16(&cpu.a, &cpu.f)
+func (cpu *CPU) af() uint16 {
+	return uint16(cpu.a)<<8 + uint16(cpu.f)
 }
 
-func (cpu *CPU) hl() register16 {
-	return newRegister16(&cpu.h, &cpu.l)
+func (cpu *CPU) hl() uint16 {
+	return uint16(cpu.h)<<8 + uint16(cpu.l)
 }
 
 func z(new uint8) bool {
+	return new == 0
+}
+
+func z16(new uint16) bool {
 	return new == 0
 }
 
@@ -110,7 +105,7 @@ func h(old, new uint8) bool {
 }
 
 func h16(old, new uint16) bool {
-	return h(uint8(old>>4), uint8(new>>4))
+	return h(uint8(old>>8), uint8(new>>8))
 }
 
 func c(old, new uint8) bool {
@@ -118,7 +113,7 @@ func c(old, new uint8) bool {
 }
 
 func c16(old, new uint16) bool {
-	return c(uint8(old>>4), uint8(new>>4))
+	return c(uint8(old>>8), uint8(new>>8))
 }
 
 func (cpu *CPU) flags(zf, nf, hf, cf bool) {

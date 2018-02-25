@@ -78,10 +78,14 @@ func TestAdd(t *testing.T) {
 }
 
 func TestAddHL(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{}},
+	for _, test := range []struct {
+		cpu, expectedCPU CPU
+	}{
+		{CPU{h: 0x1f, l: 0xb2}, CPU{h: 0x51, l: 0xc4, hf: true}},
+		{CPU{h: 0xd1, l: 0xb2}, CPU{h: 0x03, l: 0xc4, cf: true}},
+		{CPU{h: 0xcd, l: 0xee}, CPU{h: 0x00, l: 0x00, hf: true, cf: true}},
 	} {
-		// test.cpu.addHL()
+		test.cpu.addHL(0x3212)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
@@ -470,7 +474,7 @@ func TestPop(t *testing.T) {
 		actual := mem.NewMemory()
 		*actual.Read(0x1233) = 0x1a
 		*actual.Read(0x1234) = 0xf2
-		test.cpu.pop(test.cpu.bc(), actual)
+		test.cpu.pop(&test.cpu.b, &test.cpu.c, actual)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
@@ -480,7 +484,7 @@ func TestPush(t *testing.T) {
 		{CPU{b: 0x1a, c: 0xf2, sp: 0x1234}, CPU{b: 0x1a, c: 0xf2, sp: 0x1232}},
 	} {
 		actual := mem.NewMemory()
-		test.cpu.push(test.cpu.bc(), actual)
+		test.cpu.push(test.cpu.b, test.cpu.c, actual)
 		expected := mem.NewMemory()
 		*expected.Read(0x1233) = 0x1a
 		*expected.Read(0x1234) = 0xf2

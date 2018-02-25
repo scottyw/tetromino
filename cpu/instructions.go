@@ -33,10 +33,11 @@ func (cpu *CPU) add(u8 uint8) {
 }
 
 func (cpu *CPU) addHL(u16 uint16) {
-	hl := cpu.hl()
-	old := hl.Get()
-	hl.Set(old + u16)
-	cpu.flags(cpu.zf, false, h16(old, hl.Get()), c16(old, hl.Get())) // [- 0 H C]
+	old := cpu.hl()
+	new := old + u16
+	cpu.h = uint8(new >> 8)
+	cpu.l = uint8(new)
+	cpu.flags(cpu.zf, false, h16(old, new), c16(old, new)) // [- 0 H C]
 }
 
 func (cpu *CPU) addSP(i8 int8) {
@@ -136,8 +137,12 @@ func (cpu *CPU) dec(r8 *uint8) {
 	cpu.flags(z(*r8), true, h(*r8, old), cpu.cf) //	[Z 1 H -]
 }
 
-func (cpu *CPU) dec16(r16 register16) {
-	r16.Set(r16.Get() - 1)
+func (cpu *CPU) dec16(msb, lsb *uint8) {
+	old := uint16(*msb)<<8 + uint16(*lsb)
+	new := old - 1
+	*msb = uint8(new >> 8)
+	*lsb = uint8(new)
+	cpu.flags(z16(new), true, h16(new, old), cpu.cf) //	[Z 1 H -]
 }
 
 func (cpu *CPU) decSP() {
@@ -166,8 +171,12 @@ func (cpu *CPU) inc(r8 *uint8) {
 	cpu.flags(z(*r8), true, h(old, *r8), cpu.cf) // [Z 0 H -]
 }
 
-func (cpu *CPU) inc16(r16 register16) {
-	r16.Set(r16.Get() + 1)
+func (cpu *CPU) inc16(msb, lsb *uint8) {
+	old := uint16(*msb)<<8 + uint16(*lsb)
+	new := old + 1
+	*msb = uint8(new >> 8)
+	*lsb = uint8(new)
+	cpu.flags(z16(new), true, h16(old, new), cpu.cf) //	[Z 1 H -]
 }
 
 func (cpu *CPU) incSP() {
@@ -230,8 +239,9 @@ func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
 	*r8 = u8
 }
 
-func (cpu *CPU) ld16(r16 register16, u16 uint16) {
-	r16.Set(u16)
+func (cpu *CPU) ld16(msb, lsb *uint8, u16 uint16) {
+	*msb = uint8(u16 >> 8)
+	*lsb = uint8(u16)
 }
 
 func (cpu *CPU) ldFromAddr(r8 *uint8, a16 uint16, mem mem.Memory) {
@@ -278,27 +288,23 @@ func (cpu *CPU) ldSPToHL(i8 int8) {
 }
 
 func (cpu *CPU) lddFromAddr(mem mem.Memory) {
-	hl := cpu.hl()
-	cpu.ldFromAddr(&cpu.a, hl.Get(), mem)
-	cpu.dec16(hl)
+	cpu.ldFromAddr(&cpu.a, cpu.hl(), mem)
+	cpu.dec16(&cpu.h, &cpu.l)
 }
 
 func (cpu *CPU) lddToAddr(mem mem.Memory) {
-	hl := cpu.hl()
-	cpu.ldToAddr(hl.Get(), cpu.a, mem)
-	cpu.dec16(hl)
+	cpu.ldToAddr(cpu.hl(), cpu.a, mem)
+	cpu.dec16(&cpu.h, &cpu.l)
 }
 
 func (cpu *CPU) ldiFromAddr(mem mem.Memory) {
-	hl := cpu.hl()
-	cpu.ldFromAddr(&cpu.a, hl.Get(), mem)
-	cpu.inc16(hl)
+	cpu.ldFromAddr(&cpu.a, cpu.hl(), mem)
+	cpu.inc16(&cpu.h, &cpu.l)
 }
 
 func (cpu *CPU) ldiToAddr(mem mem.Memory) {
-	hl := cpu.hl()
-	cpu.ldToAddr(hl.Get(), cpu.a, mem)
-	cpu.inc16(hl)
+	cpu.ldToAddr(cpu.hl(), cpu.a, mem)
+	cpu.inc16(&cpu.h, &cpu.l)
 }
 
 func (cpu *CPU) nop() {
@@ -315,25 +321,25 @@ func (cpu *CPU) orAddr(a16 uint16, mem mem.Memory) {
 	cpu.or(*mem.Read(a16))
 }
 
-func (cpu *CPU) pop(r16 register16, mem mem.Memory) {
+func (cpu *CPU) pop(msb, lsb *uint8, mem mem.Memory) {
 	cpu.sp++
-	r16.SetMsb(*mem.Read(cpu.sp))
+	*msb = *mem.Read(cpu.sp)
 	cpu.sp++
-	r16.SetLsb(*mem.Read(cpu.sp))
+	*lsb = *mem.Read(cpu.sp)
 }
 
 func (cpu *CPU) popAF(mem mem.Memory) {
-	cpu.pop(cpu.af(), mem)
+	cpu.pop(&cpu.a, &cpu.f, mem)
 	cpu.zf = cpu.f&8 > 1
 	cpu.nf = cpu.f&4 > 1
 	cpu.hf = cpu.f&2 > 1
 	cpu.cf = cpu.f&1 > 1
 }
 
-func (cpu *CPU) push(r16 register16, mem mem.Memory) {
-	*mem.Read(cpu.sp) = r16.GetLsb()
+func (cpu *CPU) push(msb, lsb uint8, mem mem.Memory) {
+	*mem.Read(cpu.sp) = lsb
 	cpu.sp--
-	*mem.Read(cpu.sp) = r16.GetMsb()
+	*mem.Read(cpu.sp) = msb
 	cpu.sp--
 }
 

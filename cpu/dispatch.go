@@ -18,7 +18,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x8c:
 		cpu.adc(cpu.h) // ADC A H [Z 0 H C]
 	case 0x8e:
-		cpu.adcAddr(cpu.hl().Get(), mem) // ADC A (HL) [Z 0 H C]
+		cpu.adcAddr(cpu.hl(), mem) // ADC A (HL) [Z 0 H C]
 	case 0x8d:
 		cpu.adc(cpu.l) // ADC A L [Z 0 H C]
 	case 0x87:
@@ -36,13 +36,13 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x85:
 		cpu.add(cpu.l) // ADD A L [Z 0 H C]
 	case 0x86:
-		cpu.addAddr(cpu.hl().Get(), mem) // ADD A (HL) [Z 0 H C]
+		cpu.addAddr(cpu.hl(), mem) // ADD A (HL) [Z 0 H C]
 	case 0x09:
-		cpu.addHL(cpu.bc().Get()) // ADD HL BC [- 0 H C]
+		cpu.addHL(cpu.bc()) // ADD HL BC [- 0 H C]
 	case 0x19:
-		cpu.addHL(cpu.de().Get()) // ADD HL DE [- 0 H C]
+		cpu.addHL(cpu.de()) // ADD HL DE [- 0 H C]
 	case 0x29:
-		cpu.addHL(cpu.hl().Get()) // ADD HL HL [- 0 H C]
+		cpu.addHL(cpu.hl()) // ADD HL HL [- 0 H C]
 	case 0x39:
 		cpu.addHL(cpu.sp) // ADD HL SP [- 0 H C]
 	case 0xa7:
@@ -58,7 +58,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0xa4:
 		cpu.and(cpu.h) // AND H  [Z 0 1 0]
 	case 0xa6:
-		cpu.andAddr(cpu.hl().Get(), mem) // AND (HL)  [Z 0 1 0]
+		cpu.andAddr(cpu.hl(), mem) // AND (HL)  [Z 0 1 0]
 	case 0xa5:
 		cpu.and(cpu.l) // AND L  [Z 0 1 0]
 	case 0x3f:
@@ -76,7 +76,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0xbc:
 		cpu.cp(cpu.h) // CP H  [Z 1 H C]
 	case 0xbe:
-		cpu.cpAddr(cpu.hl().Get(), mem) // CP (HL)  [Z 1 H C]
+		cpu.cpAddr(cpu.hl(), mem) // CP (HL)  [Z 1 H C]
 	case 0xbd:
 		cpu.cp(cpu.l) // CP L  [Z 1 H C]
 	case 0x2f:
@@ -88,21 +88,21 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x05:
 		cpu.dec(&cpu.b) // DEC B  [Z 1 H -]
 	case 0x0b:
-		cpu.dec16(cpu.bc()) // DEC BC  []
+		cpu.dec16(&cpu.b, &cpu.c) // DEC BC  []
 	case 0x0d:
 		cpu.dec(&cpu.c) // DEC C  [Z 1 H -]
 	case 0x15:
 		cpu.dec(&cpu.d) // DEC D  [Z 1 H -]
 	case 0x1b:
-		cpu.dec16(cpu.de()) // DEC DE  []
+		cpu.dec16(&cpu.d, &cpu.e) // DEC DE  []
 	case 0x1d:
 		cpu.dec(&cpu.e) // DEC E  [Z 1 H -]
 	case 0x25:
 		cpu.dec(&cpu.h) // DEC H  [Z 1 H -]
 	case 0x35:
-		cpu.decAddr(cpu.hl().Get(), mem) // DEC (HL)  [Z 1 H -]
+		cpu.decAddr(cpu.hl(), mem) // DEC (HL)  [Z 1 H -]
 	case 0x2b:
-		cpu.dec16(cpu.hl()) // DEC HL  []
+		cpu.dec16(&cpu.h, &cpu.l) // DEC HL  []
 	case 0x2d:
 		cpu.dec(&cpu.l) // DEC L  [Z 1 H -]
 	case 0x3b:
@@ -118,35 +118,35 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x04:
 		cpu.inc(&cpu.b) // INC B  [Z 0 H -]
 	case 0x03:
-		cpu.inc16(cpu.bc()) // INC BC  []
+		cpu.inc16(&cpu.b, &cpu.c) // INC BC  []
 	case 0x0c:
 		cpu.inc(&cpu.c) // INC C  [Z 0 H -]
 	case 0x14:
 		cpu.inc(&cpu.d) // INC D  [Z 0 H -]
 	case 0x13:
-		cpu.inc16(cpu.de()) // INC DE  []
+		cpu.inc16(&cpu.d, &cpu.e) // INC DE  []
 	case 0x1c:
 		cpu.inc(&cpu.e) // INC E  [Z 0 H -]
 	case 0x24:
 		cpu.inc(&cpu.h) // INC H  [Z 0 H -]
 	case 0x34:
-		cpu.incAddr(cpu.hl().Get(), mem) // INC (HL)  [Z 0 H -]
+		cpu.incAddr(cpu.hl(), mem) // INC (HL)  [Z 0 H -]
 	case 0x23:
-		cpu.inc16(cpu.hl()) // INC HL  []
+		cpu.inc16(&cpu.h, &cpu.l) // INC HL  []
 	case 0x2c:
 		cpu.inc(&cpu.l) // INC L  [Z 0 H -]
 	case 0x33:
 		cpu.incSP() // INC SP  []
 	case 0xe9:
-		cpu.jp("", cpu.hl().Get()) // JP (HL)  []
+		cpu.jp("", cpu.hl()) // JP (HL)  []
 	case 0xe2:
 		cpu.ldAToAddrC(mem) // LD (C) A []
 	case 0x12:
-		cpu.ldToAddr(cpu.de().Get(), cpu.a, mem) // LD (DE) A []
+		cpu.ldToAddr(cpu.de(), cpu.a, mem) // LD (DE) A []
 	case 0xf2:
 		cpu.ldAFromAddrC(mem) // LD A (C) []
 	case 0x1a:
-		cpu.ldFromAddr(&cpu.a, cpu.de().Get(), mem) // LD A (DE) []
+		cpu.ldFromAddr(&cpu.a, cpu.de(), mem) // LD A (DE) []
 	case 0x3a:
 		cpu.lddFromAddr(mem) // LD A (HL-) []
 	case 0x32:
@@ -160,7 +160,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x78:
 		cpu.ld(&cpu.a, cpu.b) // LD A B []
 	case 0x0a:
-		cpu.ldFromAddr(&cpu.a, cpu.bc().Get(), mem) // LD A (BC) []
+		cpu.ldFromAddr(&cpu.a, cpu.bc(), mem) // LD A (BC) []
 	case 0x79:
 		cpu.ld(&cpu.a, cpu.c) // LD A C []
 	case 0x7a:
@@ -170,7 +170,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x7c:
 		cpu.ld(&cpu.a, cpu.h) // LD A H []
 	case 0x7e:
-		cpu.ldFromAddr(&cpu.a, cpu.hl().Get(), mem) // LD A (HL) []
+		cpu.ldFromAddr(&cpu.a, cpu.hl(), mem) // LD A (HL) []
 	case 0x7d:
 		cpu.ld(&cpu.a, cpu.l) // LD A L []
 	case 0x47:
@@ -186,11 +186,11 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x44:
 		cpu.ld(&cpu.b, cpu.h) // LD B H []
 	case 0x46:
-		cpu.ldFromAddr(&cpu.b, cpu.hl().Get(), mem) // LD B (HL) []
+		cpu.ldFromAddr(&cpu.b, cpu.hl(), mem) // LD B (HL) []
 	case 0x45:
 		cpu.ld(&cpu.b, cpu.l) // LD B L []
 	case 0x02:
-		cpu.ldToAddr(cpu.bc().Get(), cpu.a, mem) // LD (BC) A []
+		cpu.ldToAddr(cpu.bc(), cpu.a, mem) // LD (BC) A []
 	case 0x4f:
 		cpu.ld(&cpu.c, cpu.a) // LD C A []
 	case 0x48:
@@ -204,7 +204,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x4c:
 		cpu.ld(&cpu.c, cpu.h) // LD C H []
 	case 0x4e:
-		cpu.ldFromAddr(&cpu.c, cpu.hl().Get(), mem) // LD C (HL) []
+		cpu.ldFromAddr(&cpu.c, cpu.hl(), mem) // LD C (HL) []
 	case 0x4d:
 		cpu.ld(&cpu.c, cpu.l) // LD C L []
 	case 0x57:
@@ -220,7 +220,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x54:
 		cpu.ld(&cpu.d, cpu.h) // LD D H []
 	case 0x56:
-		cpu.ldFromAddr(&cpu.d, cpu.hl().Get(), mem) // LD D (HL) []
+		cpu.ldFromAddr(&cpu.d, cpu.hl(), mem) // LD D (HL) []
 	case 0x55:
 		cpu.ld(&cpu.d, cpu.l) // LD D L []
 	case 0x5f:
@@ -236,7 +236,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x5c:
 		cpu.ld(&cpu.e, cpu.h) // LD E H []
 	case 0x5e:
-		cpu.ldFromAddr(&cpu.e, cpu.hl().Get(), mem) // LD E (HL) []
+		cpu.ldFromAddr(&cpu.e, cpu.hl(), mem) // LD E (HL) []
 	case 0x5d:
 		cpu.ld(&cpu.e, cpu.l) // LD E L []
 	case 0x67:
@@ -252,23 +252,23 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x64:
 		cpu.ld(&cpu.h, cpu.h) // LD H H []
 	case 0x66:
-		cpu.ldFromAddr(&cpu.h, cpu.hl().Get(), mem) // LD H (HL) []
+		cpu.ldFromAddr(&cpu.h, cpu.hl(), mem) // LD H (HL) []
 	case 0x65:
 		cpu.ld(&cpu.h, cpu.l) // LD H L []
 	case 0x77:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.a, mem) // LD (HL) A []
+		cpu.ldToAddr(cpu.hl(), cpu.a, mem) // LD (HL) A []
 	case 0x70:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.b, mem) // LD (HL) B []
+		cpu.ldToAddr(cpu.hl(), cpu.b, mem) // LD (HL) B []
 	case 0x71:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.c, mem) // LD (HL) C []
+		cpu.ldToAddr(cpu.hl(), cpu.c, mem) // LD (HL) C []
 	case 0x72:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.d, mem) // LD (HL) D []
+		cpu.ldToAddr(cpu.hl(), cpu.d, mem) // LD (HL) D []
 	case 0x73:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.e, mem) // LD (HL) E []
+		cpu.ldToAddr(cpu.hl(), cpu.e, mem) // LD (HL) E []
 	case 0x74:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.h, mem) // LD (HL) H []
+		cpu.ldToAddr(cpu.hl(), cpu.h, mem) // LD (HL) H []
 	case 0x75:
-		cpu.ldToAddr(cpu.hl().Get(), cpu.l, mem) // LD (HL) L []
+		cpu.ldToAddr(cpu.hl(), cpu.l, mem) // LD (HL) L []
 	case 0x6f:
 		cpu.ld(&cpu.l, cpu.a) // LD L A []
 	case 0x68:
@@ -282,7 +282,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x6c:
 		cpu.ld(&cpu.l, cpu.h) // LD L H []
 	case 0x6e:
-		cpu.ldFromAddr(&cpu.l, cpu.hl().Get(), mem) // LD L (HL) []
+		cpu.ldFromAddr(&cpu.l, cpu.hl(), mem) // LD L (HL) []
 	case 0x6d:
 		cpu.ld(&cpu.l, cpu.l) // LD L L []
 	case 0xf9:
@@ -302,25 +302,25 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0xb4:
 		cpu.or(cpu.h) // OR H  [Z 0 0 0]
 	case 0xb6:
-		cpu.orAddr(cpu.hl().Get(), mem) // OR (HL)  [Z 0 0 0]
+		cpu.orAddr(cpu.hl(), mem) // OR (HL)  [Z 0 0 0]
 	case 0xb5:
 		cpu.or(cpu.l) // OR L  [Z 0 0 0]
 	case 0xf1:
 		cpu.popAF(mem) // POP AF  [Z N H C]
 	case 0xc1:
-		cpu.pop(cpu.bc(), mem) // POP BC  []
+		cpu.pop(&cpu.b, &cpu.c, mem) // POP BC  []
 	case 0xd1:
-		cpu.pop(cpu.de(), mem) // POP DE  []
+		cpu.pop(&cpu.d, &cpu.e, mem) // POP DE  []
 	case 0xe1:
-		cpu.pop(cpu.hl(), mem) // POP HL  []
+		cpu.pop(&cpu.h, &cpu.l, mem) // POP HL  []
 	case 0xf5:
-		cpu.push(cpu.af(), mem) // PUSH AF  []
+		cpu.push(cpu.a, cpu.f, mem) // PUSH AF  []
 	case 0xc5:
-		cpu.push(cpu.bc(), mem) // PUSH BC  []
+		cpu.push(cpu.b, cpu.c, mem) // PUSH BC  []
 	case 0xd5:
-		cpu.push(cpu.de(), mem) // PUSH DE  []
+		cpu.push(cpu.d, cpu.e, mem) // PUSH DE  []
 	case 0xe5:
-		cpu.push(cpu.hl(), mem) // PUSH HL  []
+		cpu.push(cpu.h, cpu.l, mem) // PUSH HL  []
 	case 0xc9:
 		cpu.ret("", mem) // RET   []
 	case 0xd8:
@@ -370,7 +370,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x9c:
 		cpu.sbc(cpu.h) // SBC A H [Z 1 H C]
 	case 0x9e:
-		cpu.sbcAddr(cpu.hl().Get(), mem) // SBC A (HL) [Z 1 H C]
+		cpu.sbcAddr(cpu.hl(), mem) // SBC A (HL) [Z 1 H C]
 	case 0x9d:
 		cpu.sbc(cpu.l) // SBC A L [Z 1 H C]
 	case 0x37:
@@ -390,7 +390,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0x94:
 		cpu.sub(cpu.h) // SUB H  [Z 1 H C]
 	case 0x96:
-		cpu.subAddr(cpu.hl().Get(), mem) // SUB (HL)  [Z 1 H C]
+		cpu.subAddr(cpu.hl(), mem) // SUB (HL)  [Z 1 H C]
 	case 0x95:
 		cpu.sub(cpu.l) // SUB L  [Z 1 H C]
 	case 0xaf:
@@ -406,7 +406,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	case 0xac:
 		cpu.xor(cpu.h) // XOR H  [Z 0 0 0]
 	case 0xae:
-		cpu.xorAddr(cpu.hl().Get(), mem) // XOR (HL)  [Z 0 0 0]
+		cpu.xorAddr(cpu.hl(), mem) // XOR (HL)  [Z 0 0 0]
 	case 0xad:
 		cpu.xor(cpu.l) // XOR L  [Z 0 0 0]
 	default:
@@ -451,7 +451,7 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	case 0x2e:
 		cpu.ld(&cpu.l, u8) // LD L d8 []
 	case 0x36:
-		cpu.ldToAddr(cpu.hl().Get(), u8, mem) // LD (HL) d8 []
+		cpu.ldToAddr(cpu.hl(), u8, mem) // LD (HL) d8 []
 	case 0xf8:
 		cpu.ldSPToHL(int8(u8)) // LD HL SP+r8 [0 0 H C]
 	case 0xe0:
@@ -500,11 +500,11 @@ func (cpu *CPU) dispatchThreeByteInstruction(mem mem.Memory, instruction uint8, 
 	case 0xfa:
 		cpu.ldFromAddr(&cpu.a, u16, mem) // LD A (a16) []
 	case 0x01:
-		cpu.ld16(cpu.bc(), u16) // LD BC d16 []
+		cpu.ld16(&cpu.b, &cpu.c, u16) // LD BC d16 []
 	case 0x11:
-		cpu.ld16(cpu.de(), u16) // LD DE d16 []
+		cpu.ld16(&cpu.d, &cpu.e, u16) // LD DE d16 []
 	case 0x21:
-		cpu.ld16(cpu.hl(), u16) // LD HL d16 []
+		cpu.ld16(&cpu.h, &cpu.l, u16) // LD HL d16 []
 	case 0x31:
 		cpu.ldSP(u16) // LD SP d16 []
 	default:
@@ -527,7 +527,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x44:
 		cpu.bit(0, cpu.h) // BIT 0 H [Z 0 1 -]
 	case 0x46:
-		cpu.bitAddr(0, cpu.hl().Get(), mem) // BIT 0 (HL) [Z 0 1 -]
+		cpu.bitAddr(0, cpu.hl(), mem) // BIT 0 (HL) [Z 0 1 -]
 	case 0x45:
 		cpu.bit(0, cpu.l) // BIT 0 L [Z 0 1 -]
 	case 0x4f:
@@ -543,7 +543,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x4c:
 		cpu.bit(1, cpu.h) // BIT 1 H [Z 0 1 -]
 	case 0x4e:
-		cpu.bitAddr(1, cpu.hl().Get(), mem) // BIT 1 (HL) [Z 0 1 -]
+		cpu.bitAddr(1, cpu.hl(), mem) // BIT 1 (HL) [Z 0 1 -]
 	case 0x4d:
 		cpu.bit(1, cpu.l) // BIT 1 L [Z 0 1 -]
 	case 0x57:
@@ -559,7 +559,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x54:
 		cpu.bit(2, cpu.h) // BIT 2 H [Z 0 1 -]
 	case 0x56:
-		cpu.bitAddr(2, cpu.hl().Get(), mem) // BIT 2 (HL) [Z 0 1 -]
+		cpu.bitAddr(2, cpu.hl(), mem) // BIT 2 (HL) [Z 0 1 -]
 	case 0x55:
 		cpu.bit(2, cpu.l) // BIT 2 L [Z 0 1 -]
 	case 0x5f:
@@ -575,7 +575,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x5c:
 		cpu.bit(3, cpu.h) // BIT 3 H [Z 0 1 -]
 	case 0x5e:
-		cpu.bitAddr(3, cpu.hl().Get(), mem) // BIT 3 (HL) [Z 0 1 -]
+		cpu.bitAddr(3, cpu.hl(), mem) // BIT 3 (HL) [Z 0 1 -]
 	case 0x5d:
 		cpu.bit(3, cpu.l) // BIT 3 L [Z 0 1 -]
 	case 0x67:
@@ -591,7 +591,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x64:
 		cpu.bit(4, cpu.h) // BIT 4 H [Z 0 1 -]
 	case 0x66:
-		cpu.bitAddr(4, cpu.hl().Get(), mem) // BIT 4 (HL) [Z 0 1 -]
+		cpu.bitAddr(4, cpu.hl(), mem) // BIT 4 (HL) [Z 0 1 -]
 	case 0x65:
 		cpu.bit(4, cpu.l) // BIT 4 L [Z 0 1 -]
 	case 0x6f:
@@ -607,7 +607,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x6c:
 		cpu.bit(5, cpu.h) // BIT 5 H [Z 0 1 -]
 	case 0x6e:
-		cpu.bitAddr(5, cpu.hl().Get(), mem) // BIT 5 (HL) [Z 0 1 -]
+		cpu.bitAddr(5, cpu.hl(), mem) // BIT 5 (HL) [Z 0 1 -]
 	case 0x6d:
 		cpu.bit(5, cpu.l) // BIT 5 L [Z 0 1 -]
 	case 0x77:
@@ -623,7 +623,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x74:
 		cpu.bit(6, cpu.h) // BIT 6 H [Z 0 1 -]
 	case 0x76:
-		cpu.bitAddr(6, cpu.hl().Get(), mem) // BIT 6 (HL) [Z 0 1 -]
+		cpu.bitAddr(6, cpu.hl(), mem) // BIT 6 (HL) [Z 0 1 -]
 	case 0x75:
 		cpu.bit(6, cpu.l) // BIT 6 L [Z 0 1 -]
 	case 0x7f:
@@ -639,7 +639,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x7c:
 		cpu.bit(7, cpu.h) // BIT 7 H [Z 0 1 -]
 	case 0x7e:
-		cpu.bitAddr(7, cpu.hl().Get(), mem) // BIT 7 (HL) [Z 0 1 -]
+		cpu.bitAddr(7, cpu.hl(), mem) // BIT 7 (HL) [Z 0 1 -]
 	case 0x7d:
 		cpu.bit(7, cpu.l) // BIT 7 L [Z 0 1 -]
 	case 0x87:
@@ -655,7 +655,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x84:
 		cpu.res(0, &cpu.h) // RES 0 H []
 	case 0x86:
-		cpu.resAddr(0, cpu.hl().Get(), mem) // RES 0 (HL) []
+		cpu.resAddr(0, cpu.hl(), mem) // RES 0 (HL) []
 	case 0x85:
 		cpu.res(0, &cpu.l) // RES 0 L []
 	case 0x8f:
@@ -671,7 +671,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x8c:
 		cpu.res(1, &cpu.h) // RES 1 H []
 	case 0x8e:
-		cpu.resAddr(1, cpu.hl().Get(), mem) // RES 1 (HL) []
+		cpu.resAddr(1, cpu.hl(), mem) // RES 1 (HL) []
 	case 0x8d:
 		cpu.res(1, &cpu.l) // RES 1 L []
 	case 0x97:
@@ -687,7 +687,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x94:
 		cpu.res(2, &cpu.h) // RES 2 H []
 	case 0x96:
-		cpu.resAddr(2, cpu.hl().Get(), mem) // RES 2 (HL) []
+		cpu.resAddr(2, cpu.hl(), mem) // RES 2 (HL) []
 	case 0x95:
 		cpu.res(2, &cpu.l) // RES 2 L []
 	case 0x9f:
@@ -703,7 +703,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x9c:
 		cpu.res(3, &cpu.h) // RES 3 H []
 	case 0x9e:
-		cpu.resAddr(3, cpu.hl().Get(), mem) // RES 3 (HL) []
+		cpu.resAddr(3, cpu.hl(), mem) // RES 3 (HL) []
 	case 0x9d:
 		cpu.res(3, &cpu.l) // RES 3 L []
 	case 0xa7:
@@ -719,7 +719,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xa4:
 		cpu.res(4, &cpu.h) // RES 4 H []
 	case 0xa6:
-		cpu.resAddr(4, cpu.hl().Get(), mem) // RES 4 (HL) []
+		cpu.resAddr(4, cpu.hl(), mem) // RES 4 (HL) []
 	case 0xa5:
 		cpu.res(4, &cpu.l) // RES 4 L []
 	case 0xaf:
@@ -735,7 +735,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xac:
 		cpu.res(5, &cpu.h) // RES 5 H []
 	case 0xae:
-		cpu.resAddr(5, cpu.hl().Get(), mem) // RES 5 (HL) []
+		cpu.resAddr(5, cpu.hl(), mem) // RES 5 (HL) []
 	case 0xad:
 		cpu.res(5, &cpu.l) // RES 5 L []
 	case 0xb7:
@@ -751,7 +751,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xb4:
 		cpu.res(6, &cpu.h) // RES 6 H []
 	case 0xb6:
-		cpu.resAddr(6, cpu.hl().Get(), mem) // RES 6 (HL) []
+		cpu.resAddr(6, cpu.hl(), mem) // RES 6 (HL) []
 	case 0xb5:
 		cpu.res(6, &cpu.l) // RES 6 L []
 	case 0xbf:
@@ -767,7 +767,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xbc:
 		cpu.res(7, &cpu.h) // RES 7 H []
 	case 0xbe:
-		cpu.resAddr(7, cpu.hl().Get(), mem) // RES 7 (HL) []
+		cpu.resAddr(7, cpu.hl(), mem) // RES 7 (HL) []
 	case 0xbd:
 		cpu.res(7, &cpu.l) // RES 7 L []
 	case 0x17:
@@ -783,7 +783,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x14:
 		cpu.rl(&cpu.h) // RL H  [Z 0 0 C]
 	case 0x16:
-		cpu.rlAddr(cpu.hl().Get(), mem) // RL (HL)  [Z 0 0 C]
+		cpu.rlAddr(cpu.hl(), mem) // RL (HL)  [Z 0 0 C]
 	case 0x15:
 		cpu.rl(&cpu.l) // RL L  [Z 0 0 C]
 	case 0x07:
@@ -799,7 +799,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x04:
 		cpu.rlc(&cpu.h) // RLC H  [Z 0 0 C]
 	case 0x06:
-		cpu.rlcAddr(cpu.hl().Get(), mem) // RLC (HL)  [Z 0 0 C]
+		cpu.rlcAddr(cpu.hl(), mem) // RLC (HL)  [Z 0 0 C]
 	case 0x05:
 		cpu.rlc(&cpu.l) // RLC L  [Z 0 0 C]
 	case 0x1f:
@@ -815,7 +815,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x1c:
 		cpu.rr(&cpu.h) // RR H  [Z 0 0 C]
 	case 0x1e:
-		cpu.rrAddr(cpu.hl().Get(), mem) // RR (HL)  [Z 0 0 C]
+		cpu.rrAddr(cpu.hl(), mem) // RR (HL)  [Z 0 0 C]
 	case 0x1d:
 		cpu.rr(&cpu.l) // RR L  [Z 0 0 C]
 	case 0x0f:
@@ -831,7 +831,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x0c:
 		cpu.rrc(&cpu.h) // RRC H  [Z 0 0 C]
 	case 0x0e:
-		cpu.rrcAddr(cpu.hl().Get(), mem) // RRC (HL)  [Z 0 0 C]
+		cpu.rrcAddr(cpu.hl(), mem) // RRC (HL)  [Z 0 0 C]
 	case 0x0d:
 		cpu.rrc(&cpu.l) // RRC L  [Z 0 0 C]
 	case 0xc7:
@@ -847,7 +847,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xc4:
 		cpu.set(0, &cpu.h) // SET 0 H []
 	case 0xc6:
-		cpu.setAddr(0, cpu.hl().Get(), mem) // SET 0 (HL) []
+		cpu.setAddr(0, cpu.hl(), mem) // SET 0 (HL) []
 	case 0xc5:
 		cpu.set(0, &cpu.l) // SET 0 L []
 	case 0xcf:
@@ -863,7 +863,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xcc:
 		cpu.set(1, &cpu.h) // SET 1 H []
 	case 0xce:
-		cpu.setAddr(1, cpu.hl().Get(), mem) // SET 1 (HL) []
+		cpu.setAddr(1, cpu.hl(), mem) // SET 1 (HL) []
 	case 0xcd:
 		cpu.set(1, &cpu.l) // SET 1 L []
 	case 0xd7:
@@ -879,7 +879,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xd4:
 		cpu.set(2, &cpu.h) // SET 2 H []
 	case 0xd6:
-		cpu.setAddr(2, cpu.hl().Get(), mem) // SET 2 (HL) []
+		cpu.setAddr(2, cpu.hl(), mem) // SET 2 (HL) []
 	case 0xd5:
 		cpu.set(2, &cpu.l) // SET 2 L []
 	case 0xdf:
@@ -895,7 +895,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xdc:
 		cpu.set(3, &cpu.h) // SET 3 H []
 	case 0xde:
-		cpu.setAddr(3, cpu.hl().Get(), mem) // SET 3 (HL) []
+		cpu.setAddr(3, cpu.hl(), mem) // SET 3 (HL) []
 	case 0xdd:
 		cpu.set(3, &cpu.l) // SET 3 L []
 	case 0xe7:
@@ -911,7 +911,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xe4:
 		cpu.set(4, &cpu.h) // SET 4 H []
 	case 0xe6:
-		cpu.setAddr(4, cpu.hl().Get(), mem) // SET 4 (HL) []
+		cpu.setAddr(4, cpu.hl(), mem) // SET 4 (HL) []
 	case 0xe5:
 		cpu.set(4, &cpu.l) // SET 4 L []
 	case 0xef:
@@ -927,7 +927,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xec:
 		cpu.set(5, &cpu.h) // SET 5 H []
 	case 0xee:
-		cpu.setAddr(5, cpu.hl().Get(), mem) // SET 5 (HL) []
+		cpu.setAddr(5, cpu.hl(), mem) // SET 5 (HL) []
 	case 0xed:
 		cpu.set(5, &cpu.l) // SET 5 L []
 	case 0xf7:
@@ -943,7 +943,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xf4:
 		cpu.set(6, &cpu.h) // SET 6 H []
 	case 0xf6:
-		cpu.setAddr(6, cpu.hl().Get(), mem) // SET 6 (HL) []
+		cpu.setAddr(6, cpu.hl(), mem) // SET 6 (HL) []
 	case 0xf5:
 		cpu.set(6, &cpu.l) // SET 6 L []
 	case 0xff:
@@ -959,7 +959,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0xfc:
 		cpu.set(7, &cpu.h) // SET 7 H []
 	case 0xfe:
-		cpu.setAddr(7, cpu.hl().Get(), mem) // SET 7 (HL) []
+		cpu.setAddr(7, cpu.hl(), mem) // SET 7 (HL) []
 	case 0xfd:
 		cpu.set(7, &cpu.l) // SET 7 L []
 	case 0x27:
@@ -975,7 +975,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x24:
 		cpu.sla(&cpu.h) // SLA H  [Z 0 0 C]
 	case 0x26:
-		cpu.slaAddr(cpu.hl().Get(), mem) // SLA (HL)  [Z 0 0 C]
+		cpu.slaAddr(cpu.hl(), mem) // SLA (HL)  [Z 0 0 C]
 	case 0x25:
 		cpu.sla(&cpu.l) // SLA L  [Z 0 0 C]
 	case 0x2f:
@@ -991,7 +991,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x2c:
 		cpu.sra(&cpu.h) // SRA H  [Z 0 0 0]
 	case 0x2e:
-		cpu.sraAddr(cpu.hl().Get(), mem) // SRA (HL)  [Z 0 0 0]
+		cpu.sraAddr(cpu.hl(), mem) // SRA (HL)  [Z 0 0 0]
 	case 0x2d:
 		cpu.sra(&cpu.l) // SRA L  [Z 0 0 0]
 	case 0x3f:
@@ -1007,7 +1007,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x3c:
 		cpu.srl(&cpu.h) // SRL H  [Z 0 0 C]
 	case 0x3e:
-		cpu.srlAddr(cpu.hl().Get(), mem) // SRL (HL)  [Z 0 0 C]
+		cpu.srlAddr(cpu.hl(), mem) // SRL (HL)  [Z 0 0 C]
 	case 0x3d:
 		cpu.srl(&cpu.l) // SRL L  [Z 0 0 C]
 	case 0x37:
@@ -1023,7 +1023,7 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
 	case 0x34:
 		cpu.swap(&cpu.h) // SWAP H  [Z 0 0 0]
 	case 0x36:
-		cpu.swapAddr(cpu.hl().Get(), mem) // SWAP (HL)  [Z 0 0 0]
+		cpu.swapAddr(cpu.hl(), mem) // SWAP (HL)  [Z 0 0 0]
 	case 0x35:
 		cpu.swap(&cpu.l) // SWAP L  [Z 0 0 0]
 	default:
