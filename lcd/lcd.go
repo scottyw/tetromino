@@ -61,37 +61,45 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 
 // FrameData returns the frame data as a 256x256 array of bytes where each element is a colour value between 0 and 3
 func (lcd *LCD) FrameData(mem mem.Memory) [65536]uint8 {
-	lcd.drawTiles(mem, highBgTileMapDisplaySelect)
+	lcd.drawTiles(mem)
 	// if windowDisplayEnable(mem) {
 	// 	lcd.drawTiles(mem, highWindowTileMapDisplaySelect)
 	// }
 	return lcd.data
 }
 
+func lowTileAbsoluteAddress(tileNumber uint8) uint16 {
+	return 0x8000 + uint16(tileNumber)*16
+}
+
+func highTileAbsoluteAddress(tileNumber int8) uint16 {
+	return uint16(0x9000 + int(tileNumber)*16)
+}
+
 // Returns 16 bytes representing one 8x8 tile
-func tileData(mem mem.Memory, tile uint16, displaySelect func(mem.Memory) bool) []byte {
+func tileData(mem mem.Memory, tile uint16) []byte {
 	var tileAddr uint16
-	if displaySelect(mem) {
+	if highBgTileMapDisplaySelect(mem) {
 		tileAddr = 0x9c00 + tile
 	} else {
 		tileAddr = 0x9800 + tile
 	}
-	tileIndex := *mem.Read(tileAddr)
+	tileNumber := *mem.Read(tileAddr)
 	if lowTileDataSelect(mem) {
-		return mem.ReadRegion(0x8000+uint16(tileIndex)*16, 16)
+		return mem.ReadRegion(lowTileAbsoluteAddress(tileNumber), 16)
 	}
-	return mem.ReadRegion(uint16(0x9000+int(tileIndex)*16), 16)
+	return mem.ReadRegion(highTileAbsoluteAddress(int8(tileNumber)), 16)
 }
 
-func (lcd *LCD) drawTiles(mem mem.Memory, displaySelect func(mem.Memory) bool) {
+func (lcd *LCD) drawTiles(mem mem.Memory) {
 	var x, y, row, col uint16
 	var pixel uint8
 	for y = 0; y < 32; y++ {
 		for x = 0; x < 32; x++ {
-			tile := tileData(mem, y*32+x, displaySelect)
+			tileData := tileData(mem, y*32+x)
 			for row = 0; row < 8; row++ {
-				a := tile[row*2]
-				b := tile[row*2+1]
+				a := tileData[row*2]
+				b := tileData[row*2+1]
 				for col = 0; col < 8; col++ {
 					pixel = (a>>uint(7-col))&1 | ((b>>uint(7-col))&1)<<1
 					index := (((y * 8) + row) * 256) + ((x * 8) + col)
