@@ -56,11 +56,7 @@ Tetris will corrupt the display and crash as soon as it hits demo mode. Every ot
 
 #### Go dependencies
 
-Install the Go dependencies using dep:
-
-    dep ensure
-
-Or if you prefer get them manually like this:
+Install these Go dependencies:
 
     github.com/go-gl/gl/v2.1/gl
     github.com/go-gl/glfw/v3.1/glfw
