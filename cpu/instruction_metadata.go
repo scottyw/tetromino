@@ -29,29 +29,41 @@ func noFlags(flags []string) bool {
 	return flags[0] == "-" && flags[1] == "-" && flags[2] == "-" && flags[3] == "-"
 }
 
-func validateInstructionCOnsistency(im metadata) {
+func validateInstructionConsistency(im metadata) {
 	switch im.Length {
 	case 1:
-		if (strings.Contains(im.Operand1, "8") && !strings.Contains(im.Operand1, "8H")) ||
-			(strings.Contains(im.Operand2, "8") && !strings.Contains(im.Operand2, "8H")) ||
-			strings.Contains(im.Operand1, "16") ||
-			strings.Contains(im.Operand2, "16") {
-			panic(fmt.Sprintf("Metadata error: Length of 1 implies no operands should be immediate values: %v", im))
-		}
+		validateInstructionConsistencyOne(im)
 	case 2:
-		if (strings.Contains(im.Operand1, "8") == strings.Contains(im.Operand2, "8")) ||
-			strings.Contains(im.Operand1, "16") ||
-			strings.Contains(im.Operand2, "16") {
-			panic(fmt.Sprintf("Metadata error: Length of 2 implies exactly one of the operands should be an 8-bit immediate value: %v", im))
-		}
+		validateInstructionConsistencyTwo(im)
 	case 3:
-		if (strings.Contains(im.Operand1, "16") == strings.Contains(im.Operand2, "16")) ||
-			strings.Contains(im.Operand1, "8") ||
-			strings.Contains(im.Operand2, "8") {
-			panic(fmt.Sprintf("Metadata error: Length of 3 implies exactly one of the operands should be a 16-bit immediate value: %v", im))
-		}
+		validateInstructionConsistencyThree(im)
 	default:
 		panic("Metadata error: Unsupported instruction length " + im.Mnemonic)
+	}
+}
+
+func validateInstructionConsistencyOne(im metadata) {
+	if (strings.Contains(im.Operand1, "8") && !strings.Contains(im.Operand1, "8H")) ||
+		(strings.Contains(im.Operand2, "8") && !strings.Contains(im.Operand2, "8H")) ||
+		strings.Contains(im.Operand1, "16") ||
+		strings.Contains(im.Operand2, "16") {
+		panic(fmt.Sprintf("Metadata error: Length of 1 implies no operands should be immediate values: %v", im))
+	}
+}
+
+func validateInstructionConsistencyTwo(im metadata) {
+	if (strings.Contains(im.Operand1, "8") == strings.Contains(im.Operand2, "8")) ||
+		strings.Contains(im.Operand1, "16") ||
+		strings.Contains(im.Operand2, "16") {
+		panic(fmt.Sprintf("Metadata error: Length of 2 implies exactly one of the operands should be an 8-bit immediate value: %v", im))
+	}
+}
+
+func validateInstructionConsistencyThree(im metadata) {
+	if (strings.Contains(im.Operand1, "16") == strings.Contains(im.Operand2, "16")) ||
+		strings.Contains(im.Operand1, "8") ||
+		strings.Contains(im.Operand2, "8") {
+		panic(fmt.Sprintf("Metadata error: Length of 3 implies exactly one of the operands should be a 16-bit immediate value: %v", im))
 	}
 }
 
