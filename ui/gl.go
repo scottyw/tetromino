@@ -7,8 +7,6 @@ import (
 	"log"
 	"runtime"
 
-	"github.com/scottyw/tetromino/mem"
-
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/scottyw/tetromino/lcd"
@@ -64,10 +62,10 @@ func (glx *GL) Shutdown() {
 }
 
 // DrawFrame draws a frame to the GL window
-func (glx *GL) DrawFrame(lcd *lcd.LCD, mem mem.Memory) {
+func (glx *GL) DrawFrame(lcd *lcd.LCD) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
-	image := renderFrame(lcd.FrameData(mem))
+	image := renderFrame(lcd.FrameData())
 	setTexture(image)
 	drawBuffer(glx.window)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
