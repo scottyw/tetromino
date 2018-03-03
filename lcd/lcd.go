@@ -160,7 +160,13 @@ func deriveTilePixel(mem mem.Memory, vramX, vramY uint8, highTileMap, lowTileDat
 }
 
 func deriveWindowPixel(mem mem.Memory, vramX, vramY uint8) (uint8, bool) {
-	if windowDisplayEnable(mem) && vramX >= *mem.WX && vramY >= *mem.WY+7 {
+	if windowDisplayEnable(mem) &&
+		*mem.WX >= 0 &&
+		*mem.WX <= 166 &&
+		*mem.WY >= 0 &&
+		*mem.WY <= 143 &&
+		vramX >= *mem.WX &&
+		vramY >= *mem.WY+7 {
 		highTileMap := highWindowTileMapDisplaySelect(mem)
 		lowTileData := lowTileDataSelect(mem)
 		return deriveTilePixel(mem, vramX, vramY, highTileMap, lowTileData), true
@@ -178,9 +184,9 @@ func deriveBackgroundPixel(mem mem.Memory, vramX, vramY uint8) uint8 {
 }
 
 func derivePixel(mem mem.Memory, vramX, vramY uint8) uint8 {
-	if !lcdDisplayEnable(mem) {
-		return 0
-	}
+	// if !lcdDisplayEnable(mem) {
+	// 	return 0
+	// }
 	if pixel, found := deriveSpritePixel(mem, vramX, vramY); found {
 		return pixel
 	}
