@@ -31,7 +31,7 @@ func NewGL() UI {
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.Resizable, 0)
-	window, err := glfw.CreateWindow(512, 512, "Tetromino", nil, nil)
+	window, err := glfw.CreateWindow(640, 576, "Tetromino", nil, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -104,8 +104,8 @@ func setTexture(im *image.RGBA) {
 
 func drawBuffer(window *glfw.Window) {
 	w, h := window.GetFramebufferSize()
-	s1 := float32(w) / 256
-	s2 := float32(h) / 256
+	s1 := float32(w) / 160
+	s2 := float32(h) / 144
 	f := float32(1 - 0)
 	var x, y float32
 	if s1 >= s2 {
@@ -142,11 +142,11 @@ func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
 	}
 }
 
-func renderFrame(data [65536]uint8) *image.RGBA {
-	im := image.NewRGBA(image.Rect(0, 0, 256, 256))
-	for y := 0; y < 256; y++ {
-		for x := 0; x < 256; x++ {
-			pixel := data[y*256+x]
+func renderFrame(data [23040]uint8) *image.RGBA {
+	im := image.NewRGBA(image.Rect(0, 0, 160, 144))
+	for y := 0; y < 144; y++ {
+		for x := 0; x < 160; x++ {
+			pixel := data[y*160+x]
 			renderPixel(im, x, y, pixel)
 		}
 	}
