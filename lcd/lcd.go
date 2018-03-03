@@ -37,7 +37,7 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 	case ly == 144:
 		// V-Blank period starts
 		stat = 1
-		*memory.Read(mem.IF) |= 0x01
+		*memory.IF |= 0x01
 	case lyRemainder == 0:
 		// OAM period starts
 		stat = 2
@@ -51,7 +51,7 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 			lcd.updateLcdLine(memory, ly)
 		}
 	default:
-		stat = *memory.Read(mem.STAT)
+		stat = *memory.STAT
 	}
 	// Set coincidence flag and coincidence interrupt on stat register
 	if ly == uint8(*memory.Read(0xff45)) {
@@ -68,8 +68,8 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 	case lyRemainder == 63:
 		stat |= 0x08
 	}
-	*memory.Read(mem.STAT) = stat
-	*memory.Read(mem.LY) = ly
+	*memory.STAT = stat
+	*memory.LY = ly
 }
 
 // FrameData returns the frame data as a 160x144 array of bytes where each element is a colour value between 0 and 3
@@ -100,25 +100,6 @@ func tileData(mem mem.Memory, tile uint16) []byte {
 	return mem.ReadRegion(highTileAbsoluteAddress(int8(tileNumber)), 16)
 }
 
-func (lcd *LCD) drawTiles2(mem mem.Memory) {
-	var x, y, row, col uint16
-	var pixel uint8
-	for y = 0; y < 32; y++ {
-		for x = 0; x < 32; x++ {
-			tileData := tileData(mem, y*32+x)
-			for row = 0; row < 8; row++ {
-				a := tileData[row*2]
-				b := tileData[row*2+1]
-				for col = 0; col < 8; col++ {
-					pixel = (a>>uint(7-col))&1 | ((b>>uint(7-col))&1)<<1
-					index := (((y * 8) + row) * 256) + ((x * 8) + col)
-					lcd.data[index] = pixel
-				}
-			}
-		}
-	}
-}
-
 func pixel(mem mem.Memory, memoryAddr uint16, bit uint8) uint8 {
 	var a, b, pixel uint8
 	a = uint8(*mem.Read(memoryAddr))
@@ -147,36 +128,71 @@ func pixel(mem mem.Memory, memoryAddr uint16, bit uint8) uint8 {
 }
 
 // Returns the memory address of the tile
-func tileDataAddr(mem mem.Memory, tileX, tileY uint8) uint16 {
+func tileDataAddr(mem mem.Memory, tileX, tileY uint8, highTileMap, lowTileData bool) uint16 {
 	var tileNumberAddr, tileIndex uint16
 	tileIndex = uint16(tileY)*32 + uint16(tileX)
-	if highBgTileMapDisplaySelect(mem) {
+	if highTileMap {
 		tileNumberAddr = 0x9c00 + tileIndex
 	} else {
 		tileNumberAddr = 0x9800 + tileIndex
 	}
 	tileNumber := *mem.Read(tileNumberAddr)
-	if lowTileDataSelect(mem) {
+	if lowTileData {
 		return lowTileAbsoluteAddress(tileNumber)
 	}
 	return highTileAbsoluteAddress(int8(tileNumber))
 }
 
+func deriveSpritePixel(mem mem.Memory, vramX, vramY uint8) (uint8, bool) {
+	return 0, false
+}
+
+func deriveTilePixel(mem mem.Memory, vramX, vramY uint8, highTileMap, lowTileData bool) uint8 {
+	var tileX, tileY, tileOffsetX, tileOffsetY uint8
+	var tileAddr, memoryAddr uint16
+	tileX = vramX / 8
+	tileY = vramY / 8
+	tileAddr = tileDataAddr(mem, tileX, tileY, highTileMap, lowTileData)
+	tileOffsetX = vramX % 8
+	tileOffsetY = vramY % 8
+	memoryAddr = tileAddr + uint16(tileOffsetY)*2
+	return pixel(mem, memoryAddr, tileOffsetX)
+}
+
+func deriveWindowPixel(mem mem.Memory, vramX, vramY uint8) (uint8, bool) {
+	if windowDisplayEnable(mem) {
+		highTileMap := highWindowTileMapDisplaySelect(mem)
+		lowTileData := lowTileDataSelect(mem)
+		return deriveTilePixel(mem, vramX, vramY, highTileMap, lowTileData), true
+	}
+	return 0, false
+}
+
+func deriveBackgroundPixel(mem mem.Memory, vramX, vramY uint8) uint8 {
+	highTileMap := highBgTileMapDisplaySelect(mem)
+	lowTileData := lowTileDataSelect(mem)
+	return deriveTilePixel(mem, vramX, vramY, highTileMap, lowTileData)
+}
+
+func derivePixel(mem mem.Memory, vramX, vramY uint8) uint8 {
+	if pixel, found := deriveSpritePixel(mem, vramX, vramY); found {
+		return pixel
+	}
+	if pixel, found := deriveWindowPixel(mem, vramX, vramY); found {
+		return pixel
+	}
+	return deriveBackgroundPixel(mem, vramX, vramY)
+}
+
 func (lcd *LCD) updateLcdLine(mem mem.Memory, lcdY uint8) {
-	var lcdX, scrX, scrY, vramX, vramY, tileX, tileY, tileOffsetX, tileOffsetY uint8
-	var index, tileAddr, memoryAddr uint16
+	var lcdX, scrX, scrY, vramX, vramY uint8
+	var index uint16
 	for lcdX = 0; lcdX < 160; lcdX++ {
 		index = uint16(lcdY)*160 + uint16(lcdX)
 		scrX = 0            // FIXME scroll register
 		scrY = 0            // FIXME scroll register
 		vramX = lcdX + scrX // Overflows deliberately
 		vramY = lcdY + scrY // Overflows deliberately
-		tileX = vramX / 8
-		tileY = vramY / 8
-		tileAddr = tileDataAddr(mem, tileX, tileY)
-		tileOffsetX = vramX % 8
-		tileOffsetY = vramY % 8
-		memoryAddr = tileAddr + uint16(tileOffsetY)*2
-		lcd.data[index] = pixel(mem, memoryAddr, tileOffsetX)
+		lcd.data[index] = derivePixel(mem, vramX, vramY)
 	}
 }

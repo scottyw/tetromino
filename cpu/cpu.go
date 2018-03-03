@@ -125,9 +125,7 @@ func (cpu *CPU) flags(zf, nf, hf, cf bool) {
 
 func (cpu *CPU) checkInterrupts(memory mem.Memory) {
 	if cpu.ime {
-		ieReg := *memory.Read(mem.IE)
-		ifReg := *memory.Read(mem.IF)
-		interrupts := ifReg & ieReg
+		interrupts := *memory.IF & *memory.IE
 		if interrupts > 0 {
 			cpu.ime = false
 			switch {
@@ -136,7 +134,7 @@ func (cpu *CPU) checkInterrupts(memory mem.Memory) {
 					fmt.Printf("==== V-Blank interrupt ...\n")
 				}
 				cpu.rst(0x0040, memory)
-				*memory.Read(mem.IF) &^= 0x01 // Reset IF
+				*memory.IF &^= 0x01 // Reset IF
 			}
 		}
 	}
