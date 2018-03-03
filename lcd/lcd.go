@@ -1,7 +1,20 @@
 package lcd
 
 import (
+	"fmt"
+
 	"github.com/scottyw/tetromino/mem"
+)
+
+const (
+	bit7 = 1 << iota
+	bit6 = 1 << iota
+	bit5 = 1 << iota
+	bit4 = 1 << iota
+	bit3 = 1 << iota
+	bit2 = 1 << iota
+	bit1 = 1 << iota
+	bit0 = 1 << iota
 )
 
 // LCD represents the LCD display of the Gameboy
@@ -115,13 +128,52 @@ func updateLcdLine(ly uint8) {
 	// FIXME
 }
 
-func pixel(addr uint16, bit uint8) uint8 {
-	return bit % 4
+func pixel(mem mem.Memory, memoryAddr uint16, bit uint8) uint8 {
+	var a, b, pixel uint8
+	a = uint8(*mem.Read(memoryAddr))
+	b = uint8(*mem.Read(memoryAddr + 1))
+	switch bit {
+	case 0:
+		pixel = (a&bit0)>>7 | (b&bit0)>>6
+	case 1:
+		pixel = (a&bit1)>>6 | (b&bit1)>>5
+	case 2:
+		pixel = (a&bit2)>>5 | (b&bit2)>>4
+	case 3:
+		pixel = (a&bit3)>>4 | (b&bit3)>>3
+	case 4:
+		pixel = (a&bit4)>>3 | (b&bit4)>>2
+	case 5:
+		pixel = (a&bit5)>>2 | (b&bit5)>>1
+	case 6:
+		pixel = (a&bit6)>>1 | (b & bit6)
+	case 7:
+		pixel = (a & bit7) | (b&bit7)<<1
+	default:
+		panic(fmt.Sprintf("Bad bit in pixel(): %v", bit))
+	}
+	return pixel
+}
+
+// Returns the memory address of the tile
+func tileDataAddr(mem mem.Memory, tileX, tileY uint8) uint16 {
+	var tileNumberAddr, tileIndex uint16
+	tileIndex = uint16(tileY)*32 + uint16(tileX)
+	if highBgTileMapDisplaySelect(mem) {
+		tileNumberAddr = 0x9c00 + tileIndex
+	} else {
+		tileNumberAddr = 0x9800 + tileIndex
+	}
+	tileNumber := *mem.Read(tileNumberAddr)
+	if lowTileDataSelect(mem) {
+		return lowTileAbsoluteAddress(tileNumber)
+	}
+	return highTileAbsoluteAddress(int8(tileNumber))
 }
 
 func (lcd *LCD) drawTiles(mem mem.Memory) {
 	var lcdX, lcdY, scrX, scrY, vramX, vramY, tileX, tileY, tileOffsetX, tileOffsetY uint8
-	var index, addr uint16
+	var index, tileAddr, memoryAddr uint16
 	for lcdY = 0; lcdY < 144; lcdY++ {
 		for lcdX = 0; lcdX < 160; lcdX++ {
 			index = uint16(lcdY)*160 + uint16(lcdX)
@@ -129,12 +181,13 @@ func (lcd *LCD) drawTiles(mem mem.Memory) {
 			scrY = 0            // FIXME scroll register
 			vramX = lcdX + scrX // Overflows deliberately
 			vramY = lcdY + scrY // Overflows deliberately
-			tileX = vramX / 32
-			tileY = vramY / 32
-			tileOffsetX = vramX % 32
-			tileOffsetY = vramY % 32
-			addr = uint16(tileY)*512 + uint16(tileX)*16 + uint16(tileOffsetY)*2
-			lcd.data[index] = pixel(addr, tileOffsetX)
+			tileX = vramX / 8
+			tileY = vramY / 8
+			tileAddr = tileDataAddr(mem, tileX, tileY)
+			tileOffsetX = vramX % 8
+			tileOffsetY = vramY % 8
+			memoryAddr = tileAddr + uint16(tileOffsetY)*2
+			lcd.data[index] = pixel(mem, memoryAddr, tileOffsetX)
 		}
 	}
 }
