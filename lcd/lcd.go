@@ -160,7 +160,7 @@ func deriveTilePixel(mem mem.Memory, vramX, vramY uint8, highTileMap, lowTileDat
 }
 
 func deriveWindowPixel(mem mem.Memory, vramX, vramY uint8) (uint8, bool) {
-	if windowDisplayEnable(mem) {
+	if windowDisplayEnable(mem) && vramX >= *mem.WX && vramY >= *mem.WY+7 {
 		highTileMap := highWindowTileMapDisplaySelect(mem)
 		lowTileData := lowTileDataSelect(mem)
 		return deriveTilePixel(mem, vramX, vramY, highTileMap, lowTileData), true
@@ -169,12 +169,18 @@ func deriveWindowPixel(mem mem.Memory, vramX, vramY uint8) (uint8, bool) {
 }
 
 func deriveBackgroundPixel(mem mem.Memory, vramX, vramY uint8) uint8 {
+	if !bgDisplay(mem) {
+		return 0
+	}
 	highTileMap := highBgTileMapDisplaySelect(mem)
 	lowTileData := lowTileDataSelect(mem)
 	return deriveTilePixel(mem, vramX, vramY, highTileMap, lowTileData)
 }
 
 func derivePixel(mem mem.Memory, vramX, vramY uint8) uint8 {
+	if !lcdDisplayEnable(mem) {
+		return 0
+	}
 	if pixel, found := deriveSpritePixel(mem, vramX, vramY); found {
 		return pixel
 	}
@@ -185,14 +191,12 @@ func derivePixel(mem mem.Memory, vramX, vramY uint8) uint8 {
 }
 
 func (lcd *LCD) updateLcdLine(mem mem.Memory, lcdY uint8) {
-	var lcdX, scrX, scrY, vramX, vramY uint8
+	var lcdX, vramX, vramY uint8
 	var index uint16
 	for lcdX = 0; lcdX < 160; lcdX++ {
 		index = uint16(lcdY)*160 + uint16(lcdX)
-		scrX = 0            // FIXME scroll register
-		scrY = 0            // FIXME scroll register
-		vramX = lcdX + scrX // Overflows deliberately
-		vramY = lcdY + scrY // Overflows deliberately
+		vramX = lcdX + *mem.SCX // Overflows deliberately
+		vramY = lcdY + *mem.SCY // Overflows deliberately
 		lcd.data[index] = derivePixel(mem, vramX, vramY)
 	}
 }
