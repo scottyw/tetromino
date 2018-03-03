@@ -168,12 +168,29 @@ func region(addr uint16) string {
 	}
 }
 
+func (mem Memory) dma(addrPrefix uint8) {
+	srcAddr := uint16(addrPrefix) << 8
+	for destAddr := 0xfe00; destAddr < 0xff00; destAddr++ {
+		mem.mem[destAddr] = mem.mem[srcAddr]
+	}
+}
+
 // Read a byte from the chosen memory location
-func (mem Memory) Read(addr uint16) *byte {
+func (mem Memory) Read(addr uint16) byte {
 	// if addr >= 0x8000 {
 	// 	fmt.Printf("DEBUG: Read %s - 0x%04x\n", region(addr), addr)
 	// }
-	return &mem.mem[addr]
+	return mem.mem[addr]
+}
+
+// Write a byte to the chosen memory location
+func (mem Memory) Write(addr uint16, value byte) {
+	switch addr {
+	case 0xff46:
+		mem.dma(value)
+	default:
+		mem.mem[addr] = value
+	}
 }
 
 // ReadRegion of memory

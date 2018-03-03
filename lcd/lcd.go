@@ -54,7 +54,7 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 		stat = *memory.STAT
 	}
 	// Set coincidence flag and coincidence interrupt on stat register
-	if ly == uint8(*memory.Read(0xff45)) {
+	if ly == *memory.LYC {
 		stat |= 0x44
 	} else {
 		stat &^= 0x44
@@ -93,7 +93,7 @@ func tileData(mem mem.Memory, tile uint16) []byte {
 	} else {
 		tileAddr = 0x9800 + tile
 	}
-	tileNumber := *mem.Read(tileAddr)
+	tileNumber := mem.Read(tileAddr)
 	if lowTileDataSelect(mem) {
 		return mem.ReadRegion(lowTileAbsoluteAddress(tileNumber), 16)
 	}
@@ -102,8 +102,8 @@ func tileData(mem mem.Memory, tile uint16) []byte {
 
 func pixel(mem mem.Memory, memoryAddr uint16, bit uint8) uint8 {
 	var a, b, pixel uint8
-	a = uint8(*mem.Read(memoryAddr))
-	b = uint8(*mem.Read(memoryAddr + 1))
+	a = uint8(mem.Read(memoryAddr))
+	b = uint8(mem.Read(memoryAddr + 1))
 	switch bit {
 	case 0:
 		pixel = (a&bit0)>>7 | (b&bit0)>>6
@@ -136,7 +136,7 @@ func tileDataAddr(mem mem.Memory, tileX, tileY uint8, highTileMap, lowTileData b
 	} else {
 		tileNumberAddr = 0x9800 + tileIndex
 	}
-	tileNumber := *mem.Read(tileNumberAddr)
+	tileNumber := mem.Read(tileNumberAddr)
 	if lowTileData {
 		return lowTileAbsoluteAddress(tileNumber)
 	}
@@ -144,6 +144,31 @@ func tileDataAddr(mem mem.Memory, tileX, tileY uint8, highTileMap, lowTileData b
 }
 
 func deriveSpritePixel(mem mem.Memory, vramX, vramY uint8) (uint8, bool) {
+	largeSpriteSize := largeSpriteSize(mem)
+	var spriteAddr uint16
+	for spriteAddr = 0xfe00; spriteAddr < 0xfe9f; spriteAddr += 4 {
+		startY := mem.Read(spriteAddr)
+		if startY == 0 || startY > 160 {
+			continue
+		}
+		startX := mem.Read(spriteAddr + 1)
+		if startX == 0 || startX > 168 {
+			continue
+		}
+		tileNumber := mem.Read(spriteAddr + 2)
+		// attributes := mem.Read(spriteAddr + 3)
+		endY := startY + 8
+		endX := startX + 8
+		if largeSpriteSize {
+			endY += 8
+		}
+		if vramX >= startX &&
+			vramX < endX &&
+			vramY >= startY &&
+			vramY < endY {
+			fmt.Println("IN SPRITE ", tileNumber)
+		}
+	}
 	return 0, false
 }
 

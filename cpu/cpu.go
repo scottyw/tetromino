@@ -142,13 +142,13 @@ func (cpu *CPU) checkInterrupts(memory mem.Memory) {
 
 func (cpu *CPU) execute(mem mem.Memory) {
 	cpu.checkInterrupts(mem)
-	instruction := *mem.Read(cpu.pc)
+	instruction := mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
 	if im.Addr == "" {
 		panic(fmt.Sprintf("Unknown instruction opcode: %v", instruction))
 	}
 	if instruction == 0xcb {
-		instruction := *mem.Read(cpu.pc + 1)
+		instruction := mem.Read(cpu.pc + 1)
 		im := prefixedInstructionMetadata[instruction]
 		if options.DebugCPU(cpu.pc) {
 			fmt.Printf("0x%04x : %v\n%v\n\n", cpu.pc, im, cpu)
@@ -164,14 +164,14 @@ func (cpu *CPU) execute(mem mem.Memory) {
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
-			u8 := *mem.Read(cpu.pc + 1)
+			u8 := mem.Read(cpu.pc + 1)
 			if options.DebugCPU(cpu.pc) {
 				fmt.Printf("0x%04x : %v u8=0x%02x\n%v\n\n", cpu.pc, im, u8, cpu)
 			}
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
-			u16 := uint16(*mem.Read(cpu.pc + 1)) | uint16(*mem.Read(cpu.pc + 2))<<8
+			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
 			if options.DebugCPU(cpu.pc) {
 				fmt.Printf("0x%04x : %v u16=0x%04x\n%v\n\n", cpu.pc, im, u16, cpu)
 			}
@@ -186,7 +186,7 @@ func (cpu *CPU) execute(mem mem.Memory) {
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
 func (cpu *CPU) Tick(mem mem.Memory) {
 
-	*mem.Read(0xff00) = 0xff // FIXME no joypad input yet
+	mem.Write(0xff00, 0xff) // FIXME no joypad input yet
 
 	if cycles == 0 {
 		cpu.execute(mem)

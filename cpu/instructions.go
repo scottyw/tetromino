@@ -22,7 +22,7 @@ func (cpu *CPU) adc(u8 uint8) {
 }
 
 func (cpu *CPU) adcAddr(a16 uint16, mem mem.Memory) {
-	cpu.adc(*mem.Read(a16))
+	cpu.adc(mem.Read(a16))
 }
 
 func (cpu *CPU) add(u8 uint8) {
@@ -53,7 +53,7 @@ func (cpu *CPU) and(u8 uint8) {
 }
 
 func (cpu *CPU) andAddr(a16 uint16, mem mem.Memory) {
-	cpu.and(*mem.Read(a16))
+	cpu.and(mem.Read(a16))
 }
 
 func (cpu *CPU) bit(pos uint8, u8 uint8) {
@@ -62,7 +62,7 @@ func (cpu *CPU) bit(pos uint8, u8 uint8) {
 }
 
 func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	cpu.bit(pos, *mem.Read(a16))
+	cpu.bit(pos, mem.Read(a16))
 }
 
 func (cpu *CPU) call(kind string, a16 uint16, mem mem.Memory) {
@@ -71,9 +71,9 @@ func (cpu *CPU) call(kind string, a16 uint16, mem mem.Memory) {
 		if options.DebugFlowControl() {
 			fmt.Printf("==== CALL %04x --> %04x\n", cpu.pc, a16)
 		}
-		*mem.Read(cpu.sp) = byte(cpu.pc & 0xff)
+		mem.Write(cpu.sp, byte(cpu.pc&0xff))
 		cpu.sp--
-		*mem.Read(cpu.sp) = byte(cpu.pc >> 8)
+		mem.Write(cpu.sp, byte(cpu.pc>>8))
 		cpu.sp--
 		cpu.pc = a16
 	case "NZ":
@@ -118,7 +118,7 @@ func (cpu *CPU) cp(u8 uint8) {
 }
 
 func (cpu *CPU) cpAddr(a16 uint16, mem mem.Memory) {
-	cpu.cp(*mem.Read(a16))
+	cpu.cp(mem.Read(a16))
 }
 
 func (cpu *CPU) cpl() {
@@ -149,7 +149,9 @@ func (cpu *CPU) decSP() {
 }
 
 func (cpu *CPU) decAddr(a16 uint16, mem mem.Memory) {
-	cpu.dec(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.dec(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) di() {
@@ -183,7 +185,9 @@ func (cpu *CPU) incSP() {
 }
 
 func (cpu *CPU) incAddr(a16 uint16, mem mem.Memory) {
-	cpu.inc(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.inc(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) jp(kind string, a16 uint16) {
@@ -244,21 +248,21 @@ func (cpu *CPU) ld16(msb, lsb *uint8, u16 uint16) {
 }
 
 func (cpu *CPU) ldFromAddr(r8 *uint8, a16 uint16, mem mem.Memory) {
-	*r8 = *mem.Read(a16)
+	*r8 = mem.Read(a16)
 }
 
 func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem mem.Memory) {
-	*mem.Read(a16) = u8
+	mem.Write(a16, u8)
 }
 
 func (cpu *CPU) ldhFromAddr(u8 uint8, mem mem.Memory) {
 	address := uint16(0xff00 + uint16(u8))
-	cpu.a = *mem.Read(address)
+	cpu.a = mem.Read(address)
 }
 
 func (cpu *CPU) ldhToAddr(u8 uint8, mem mem.Memory) {
 	address := uint16(0xff00 + uint16(u8))
-	*mem.Read(address) = cpu.a
+	mem.Write(address, cpu.a)
 }
 
 func (cpu *CPU) ldAFromAddrC(mem mem.Memory) {
@@ -278,8 +282,8 @@ func (cpu *CPU) ldHLToSP() {
 }
 
 func (cpu *CPU) ldSPToAddr(a16 uint16, mem mem.Memory) {
-	*mem.Read(a16) = uint8(cpu.sp >> 8)
-	*mem.Read(a16 + 1) = uint8(cpu.sp | 0x0f)
+	mem.Write(a16, uint8(cpu.sp>>8))
+	mem.Write(a16+1, uint8(cpu.sp|0x0f))
 }
 
 func (cpu *CPU) ldSPToHL(i8 int8) {
@@ -317,14 +321,14 @@ func (cpu *CPU) or(u8 uint8) {
 }
 
 func (cpu *CPU) orAddr(a16 uint16, mem mem.Memory) {
-	cpu.or(*mem.Read(a16))
+	cpu.or(mem.Read(a16))
 }
 
 func (cpu *CPU) pop(msb, lsb *uint8, mem mem.Memory) {
 	cpu.sp++
-	*msb = *mem.Read(cpu.sp)
+	*msb = mem.Read(cpu.sp)
 	cpu.sp++
-	*lsb = *mem.Read(cpu.sp)
+	*lsb = mem.Read(cpu.sp)
 }
 
 func (cpu *CPU) popAF(mem mem.Memory) {
@@ -336,9 +340,9 @@ func (cpu *CPU) popAF(mem mem.Memory) {
 }
 
 func (cpu *CPU) push(msb, lsb uint8, mem mem.Memory) {
-	*mem.Read(cpu.sp) = lsb
+	mem.Write(cpu.sp, lsb)
 	cpu.sp--
-	*mem.Read(cpu.sp) = msb
+	mem.Write(cpu.sp, msb)
 	cpu.sp--
 }
 
@@ -347,16 +351,18 @@ func (cpu *CPU) res(pos uint8, r8 *uint8) {
 }
 
 func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	cpu.res(pos, mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.res(pos, &value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) ret(kind string, mem mem.Memory) {
 	switch kind {
 	case "":
 		cpu.sp++
-		msb := *mem.Read(cpu.sp)
+		msb := mem.Read(cpu.sp)
 		cpu.sp++
-		lsb := *mem.Read(cpu.sp)
+		lsb := mem.Read(cpu.sp)
 		retAddr := uint16(msb)<<8 | uint16(lsb)
 		cpu.pc = retAddr
 		if options.DebugFlowControl() {
@@ -413,7 +419,9 @@ func (cpu *CPU) rl(r8 *uint8) {
 }
 
 func (cpu *CPU) rlAddr(a16 uint16, mem mem.Memory) {
-	cpu.rl(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.rl(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) rla() {
@@ -436,7 +444,9 @@ func (cpu *CPU) rlca() {
 }
 
 func (cpu *CPU) rlcAddr(a16 uint16, mem mem.Memory) {
-	cpu.rlc(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.rlc(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) rr(r8 *uint8) {
@@ -453,7 +463,9 @@ func (cpu *CPU) rra() {
 }
 
 func (cpu *CPU) rrAddr(a16 uint16, mem mem.Memory) {
-	cpu.rr(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.rr(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) rrc(r8 *uint8) {
@@ -470,7 +482,9 @@ func (cpu *CPU) rrca() {
 }
 
 func (cpu *CPU) rrcAddr(a16 uint16, mem mem.Memory) {
-	cpu.rrc(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.rrc(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) rst(a16 uint16, mem mem.Memory) {
@@ -485,7 +499,9 @@ func (cpu *CPU) set(pos uint8, r8 *uint8) {
 }
 
 func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem mem.Memory) {
-	cpu.set(pos, mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.set(pos, &value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) sla(r8 *uint8) {
@@ -495,7 +511,9 @@ func (cpu *CPU) sla(r8 *uint8) {
 }
 
 func (cpu *CPU) slaAddr(a16 uint16, mem mem.Memory) {
-	cpu.sla(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.sla(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) sra(r8 *uint8) {
@@ -509,7 +527,9 @@ func (cpu *CPU) sra(r8 *uint8) {
 }
 
 func (cpu *CPU) sraAddr(a16 uint16, mem mem.Memory) {
-	cpu.sra(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.sra(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) srl(r8 *uint8) {
@@ -519,7 +539,9 @@ func (cpu *CPU) srl(r8 *uint8) {
 }
 
 func (cpu *CPU) srlAddr(a16 uint16, mem mem.Memory) {
-	cpu.srl(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.srl(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) swap(r8 *uint8) {
@@ -529,7 +551,9 @@ func (cpu *CPU) swap(r8 *uint8) {
 }
 
 func (cpu *CPU) swapAddr(a16 uint16, mem mem.Memory) {
-	cpu.swap(mem.Read(a16))
+	value := mem.Read(a16)
+	cpu.swap(&value)
+	mem.Write(a16, value)
 }
 
 func (cpu *CPU) scf() {
