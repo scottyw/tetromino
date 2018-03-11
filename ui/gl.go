@@ -76,12 +76,76 @@ func (glx *GL) DrawFrame(lcd *lcd.LCD) {
 
 func onKeyFunc(joyp *uint8) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		if action == glfw.Press {
-			if key == glfw.KeySpace {
-				fmt.Println("Pressed space")
-			}
+		// Bit 5 - P15 Select Button Keys      (0=Select)
+		// Bit 4 - P14 Select Direction Keys   (0=Select)
+		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
+		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
+		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
+		// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
+		if (^*joyp)&0x20 > 0 {
+			buttonInput(key, action, joyp)
 		}
-		fmt.Printf("Pressed %v\n", key)
+		if (^*joyp)&0x10 > 0 {
+			directionInput(key, action, joyp)
+		}
+	}
+}
+
+func buttonInput(key glfw.Key, action glfw.Action, joyp *uint8) {
+	switch key {
+	case glfw.KeyA:
+		if action == glfw.Press {
+			*joyp &^= 0x8
+		} else if action == glfw.Release {
+			*joyp |= 0x8
+		}
+	case glfw.KeyS:
+		if action == glfw.Press {
+			*joyp &^= 0x4
+		} else if action == glfw.Release {
+			*joyp |= 0x4
+		}
+	case glfw.KeyZ:
+		if action == glfw.Press {
+			*joyp &^= 0x2
+		} else if action == glfw.Release {
+			*joyp |= 0x2
+		}
+	case glfw.KeyX:
+		if action == glfw.Press {
+			*joyp &^= 0x1
+		} else if action == glfw.Release {
+			*joyp |= 0x1
+		}
+	}
+}
+
+func directionInput(key glfw.Key, action glfw.Action, joyp *uint8) {
+	switch key {
+	case glfw.KeyDown:
+		if action == glfw.Press {
+			*joyp &^= 0x8
+		} else if action == glfw.Release {
+			*joyp |= 0x8
+		}
+	case glfw.KeyUp:
+		if action == glfw.Press {
+			*joyp &^= 0x4
+		} else if action == glfw.Release {
+			*joyp |= 0x4
+		}
+	case glfw.KeyLeft:
+		if action == glfw.Press {
+			*joyp &^= 0x2
+		} else if action == glfw.Release {
+			*joyp |= 0x2
+		}
+	case glfw.KeyRight:
+		if action == glfw.Press {
+			*joyp &^= 0x1
+		} else if action == glfw.Release {
+			*joyp |= 0x1
+		}
 	}
 }
 
