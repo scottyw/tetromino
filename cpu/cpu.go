@@ -185,9 +185,6 @@ func (cpu *CPU) execute(mem mem.Memory) {
 
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
 func (cpu *CPU) Tick(mem mem.Memory) {
-
-	mem.Write(0xff00, 0xff) // FIXME no joypad input yet
-
 	if cycles == 0 {
 		cpu.execute(mem)
 	}

@@ -60,6 +60,7 @@ func NewMemory() Memory {
 	}
 	mem := make([]byte, 65536)
 	copy(mem, rom)
+	mem[0xff00] = 0xff
 	mem[0xff05] = 0x00
 	mem[0xff06] = 0x00
 	mem[0xff07] = 0x00
@@ -186,6 +187,8 @@ func (mem Memory) Read(addr uint16) byte {
 // Write a byte to the chosen memory location
 func (mem Memory) Write(addr uint16, value byte) {
 	switch addr {
+	case 0xff00:
+		mem.mem[addr] |= value & 80
 	case 0xff46:
 		mem.dma(value)
 	default:

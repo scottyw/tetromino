@@ -10,6 +10,7 @@ import (
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/scottyw/tetromino/lcd"
+	"github.com/scottyw/tetromino/mem"
 )
 
 // GL maintains state for the GL UI implementation
@@ -19,7 +20,7 @@ type GL struct {
 }
 
 // NewGL implements a user interface in GL
-func NewGL() UI {
+func NewGL(memory mem.Memory) UI {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
@@ -44,7 +45,7 @@ func NewGL() UI {
 	}
 	gl.Enable(gl.TEXTURE_2D)
 
-	// window.SetKeyCallback(onKey) // FIXME
+	window.SetKeyCallback(onKeyFunc(memory.JOYP))
 	return &GL{
 		window:  window,
 		texture: createTexture(),
@@ -71,6 +72,17 @@ func (glx *GL) DrawFrame(lcd *lcd.LCD) {
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	glx.window.SwapBuffers()
 	glfw.PollEvents()
+}
+
+func onKeyFunc(joyp *uint8) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if action == glfw.Press {
+			if key == glfw.KeySpace {
+				fmt.Println("Pressed space")
+			}
+		}
+		fmt.Printf("Pressed %v\n", key)
+	}
 }
 
 func init() {
@@ -175,12 +187,3 @@ func renderFrame(data [23040]uint8) *image.RGBA {
 	}
 	return im
 }
-
-// func onKey(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-// 	if action == glfw.Press {
-// 		if key == glfw.KeySpace {
-// 			fmt.Println("Pressed space")
-// 		}
-// 	}
-// 	fmt.Printf("Pressed %v\n", key)
-// }
