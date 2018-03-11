@@ -169,9 +169,9 @@ func region(addr uint16) string {
 }
 
 func (mem Memory) dma(addrPrefix uint8) {
-	srcAddr := uint16(addrPrefix) << 8
-	for destAddr := 0xfe00; destAddr < 0xff00; destAddr++ {
-		mem.mem[destAddr] = mem.mem[srcAddr]
+	srcBaseAddr := uint16(addrPrefix) << 8
+	for i := uint16(0x00); i < 0x0100; i++ {
+		mem.mem[0xfe00+i] = mem.mem[srcBaseAddr+i]
 	}
 }
 
