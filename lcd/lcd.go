@@ -215,12 +215,12 @@ func derivePixel(mem mem.Memory, lcdX, lcdY uint8) uint8 {
 	// 	return 0
 	// }
 	if pixel, found := deriveSpritePixel(mem, lcdX, lcdY); found {
-		return pixel
+		return pixel + 0x30 // Colour offset
 	}
 	if pixel, found := deriveWindowPixel(mem, lcdX, lcdY); found {
-		return pixel
+		return pixel + 0x20 // Colour offset
 	}
-	return deriveBackgroundPixel(mem, lcdX, lcdY)
+	return deriveBackgroundPixel(mem, lcdX, lcdY) + 0x10 // Colour offset
 }
 
 func (lcd *LCD) updateLcdLine(mem mem.Memory, lcdY uint8) {
