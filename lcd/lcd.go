@@ -154,8 +154,8 @@ func findSprites(mem mem.Memory, lcdY uint8) []uint16 {
 		if startX == 0 || startX > 168 {
 			continue
 		}
-		if lcdY >= startY &&
-			lcdY < startY+8 {
+		if lcdY >= startY-16 &&
+			lcdY < startY-8 {
 			spriteAddrs = append(spriteAddrs, spriteAddr)
 		}
 	}
@@ -173,13 +173,13 @@ func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) (
 		startX := mem.Read(spriteAddr + 1)
 		tileNumber := mem.Read(spriteAddr + 2)
 		// attributes := mem.Read(spriteAddr + 3)
-		if lcdX >= startX &&
-			lcdX < startX+8 {
+		if lcdX >= startX-8 &&
+			lcdX < startX {
 			var tileOffsetX, tileOffsetY uint8
 			var tileAddr, memoryAddr uint16
 			tileAddr = lowTileAbsoluteAddress(tileNumber)
-			tileOffsetX = lcdX - startX
-			tileOffsetY = lcdY - startY
+			tileOffsetX = lcdX - startX + 8
+			tileOffsetY = lcdY - startY + 16
 			memoryAddr = tileAddr + uint16(tileOffsetY)*2
 			pixel := pixel(mem, memoryAddr, tileOffsetX)
 			if pixel > 0 {
