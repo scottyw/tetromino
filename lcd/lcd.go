@@ -143,11 +143,9 @@ func tileDataAddr(mem mem.Memory, tileX, tileY uint8, highTileMap, lowTileData b
 	return highTileAbsoluteAddress(int8(tileNumber))
 }
 
-func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8) (uint8, bool) {
-	// FIXME search for sprites on the current Y line outside this function
-	largeSpriteSize := largeSpriteSize(mem)
-	var spriteAddr uint16
-	for spriteAddr = 0xfe00; spriteAddr < 0xfe9f; spriteAddr += 4 {
+func findSprites(mem mem.Memory, lcdY uint8) []uint16 {
+	var spriteAddrs []uint16
+	for spriteAddr := uint16(0xfe00); spriteAddr < 0xfe9f; spriteAddr += 4 {
 		startY := mem.Read(spriteAddr)
 		if startY == 0 || startY > 160 {
 			continue
@@ -156,25 +154,37 @@ func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8) (uint8, bool) {
 		if startX == 0 || startX > 168 {
 			continue
 		}
+		if lcdY >= startY &&
+			lcdY < startY+8 {
+			spriteAddrs = append(spriteAddrs, spriteAddr)
+		}
+	}
+	return spriteAddrs
+}
+
+func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) (uint8, bool) {
+	// FIXME search for sprites on the current Y line outside this function
+	largeSpriteSize := largeSpriteSize(mem)
+	if largeSpriteSize {
+		panic(fmt.Sprintf("Large sprites are not supported"))
+	}
+	for _, spriteAddr := range spriteAddrs {
+		startY := mem.Read(spriteAddr)
+		startX := mem.Read(spriteAddr + 1)
 		tileNumber := mem.Read(spriteAddr + 2)
 		// attributes := mem.Read(spriteAddr + 3)
-		endY := startY + 8
-		endX := startX + 8
-		if largeSpriteSize {
-			endY += 8
-			panic(fmt.Sprintf("Large sprites are not supported"))
-		}
 		if lcdX >= startX &&
-			lcdX < endX &&
-			lcdY >= startY &&
-			lcdY < endY {
+			lcdX < startX+8 {
 			var tileOffsetX, tileOffsetY uint8
 			var tileAddr, memoryAddr uint16
 			tileAddr = lowTileAbsoluteAddress(tileNumber)
 			tileOffsetX = lcdX - startX
 			tileOffsetY = lcdY - startY
 			memoryAddr = tileAddr + uint16(tileOffsetY)*2
-			return pixel(mem, memoryAddr, tileOffsetX), true
+			pixel := pixel(mem, memoryAddr, tileOffsetX)
+			if pixel > 0 {
+				return pixel, true
+			}
 		}
 	}
 	return 0, false
@@ -218,11 +228,11 @@ func deriveBackgroundPixel(mem mem.Memory, lcdX, lcdY uint8) uint8 {
 	return deriveTilePixel(mem, lcdX, lcdY, highTileMap, lowTileData)
 }
 
-func derivePixel(mem mem.Memory, lcdX, lcdY uint8) uint8 {
+func derivePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) uint8 {
 	// if !lcdDisplayEnable(mem) {
 	// 	return 0
 	// }
-	if pixel, found := deriveSpritePixel(mem, lcdX, lcdY); found {
+	if pixel, found := deriveSpritePixel(mem, lcdX, lcdY, spriteAddrs); found {
 		return pixel + 0x30 // Colour offset
 	}
 	if pixel, found := deriveWindowPixel(mem, lcdX, lcdY); found {
@@ -234,9 +244,9 @@ func derivePixel(mem mem.Memory, lcdX, lcdY uint8) uint8 {
 func (lcd *LCD) updateLcdLine(mem mem.Memory, lcdY uint8) {
 	var lcdX uint8
 	var index uint16
-	// FIXME search for all sprites on this Y line here
+	spriteAddrs := findSprites(mem, lcdY)
 	for lcdX = 0; lcdX < 160; lcdX++ {
 		index = uint16(lcdY)*160 + uint16(lcdX)
-		lcd.data[index] = derivePixel(mem, lcdX, lcdY)
+		lcd.data[index] = derivePixel(mem, lcdX, lcdY, spriteAddrs)
 	}
 }
