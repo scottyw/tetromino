@@ -9,27 +9,25 @@ Tetromino is a Game Boy emulator written in Go.
 
 ### Progress so far ...
 
-Tetromino isn't functional yet but can run Tetris as far as the title screen. This probably seems deeply unimpressive but I can tell you that the moment I first saw that screen appear successfully was bliss ...
+Tetromino isn't functional yet but can run Tetris as far as the title and new game screens. This probably seems deeply unimpressive but I can tell you that the moment I first saw that screen appear successfully was bliss ...
 
 Things that work:
 
 * Maybe 80% of the instructions are implemented, including flags
-* The fetch-execute architecture is pretty sound, though I would like to tweak instruction dispatch
+* The fetch-execute architecture is pretty sound
 * V-Blank interrupt works
-* LCD is wired up enought to display backgrounds (with some caveats below)
+* LCD is able to display backgrounds and small sprites (with caveats)
+* The joypad and buttons are connected
 
 Here is a sample of the todo list:
 
 * Implement the rest of the instructions
     * About three quarters are implemented now
     * Testing of what's there is not terrible but not great, and really just what fell out of TDD
-* Implement controls
-    * That's mostly a wiring job. A fiddly wiring job but nonetheless hooking GFLW keyboard input into the register which looks after that
 * Implement more LCD stuff
-    * Sprite support
-    * Window support
-    * I don't even think the background upper tile map is working ...
-    * Implement the proper 160x144 display window - right now I display the full 256x256 video ram
+    * Sprite attributes
+    * Large sprite support
+    * Window support is ropey to the point of non-functional
 * More on interrupts
     * Implement the rest of the interrupts
     * Multiple interrupts isn't right at the moment either
