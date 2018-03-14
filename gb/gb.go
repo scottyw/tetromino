@@ -13,13 +13,13 @@ import (
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
 	cpu *cpu.CPU
-	mem mem.Memory
+	mem *mem.Memory
 	lcd *lcd.LCD
 	ui  ui.UI
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy(cpu *cpu.CPU, mem mem.Memory, lcd *lcd.LCD, ui ui.UI) Gameboy {
+func NewGameboy(cpu *cpu.CPU, mem *mem.Memory, lcd *lcd.LCD, ui ui.UI) Gameboy {
 	return Gameboy{cpu: cpu, mem: mem, lcd: lcd, ui: ui}
 }
 

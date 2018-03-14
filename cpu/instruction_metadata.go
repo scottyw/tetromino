@@ -17,7 +17,7 @@ type metadata struct {
 	Addr     string   `json:"addr"`
 	Operand1 string   `json:"operand1,omitempty"`
 	Operand2 string   `json:"operand2,omitempty"`
-	Func     func(*CPU, mem.Memory, string, string, uint8, uint16) map[string]bool
+	Func     func(*CPU, *mem.Memory, string, string, uint8, uint16) map[string]bool
 }
 
 type metadataContainer struct {

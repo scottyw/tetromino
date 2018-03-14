@@ -3,7 +3,7 @@ package cpu
 import "fmt"
 import "github.com/scottyw/tetromino/mem"
 
-func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
+func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	switch instruction {
 	case 0x8f:
 		cpu.adc(cpu.a) // ADC A A [Z 0 H C]
@@ -414,7 +414,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem mem.Memory, instruction uint8) {
 	}
 }
 
-func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8) {
+func (cpu *CPU) dispatchTwoByteInstruction(mem *mem.Memory, instruction, u8 uint8) {
 	switch instruction {
 	case 0xce:
 		cpu.adc(u8) // ADC A d8 [Z 0 H C]
@@ -471,7 +471,7 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem mem.Memory, instruction, u8 uint8
 	}
 }
 
-func (cpu *CPU) dispatchThreeByteInstruction(mem mem.Memory, instruction uint8, u16 uint16) {
+func (cpu *CPU) dispatchThreeByteInstruction(mem *mem.Memory, instruction uint8, u16 uint16) {
 	switch instruction {
 	case 0xcd:
 		cpu.call("", u16, mem) // CALL a16  []
@@ -512,7 +512,7 @@ func (cpu *CPU) dispatchThreeByteInstruction(mem mem.Memory, instruction uint8, 
 	}
 }
 
-func (cpu *CPU) dispatchPrefixedInstruction(mem mem.Memory, instruction uint8) {
+func (cpu *CPU) dispatchPrefixedInstruction(mem *mem.Memory, instruction uint8) {
 	switch instruction {
 	case 0x47:
 		cpu.bit(0, cpu.a) // BIT 0 A [Z 0 1 -]

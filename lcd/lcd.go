@@ -28,7 +28,7 @@ func NewLCD() *LCD {
 }
 
 // Tick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
+func (lcd *LCD) Tick(memory *mem.Memory, cycle int) {
 	ly := uint8(cycle / 114)
 	lyRemainder := cycle % 114
 	var stat uint8
@@ -37,7 +37,7 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 	case ly == 144:
 		// V-Blank period starts
 		stat = 1
-		*memory.IF |= 0x01
+		memory.RaiseInterrupt(0x01)
 	case lyRemainder == 0:
 		// OAM period starts
 		stat = 2
@@ -51,10 +51,10 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 			lcd.updateLcdLine(memory, ly)
 		}
 	default:
-		stat = *memory.STAT
+		stat = memory.Read(mem.STAT)
 	}
 	// Set coincidence flag and coincidence interrupt on stat register
-	if ly == *memory.LYC {
+	if ly == memory.Read(mem.LYC) {
 		stat |= 0x44
 	} else {
 		stat &^= 0x44
@@ -68,8 +68,8 @@ func (lcd *LCD) Tick(memory mem.Memory, cycle int) {
 	case lyRemainder == 63:
 		stat |= 0x08
 	}
-	*memory.STAT = stat
-	*memory.LY = ly
+	memory.Write(mem.STAT, stat)
+	memory.Write(mem.LY, ly)
 }
 
 // FrameData returns the frame data as a 160x144 array of bytes where each element is a colour value between 0 and 3
@@ -86,24 +86,24 @@ func highTileAbsoluteAddress(tileNumber int8) uint16 {
 }
 
 // Returns 16 bytes representing one 8x8 tile
-func tileData(mem mem.Memory, tile uint16) []byte {
+func tileData(memory *mem.Memory, tile uint16) []byte {
 	var tileAddr uint16
-	if highBgTileMapDisplaySelect(mem) {
+	if highBgTileMapDisplaySelect(memory) {
 		tileAddr = 0x9c00 + tile
 	} else {
 		tileAddr = 0x9800 + tile
 	}
-	tileNumber := mem.Read(tileAddr)
-	if lowTileDataSelect(mem) {
-		return mem.ReadRegion(lowTileAbsoluteAddress(tileNumber), 16)
+	tileNumber := memory.Read(tileAddr)
+	if lowTileDataSelect(memory) {
+		return memory.ReadRegion(lowTileAbsoluteAddress(tileNumber), 16)
 	}
-	return mem.ReadRegion(highTileAbsoluteAddress(int8(tileNumber)), 16)
+	return memory.ReadRegion(highTileAbsoluteAddress(int8(tileNumber)), 16)
 }
 
-func pixel(mem mem.Memory, memoryAddr uint16, bit uint8) uint8 {
+func pixel(memory *mem.Memory, memoryAddr uint16, bit uint8) uint8 {
 	var a, b, pixel uint8
-	a = uint8(mem.Read(memoryAddr))
-	b = uint8(mem.Read(memoryAddr + 1))
+	a = uint8(memory.Read(memoryAddr))
+	b = uint8(memory.Read(memoryAddr + 1))
 	switch bit {
 	case 0:
 		pixel = (a&bit0)>>7 | (b&bit0)>>6
@@ -128,7 +128,7 @@ func pixel(mem mem.Memory, memoryAddr uint16, bit uint8) uint8 {
 }
 
 // Returns the memory address of the tile
-func tileDataAddr(mem mem.Memory, tileX, tileY uint8, highTileMap, lowTileData bool) uint16 {
+func tileDataAddr(memory *mem.Memory, tileX, tileY uint8, highTileMap, lowTileData bool) uint16 {
 	var tileNumberAddr, tileIndex uint16
 	tileIndex = uint16(tileY)*32 + uint16(tileX)
 	if highTileMap {
@@ -136,21 +136,21 @@ func tileDataAddr(mem mem.Memory, tileX, tileY uint8, highTileMap, lowTileData b
 	} else {
 		tileNumberAddr = 0x9800 + tileIndex
 	}
-	tileNumber := mem.Read(tileNumberAddr)
+	tileNumber := memory.Read(tileNumberAddr)
 	if lowTileData {
 		return lowTileAbsoluteAddress(tileNumber)
 	}
 	return highTileAbsoluteAddress(int8(tileNumber))
 }
 
-func findSprites(mem mem.Memory, lcdY uint8) []uint16 {
+func findSprites(memory *mem.Memory, lcdY uint8) []uint16 {
 	var spriteAddrs []uint16
 	for spriteAddr := uint16(0xfe00); spriteAddr < 0xfe9f; spriteAddr += 4 {
-		startY := mem.Read(spriteAddr)
+		startY := memory.Read(spriteAddr)
 		if startY == 0 || startY > 160 {
 			continue
 		}
-		startX := mem.Read(spriteAddr + 1)
+		startX := memory.Read(spriteAddr + 1)
 		if startX == 0 || startX > 168 {
 			continue
 		}
@@ -162,17 +162,17 @@ func findSprites(mem mem.Memory, lcdY uint8) []uint16 {
 	return spriteAddrs
 }
 
-func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) (uint8, bool) {
+func deriveSpritePixel(memory *mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) (uint8, bool) {
 	// FIXME search for sprites on the current Y line outside this function
-	largeSpriteSize := largeSpriteSize(mem)
+	largeSpriteSize := largeSpriteSize(memory)
 	if largeSpriteSize {
 		panic(fmt.Sprintf("Large sprites are not supported"))
 	}
 	for _, spriteAddr := range spriteAddrs {
-		startY := mem.Read(spriteAddr)
-		startX := mem.Read(spriteAddr + 1)
-		tileNumber := mem.Read(spriteAddr + 2)
-		// attributes := mem.Read(spriteAddr + 3)
+		startY := memory.Read(spriteAddr)
+		startX := memory.Read(spriteAddr + 1)
+		tileNumber := memory.Read(spriteAddr + 2)
+		// attributes := memory.Read(spriteAddr + 3)
 		if lcdX >= startX-8 &&
 			lcdX < startX {
 			var tileOffsetX, tileOffsetY uint8
@@ -181,7 +181,7 @@ func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) (
 			tileOffsetX = lcdX - startX + 8
 			tileOffsetY = lcdY - startY + 16
 			memoryAddr = tileAddr + uint16(tileOffsetY)*2
-			pixel := pixel(mem, memoryAddr, tileOffsetX)
+			pixel := pixel(memory, memoryAddr, tileOffsetX)
 			if pixel > 0 {
 				return pixel, true
 			}
@@ -190,63 +190,65 @@ func deriveSpritePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) (
 	return 0, false
 }
 
-func deriveTilePixel(mem mem.Memory, lcdX, lcdY uint8, highTileMap, lowTileData bool) uint8 {
+func deriveTilePixel(memory *mem.Memory, lcdX, lcdY uint8, highTileMap, lowTileData bool) uint8 {
 	var tileX, tileY, tileOffsetX, tileOffsetY uint8
 	var tileAddr, memoryAddr uint16
 	tileX = lcdX / 8
 	tileY = lcdY / 8
-	tileAddr = tileDataAddr(mem, tileX, tileY, highTileMap, lowTileData)
+	tileAddr = tileDataAddr(memory, tileX, tileY, highTileMap, lowTileData)
 	tileOffsetX = lcdX % 8
 	tileOffsetY = lcdY % 8
 	memoryAddr = tileAddr + uint16(tileOffsetY)*2
-	return pixel(mem, memoryAddr, tileOffsetX)
+	return pixel(memory, memoryAddr, tileOffsetX)
 }
 
-func deriveWindowPixel(mem mem.Memory, lcdX, lcdY uint8) (uint8, bool) {
-	if windowDisplayEnable(mem) &&
-		*mem.WX >= 0 &&
-		*mem.WX <= 166 &&
-		*mem.WY >= 0 &&
-		*mem.WY <= 143 &&
-		lcdX >= *mem.WX &&
-		lcdY >= *mem.WY+7 {
-		highTileMap := highWindowTileMapDisplaySelect(mem)
-		lowTileData := lowTileDataSelect(mem)
-		return deriveTilePixel(mem, lcdX, lcdY, highTileMap, lowTileData), true
+func deriveWindowPixel(memory *mem.Memory, lcdX, lcdY uint8) (uint8, bool) {
+	wx := memory.Read(mem.WX)
+	wy := memory.Read(mem.WY)
+	if windowDisplayEnable(memory) &&
+		wx >= 0 &&
+		wx <= 166 &&
+		wy >= 0 &&
+		wy <= 143 &&
+		lcdX >= wx &&
+		lcdY >= wy+7 {
+		highTileMap := highWindowTileMapDisplaySelect(memory)
+		lowTileData := lowTileDataSelect(memory)
+		return deriveTilePixel(memory, lcdX, lcdY, highTileMap, lowTileData), true
 	}
 	return 0, false
 }
 
-func deriveBackgroundPixel(mem mem.Memory, lcdX, lcdY uint8) uint8 {
-	if !bgDisplay(mem) {
+func deriveBackgroundPixel(memory *mem.Memory, lcdX, lcdY uint8) uint8 {
+	if !bgDisplay(memory) {
 		return 0
 	}
-	highTileMap := highBgTileMapDisplaySelect(mem)
-	lowTileData := lowTileDataSelect(mem)
-	lcdX += *mem.SCX // Overflows deliberately
-	lcdY += *mem.SCY // Overflows deliberately
-	return deriveTilePixel(mem, lcdX, lcdY, highTileMap, lowTileData)
+	highTileMap := highBgTileMapDisplaySelect(memory)
+	lowTileData := lowTileDataSelect(memory)
+	lcdX += memory.Read(mem.SCX) // Overflows deliberately
+	lcdY += memory.Read(mem.SCY) // Overflows deliberately
+	return deriveTilePixel(memory, lcdX, lcdY, highTileMap, lowTileData)
 }
 
-func derivePixel(mem mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) uint8 {
-	// if !lcdDisplayEnable(mem) {
+func derivePixel(memory *mem.Memory, lcdX, lcdY uint8, spriteAddrs []uint16) uint8 {
+	// if !lcdDisplayEnable(memory) {
 	// 	return 0
 	// }
-	if pixel, found := deriveSpritePixel(mem, lcdX, lcdY, spriteAddrs); found {
+	if pixel, found := deriveSpritePixel(memory, lcdX, lcdY, spriteAddrs); found {
 		return pixel + 0x30 // Colour offset
 	}
-	if pixel, found := deriveWindowPixel(mem, lcdX, lcdY); found {
+	if pixel, found := deriveWindowPixel(memory, lcdX, lcdY); found {
 		return pixel + 0x20 // Colour offset
 	}
-	return deriveBackgroundPixel(mem, lcdX, lcdY) + 0x10 // Colour offset
+	return deriveBackgroundPixel(memory, lcdX, lcdY) + 0x10 // Colour offset
 }
 
-func (lcd *LCD) updateLcdLine(mem mem.Memory, lcdY uint8) {
+func (lcd *LCD) updateLcdLine(memory *mem.Memory, lcdY uint8) {
 	var lcdX uint8
 	var index uint16
-	spriteAddrs := findSprites(mem, lcdY)
+	spriteAddrs := findSprites(memory, lcdY)
 	for lcdX = 0; lcdX < 160; lcdX++ {
 		index = uint16(lcdY)*160 + uint16(lcdX)
-		lcd.data[index] = derivePixel(mem, lcdX, lcdY, spriteAddrs)
+		lcd.data[index] = derivePixel(memory, lcdX, lcdY, spriteAddrs)
 	}
 }

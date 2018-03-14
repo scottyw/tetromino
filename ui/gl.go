@@ -20,7 +20,7 @@ type GL struct {
 }
 
 // NewGL implements a user interface in GL
-func NewGL(memory mem.Memory) UI {
+func NewGL(memory *mem.Memory) UI {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
@@ -45,7 +45,7 @@ func NewGL(memory mem.Memory) UI {
 	}
 	gl.Enable(gl.TEXTURE_2D)
 
-	window.SetKeyCallback(onKeyFunc(memory.JOYP))
+	window.SetKeyCallback(onKeyFunc(memory.DirectionInput, memory.ButtonInput))
 	return &GL{
 		window:  window,
 		texture: createTexture(),
@@ -74,77 +74,65 @@ func (glx *GL) DrawFrame(lcd *lcd.LCD) {
 	glfw.PollEvents()
 }
 
-func onKeyFunc(joyp *uint8) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(direction, button *uint8) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-		// Bit 5 - P15 Select Button Keys      (0=Select)
-		// Bit 4 - P14 Select Direction Keys   (0=Select)
 		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
 		// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
-		if (^*joyp)&0x20 > 0 {
-			buttonInput(key, action, joyp)
+		if key == glfw.KeyS {
+			if action == glfw.Press {
+				*button &^= 0x8
+			} else if action == glfw.Release {
+				*button |= 0x8
+			}
 		}
-		if (^*joyp)&0x10 > 0 {
-			directionInput(key, action, joyp)
+		if key == glfw.KeyA {
+			if action == glfw.Press {
+				*button &^= 0x4
+			} else if action == glfw.Release {
+				*button |= 0x4
+			}
 		}
-	}
-}
-
-func buttonInput(key glfw.Key, action glfw.Action, joyp *uint8) {
-	switch key {
-	case glfw.KeyA:
-		if action == glfw.Press {
-			*joyp &^= 0x8
-		} else if action == glfw.Release {
-			*joyp |= 0x8
+		if key == glfw.KeyX {
+			if action == glfw.Press {
+				*button &^= 0x2
+			} else if action == glfw.Release {
+				*button |= 0x2
+			}
 		}
-	case glfw.KeyS:
-		if action == glfw.Press {
-			*joyp &^= 0x4
-		} else if action == glfw.Release {
-			*joyp |= 0x4
+		if key == glfw.KeyZ {
+			if action == glfw.Press {
+				*button &^= 0x1
+			} else if action == glfw.Release {
+				*button |= 0x1
+			}
 		}
-	case glfw.KeyZ:
-		if action == glfw.Press {
-			*joyp &^= 0x2
-		} else if action == glfw.Release {
-			*joyp |= 0x2
+		if key == glfw.KeyDown {
+			if action == glfw.Press {
+				*direction &^= 0x8
+			} else if action == glfw.Release {
+				*direction |= 0x8
+			}
+		} else if key == glfw.KeyUp {
+			if action == glfw.Press {
+				*direction &^= 0x4
+			} else if action == glfw.Release {
+				*direction |= 0x4
+			}
 		}
-	case glfw.KeyX:
-		if action == glfw.Press {
-			*joyp &^= 0x1
-		} else if action == glfw.Release {
-			*joyp |= 0x1
-		}
-	}
-}
-
-func directionInput(key glfw.Key, action glfw.Action, joyp *uint8) {
-	switch key {
-	case glfw.KeyDown:
-		if action == glfw.Press {
-			*joyp &^= 0x8
-		} else if action == glfw.Release {
-			*joyp |= 0x8
-		}
-	case glfw.KeyUp:
-		if action == glfw.Press {
-			*joyp &^= 0x4
-		} else if action == glfw.Release {
-			*joyp |= 0x4
-		}
-	case glfw.KeyLeft:
-		if action == glfw.Press {
-			*joyp &^= 0x2
-		} else if action == glfw.Release {
-			*joyp |= 0x2
-		}
-	case glfw.KeyRight:
-		if action == glfw.Press {
-			*joyp &^= 0x1
-		} else if action == glfw.Release {
-			*joyp |= 0x1
+		if key == glfw.KeyLeft {
+			if action == glfw.Press {
+				*direction &^= 0x2
+			} else if action == glfw.Release {
+				*direction |= 0x2
+			}
+		} else if key == glfw.KeyRight {
+			if action == glfw.Press {
+				*direction &^= 0x1
+			} else if action == glfw.Release {
+				*direction |= 0x1
+			}
 		}
 	}
 }

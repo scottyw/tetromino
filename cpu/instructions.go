@@ -21,7 +21,7 @@ func (cpu *CPU) adc(u8 uint8) {
 	cpu.flags(z(cpu.a), false, hf, cf) // [Z 0 H C]
 }
 
-func (cpu *CPU) adcAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) adcAddr(a16 uint16, mem *mem.Memory) {
 	cpu.adc(mem.Read(a16))
 }
 
@@ -43,7 +43,7 @@ func (cpu *CPU) addSP(i8 int8) {
 	panic(fmt.Sprintf("Missing implementation for addSP: %v", i8))
 }
 
-func (cpu *CPU) addAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
 	panic(fmt.Sprintf("Missing implementation for addAddr: %v", a16))
 }
 
@@ -52,7 +52,7 @@ func (cpu *CPU) and(u8 uint8) {
 	cpu.flags(z(cpu.a), false, true, false) // [Z 0 1 0]
 }
 
-func (cpu *CPU) andAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) andAddr(a16 uint16, mem *mem.Memory) {
 	cpu.and(mem.Read(a16))
 }
 
@@ -61,11 +61,11 @@ func (cpu *CPU) bit(pos uint8, u8 uint8) {
 	cpu.flags(zero, false, true, cpu.cf) // [Z 0 1 -]
 }
 
-func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem mem.Memory) {
+func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem *mem.Memory) {
 	cpu.bit(pos, mem.Read(a16))
 }
 
-func (cpu *CPU) call(kind string, a16 uint16, mem mem.Memory) {
+func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 	switch kind {
 	case "":
 		if options.DebugFlowControl() {
@@ -117,7 +117,7 @@ func (cpu *CPU) cp(u8 uint8) {
 	cpu.flags(cpu.a == u8, true, h(u8, cpu.a), c(u8, cpu.a)) // [Z 1 H C]
 }
 
-func (cpu *CPU) cpAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) cpAddr(a16 uint16, mem *mem.Memory) {
 	cpu.cp(mem.Read(a16))
 }
 
@@ -148,7 +148,7 @@ func (cpu *CPU) decSP() {
 	panic(fmt.Sprintf("Missing implementation for decSP"))
 }
 
-func (cpu *CPU) decAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) decAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.dec(&value)
 	mem.Write(a16, value)
@@ -184,7 +184,7 @@ func (cpu *CPU) incSP() {
 	panic(fmt.Sprintf("Missing implementation for incSP"))
 }
 
-func (cpu *CPU) incAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) incAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.inc(&value)
 	mem.Write(a16, value)
@@ -247,29 +247,29 @@ func (cpu *CPU) ld16(msb, lsb *uint8, u16 uint16) {
 	*lsb = uint8(u16)
 }
 
-func (cpu *CPU) ldFromAddr(r8 *uint8, a16 uint16, mem mem.Memory) {
+func (cpu *CPU) ldFromAddr(r8 *uint8, a16 uint16, mem *mem.Memory) {
 	*r8 = mem.Read(a16)
 }
 
-func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem mem.Memory) {
+func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem *mem.Memory) {
 	mem.Write(a16, u8)
 }
 
-func (cpu *CPU) ldhFromAddr(u8 uint8, mem mem.Memory) {
+func (cpu *CPU) ldhFromAddr(u8 uint8, mem *mem.Memory) {
 	address := uint16(0xff00 + uint16(u8))
 	cpu.a = mem.Read(address)
 }
 
-func (cpu *CPU) ldhToAddr(u8 uint8, mem mem.Memory) {
+func (cpu *CPU) ldhToAddr(u8 uint8, mem *mem.Memory) {
 	address := uint16(0xff00 + uint16(u8))
 	mem.Write(address, cpu.a)
 }
 
-func (cpu *CPU) ldAFromAddrC(mem mem.Memory) {
+func (cpu *CPU) ldAFromAddrC(mem *mem.Memory) {
 	cpu.ldhFromAddr(cpu.c, mem)
 }
 
-func (cpu *CPU) ldAToAddrC(mem mem.Memory) {
+func (cpu *CPU) ldAToAddrC(mem *mem.Memory) {
 	cpu.ldhToAddr(cpu.c, mem)
 }
 
@@ -281,7 +281,7 @@ func (cpu *CPU) ldHLToSP() {
 	panic(fmt.Sprintf("Missing implementation for ldHLToSP"))
 }
 
-func (cpu *CPU) ldSPToAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) ldSPToAddr(a16 uint16, mem *mem.Memory) {
 	mem.Write(a16, uint8(cpu.sp>>8))
 	mem.Write(a16+1, uint8(cpu.sp|0x0f))
 }
@@ -290,22 +290,22 @@ func (cpu *CPU) ldSPToHL(i8 int8) {
 	panic(fmt.Sprintf("Missing implementation for ldSPToHL: %v", i8))
 }
 
-func (cpu *CPU) lddFromAddr(mem mem.Memory) {
+func (cpu *CPU) lddFromAddr(mem *mem.Memory) {
 	cpu.ldFromAddr(&cpu.a, cpu.hl(), mem)
 	cpu.dec16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) lddToAddr(mem mem.Memory) {
+func (cpu *CPU) lddToAddr(mem *mem.Memory) {
 	cpu.ldToAddr(cpu.hl(), cpu.a, mem)
 	cpu.dec16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) ldiFromAddr(mem mem.Memory) {
+func (cpu *CPU) ldiFromAddr(mem *mem.Memory) {
 	cpu.ldFromAddr(&cpu.a, cpu.hl(), mem)
 	cpu.inc16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) ldiToAddr(mem mem.Memory) {
+func (cpu *CPU) ldiToAddr(mem *mem.Memory) {
 	cpu.ldToAddr(cpu.hl(), cpu.a, mem)
 	cpu.inc16(&cpu.h, &cpu.l)
 }
@@ -320,18 +320,18 @@ func (cpu *CPU) or(u8 uint8) {
 	cpu.flags(z(cpu.a), false, false, false) // [Z 0 0 0]
 }
 
-func (cpu *CPU) orAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
 	cpu.or(mem.Read(a16))
 }
 
-func (cpu *CPU) pop(msb, lsb *uint8, mem mem.Memory) {
+func (cpu *CPU) pop(msb, lsb *uint8, mem *mem.Memory) {
 	cpu.sp++
 	*msb = mem.Read(cpu.sp)
 	cpu.sp++
 	*lsb = mem.Read(cpu.sp)
 }
 
-func (cpu *CPU) popAF(mem mem.Memory) {
+func (cpu *CPU) popAF(mem *mem.Memory) {
 	cpu.pop(&cpu.a, &cpu.f, mem)
 	cpu.zf = cpu.f&8 > 1
 	cpu.nf = cpu.f&4 > 1
@@ -339,7 +339,7 @@ func (cpu *CPU) popAF(mem mem.Memory) {
 	cpu.cf = cpu.f&1 > 1
 }
 
-func (cpu *CPU) push(msb, lsb uint8, mem mem.Memory) {
+func (cpu *CPU) push(msb, lsb uint8, mem *mem.Memory) {
 	mem.Write(cpu.sp, lsb)
 	cpu.sp--
 	mem.Write(cpu.sp, msb)
@@ -350,13 +350,13 @@ func (cpu *CPU) res(pos uint8, r8 *uint8) {
 	*r8 &^= bits[pos]
 }
 
-func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem mem.Memory) {
+func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.res(pos, &value)
 	mem.Write(a16, value)
 }
 
-func (cpu *CPU) ret(kind string, mem mem.Memory) {
+func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 	switch kind {
 	case "":
 		cpu.sp++
@@ -401,7 +401,7 @@ func (cpu *CPU) ret(kind string, mem mem.Memory) {
 	}
 }
 
-func (cpu *CPU) reti(mem mem.Memory) {
+func (cpu *CPU) reti(mem *mem.Memory) {
 	if options.DebugFlowControl() {
 		fmt.Printf("==== RETI ...\n")
 	}
@@ -418,7 +418,7 @@ func (cpu *CPU) rl(r8 *uint8) {
 	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
-func (cpu *CPU) rlAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) rlAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.rl(&value)
 	mem.Write(a16, value)
@@ -443,7 +443,7 @@ func (cpu *CPU) rlca() {
 	cpu.zf = false
 }
 
-func (cpu *CPU) rlcAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) rlcAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.rlc(&value)
 	mem.Write(a16, value)
@@ -462,7 +462,7 @@ func (cpu *CPU) rra() {
 	cpu.rr(&cpu.a)
 }
 
-func (cpu *CPU) rrAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) rrAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.rr(&value)
 	mem.Write(a16, value)
@@ -481,13 +481,13 @@ func (cpu *CPU) rrca() {
 	cpu.rrc(&cpu.a)
 }
 
-func (cpu *CPU) rrcAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) rrcAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.rrc(&value)
 	mem.Write(a16, value)
 }
 
-func (cpu *CPU) rst(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) rst(a16 uint16, mem *mem.Memory) {
 	if options.DebugFlowControl() {
 		fmt.Printf("==== RST %04x ...\n", a16)
 	}
@@ -498,7 +498,7 @@ func (cpu *CPU) set(pos uint8, r8 *uint8) {
 	*r8 |= bits[pos]
 }
 
-func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem mem.Memory) {
+func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.set(pos, &value)
 	mem.Write(a16, value)
@@ -510,7 +510,7 @@ func (cpu *CPU) sla(r8 *uint8) {
 	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
-func (cpu *CPU) slaAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) slaAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.sla(&value)
 	mem.Write(a16, value)
@@ -526,7 +526,7 @@ func (cpu *CPU) sra(r8 *uint8) {
 	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
-func (cpu *CPU) sraAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) sraAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.sra(&value)
 	mem.Write(a16, value)
@@ -538,7 +538,7 @@ func (cpu *CPU) srl(r8 *uint8) {
 	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
 }
 
-func (cpu *CPU) srlAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) srlAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.srl(&value)
 	mem.Write(a16, value)
@@ -550,7 +550,7 @@ func (cpu *CPU) swap(r8 *uint8) {
 	cpu.flags(z(*r8), false, false, false)
 }
 
-func (cpu *CPU) swapAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) swapAddr(a16 uint16, mem *mem.Memory) {
 	value := mem.Read(a16)
 	cpu.swap(&value)
 	mem.Write(a16, value)
@@ -568,7 +568,7 @@ func (cpu *CPU) sbc(u8 uint8) {
 	panic(fmt.Sprintf("Missing implementation for sbc: %v", u8))
 }
 
-func (cpu *CPU) sbcAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
 	panic(fmt.Sprintf("Missing implementation for sbcAddr: %v", a16))
 }
 
@@ -578,7 +578,7 @@ func (cpu *CPU) sub(u8 uint8) {
 	cpu.flags(z(cpu.a), false, h(cpu.a, a), c(cpu.a, a)) // [Z 0 H C]
 }
 
-func (cpu *CPU) subAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) subAddr(a16 uint16, mem *mem.Memory) {
 	panic(fmt.Sprintf("Missing implementation for subAddr: %v", a16))
 }
 
@@ -587,6 +587,6 @@ func (cpu *CPU) xor(u8 uint8) {
 	cpu.flags(z(cpu.a), false, false, false) // [Z 0 0 0]
 }
 
-func (cpu *CPU) xorAddr(a16 uint16, mem mem.Memory) {
+func (cpu *CPU) xorAddr(a16 uint16, mem *mem.Memory) {
 	panic(fmt.Sprintf("Missing implementation for xorAddr: %v", a16))
 }

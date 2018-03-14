@@ -123,9 +123,11 @@ func (cpu *CPU) flags(zf, nf, hf, cf bool) {
 	cpu.cf = cf
 }
 
-func (cpu *CPU) checkInterrupts(memory mem.Memory) {
+func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 	if cpu.ime {
-		interrupts := *memory.IF & *memory.IE
+		ifr := memory.Read(mem.IF)
+		ife := memory.Read(mem.IE)
+		interrupts := ifr & ife
 		if interrupts > 0 {
 			cpu.ime = false
 			switch {
@@ -134,13 +136,13 @@ func (cpu *CPU) checkInterrupts(memory mem.Memory) {
 					fmt.Printf("==== V-Blank interrupt ...\n")
 				}
 				cpu.rst(0x0040, memory)
-				*memory.IF &^= 0x01 // Reset IF
+				memory.ResetInterrupt(0x01)
 			}
 		}
 	}
 }
 
-func (cpu *CPU) execute(mem mem.Memory) {
+func (cpu *CPU) execute(mem *mem.Memory) {
 	cpu.checkInterrupts(mem)
 	instruction := mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
@@ -184,7 +186,7 @@ func (cpu *CPU) execute(mem mem.Memory) {
 }
 
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
-func (cpu *CPU) Tick(mem mem.Memory) {
+func (cpu *CPU) Tick(mem *mem.Memory) {
 	if cycles == 0 {
 		cpu.execute(mem)
 	}

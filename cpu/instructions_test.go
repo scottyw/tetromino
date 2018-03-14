@@ -11,7 +11,7 @@ import (
 // Test-agnostic validation functions
 ////////////////////////////////////////////////////////////////
 
-func compareCPUsAndMemory(t *testing.T, expectedCPU, actualCPU *CPU, expectedMem, actualMem mem.Memory, startAddr, length uint16) {
+func compareCPUsAndMemory(t *testing.T, expectedCPU, actualCPU *CPU, expectedMem, actualMem *mem.Memory, startAddr, length uint16) {
 	compareCPUs(t, expectedCPU, actualCPU)
 	actual := actualMem.ReadRegion(startAddr, length)
 	expected := expectedMem.ReadRegion(startAddr, length)
