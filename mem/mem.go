@@ -2,7 +2,6 @@ package mem
 
 import (
 	"io/ioutil"
-	"os"
 )
 
 // Register constants
@@ -53,6 +52,7 @@ const (
 
 // Memory allows read and write access to memory
 type Memory struct {
+	mbc                  mbc
 	mem                  []byte
 	storesDirectionInput bool
 	DirectionInput       *uint8
@@ -61,12 +61,8 @@ type Memory struct {
 
 // NewMemory creates the memory and initializes it with ROM contents and default values
 func NewMemory() *Memory {
-	rom, err := ioutil.ReadFile(os.Getenv("ROM_FILENAME"))
-	if err != nil {
-		panic(err)
-	}
+	mbc := newMBC()
 	mem := make([]byte, 65536)
-	copy(mem, rom)
 	mem[0xff00] = 0x0f
 	mem[0xff05] = 0x00
 	mem[0xff06] = 0x00
@@ -102,39 +98,10 @@ func NewMemory() *Memory {
 	direction := uint8(0x0f)
 	button := uint8(0x0f)
 	return &Memory{
+		mbc:            mbc,
 		mem:            mem,
 		DirectionInput: &direction,
 		ButtonInput:    &button,
-	}
-}
-
-// Debug function
-func region(addr uint16) string {
-	switch {
-	case addr == 0xffff:
-		return "IE Register"
-	case addr >= 0xff80:
-		return "RAM (FF80)"
-	case addr >= 0xff4c:
-		return "EMPTY"
-	case addr >= 0xff00:
-		return "IO"
-	case addr >= 0xfea0:
-		return "EMPTY"
-	case addr >= 0xfe00:
-		return "Sprite Attribute Mem"
-	case addr >= 0xe000:
-		return "RAM (echo)"
-	case addr >= 0xc000:
-		return "RAM"
-	case addr >= 0xa000:
-		return "Switchable RAM"
-	case addr >= 0x8000:
-		return "Video RAM"
-	case addr >= 0x4000:
-		return "Switchable ROM"
-	default:
-		return "ROM"
 	}
 }
 
@@ -164,10 +131,12 @@ func (mem *Memory) dma(addrPrefix uint8) {
 
 // Read a byte from the chosen memory location
 func (mem *Memory) Read(addr uint16) byte {
-	switch addr {
-	case JOYP:
+	switch {
+	case addr < 0x8000:
+		return mem.mbc.Read(addr)
+	case addr == JOYP:
 		return mem.joypRead()
-	case DMA:
+	case addr == DMA:
 		return 0
 	}
 	return mem.mem[addr]
@@ -175,10 +144,12 @@ func (mem *Memory) Read(addr uint16) byte {
 
 // Write a byte to the chosen memory location
 func (mem *Memory) Write(addr uint16, value byte) {
-	switch addr {
-	case JOYP:
+	switch {
+	case addr < 0x8000:
+		mem.mbc.Write(addr, value)
+	case addr == JOYP:
 		mem.joypWrite(value)
-	case DMA:
+	case addr == DMA:
 		mem.dma(value)
 	default:
 		mem.mem[addr] = value
