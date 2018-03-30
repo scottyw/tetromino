@@ -610,7 +610,7 @@ func (cpu *CPU) sub(u8 uint8) {
 }
 
 func (cpu *CPU) subAddr(a16 uint16, mem *mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for subAddr: %v", a16))
+	cpu.sub(mem.Read(a16))
 }
 
 func (cpu *CPU) xor(u8 uint8) {
@@ -619,5 +619,5 @@ func (cpu *CPU) xor(u8 uint8) {
 }
 
 func (cpu *CPU) xorAddr(a16 uint16, mem *mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for xorAddr: %v", a16))
+	cpu.xor(mem.Read(a16))
 }
