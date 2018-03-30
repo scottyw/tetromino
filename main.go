@@ -12,7 +12,7 @@ func main() {
 	cpu := cpu.NewCPU()
 	mem := mem.NewMemory()
 	lcd := lcd.NewLCD()
-	ui := ui.NewGL(mem)
+	ui := ui.NewGL(cpu, mem)
 	gameboy := gb.NewGameboy(cpu, mem, lcd, ui)
 	gameboy.Run()
 }

@@ -40,11 +40,13 @@ func (cpu *CPU) addHL(u16 uint16) {
 }
 
 func (cpu *CPU) addSP(i8 int8) {
-	panic(fmt.Sprintf("Missing implementation for addSP: %v", i8))
+	old := cpu.sp
+	cpu.sp = uint16(int16(cpu.sp) + int16(i8))
+	cpu.flags(false, false, h16(old, cpu.sp), c16(old, cpu.sp)) // [0 0 H C]
 }
 
 func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for addAddr: %v", a16))
+	cpu.add(mem.Read(a16))
 }
 
 func (cpu *CPU) and(u8 uint8) {
@@ -295,7 +297,7 @@ func (cpu *CPU) ldSP(u16 uint16) {
 }
 
 func (cpu *CPU) ldHLToSP() {
-	panic(fmt.Sprintf("Missing implementation for ldHLToSP"))
+	cpu.sp = cpu.hl()
 }
 
 func (cpu *CPU) ldSPToAddr(a16 uint16, mem *mem.Memory) {
@@ -304,7 +306,8 @@ func (cpu *CPU) ldSPToAddr(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) ldSPToHL(i8 int8) {
-	panic(fmt.Sprintf("Missing implementation for ldSPToHL: %v", i8))
+	cpu.h = uint8(cpu.sp >> 8)
+	cpu.l = uint8(cpu.sp)
 }
 
 func (cpu *CPU) lddFromAddr(mem *mem.Memory) {
@@ -579,7 +582,7 @@ func (cpu *CPU) scf() {
 }
 
 func (cpu *CPU) stop() {
-	panic(fmt.Sprintf("Missing implementation for stop"))
+	cpu.stopped = true
 }
 
 func (cpu *CPU) sbc(u8 uint8) {

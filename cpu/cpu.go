@@ -50,10 +50,11 @@ type CPU struct {
 	cf bool
 
 	// State
-	sp     uint16
-	pc     uint16
-	ime    bool
-	halted bool
+	sp      uint16
+	pc      uint16
+	ime     bool
+	halted  bool
+	stopped bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -75,6 +76,11 @@ func NewCPU() *CPU {
 func (cpu CPU) String() string {
 	return fmt.Sprintf("{ime:%v a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x pc:%04x zf:%v nf:%v hf:%v cf:%v}",
 		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc, cpu.zf, cpu.nf, cpu.hf, cpu.cf)
+}
+
+// Start the CPU again on button press
+func (cpu *CPU) Start() {
+	cpu.stopped = false
 }
 
 func (cpu *CPU) bc() uint16 {
@@ -146,7 +152,7 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 
 func (cpu *CPU) execute(mem *mem.Memory) {
 	cpu.checkInterrupts(mem)
-	if cpu.halted {
+	if cpu.halted || cpu.stopped {
 		return
 	}
 	instruction := mem.Read(cpu.pc)

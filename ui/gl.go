@@ -9,6 +9,7 @@ import (
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/scottyw/tetromino/cpu"
 	"github.com/scottyw/tetromino/lcd"
 	"github.com/scottyw/tetromino/mem"
 )
@@ -20,7 +21,7 @@ type GL struct {
 }
 
 // NewGL implements a user interface in GL
-func NewGL(memory *mem.Memory) UI {
+func NewGL(cpu *cpu.CPU, memory *mem.Memory) UI {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
@@ -45,7 +46,7 @@ func NewGL(memory *mem.Memory) UI {
 	}
 	gl.Enable(gl.TEXTURE_2D)
 
-	window.SetKeyCallback(onKeyFunc(memory.DirectionInput, memory.ButtonInput))
+	window.SetKeyCallback(onKeyFunc(memory.DirectionInput, memory.ButtonInput, cpu))
 	return &GL{
 		window:  window,
 		texture: createTexture(),
@@ -74,12 +75,13 @@ func (glx *GL) DrawFrame(lcd *lcd.LCD) {
 	glfw.PollEvents()
 }
 
-func onKeyFunc(direction, button *uint8) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(direction, button *uint8, cpu *cpu.CPU) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
 		// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
+		cpu.Start()
 		if key == glfw.KeyS {
 			if action == glfw.Press {
 				*button &^= 0x8
