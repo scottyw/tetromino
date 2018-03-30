@@ -586,11 +586,21 @@ func (cpu *CPU) stop() {
 }
 
 func (cpu *CPU) sbc(u8 uint8) {
-	panic(fmt.Sprintf("Missing implementation for sbc: %v", u8))
+	a := cpu.a
+	cpu.a -= u8
+	hf := h(cpu.a, a)
+	cf := c(cpu.a, a)
+	if cpu.cf {
+		a = cpu.a
+		cpu.a--
+		hf = hf || h(cpu.a, a)
+		cf = cf || c(cpu.a, a)
+	}
+	cpu.flags(z(cpu.a), true, hf, cf) // [Z 1 H C]
 }
 
 func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
-	panic(fmt.Sprintf("Missing implementation for sbcAddr: %v", a16))
+	cpu.sbc(mem.Read(a16))
 }
 
 func (cpu *CPU) sub(u8 uint8) {
