@@ -110,7 +110,8 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) ccf() {
-	panic(fmt.Sprintf("Missing implementation for ccf"))
+	cpu.cf = !cpu.cf
+	cpu.flags(z(cpu.a), false, false, cpu.cf) // [- 0 0 *]
 }
 
 func (cpu *CPU) cp(u8 uint8) {
@@ -557,7 +558,8 @@ func (cpu *CPU) swapAddr(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) scf() {
-	panic(fmt.Sprintf("Missing implementation for scf"))
+	cpu.cf = true
+	cpu.flags(z(cpu.a), false, false, true) // [- 0 0 1]
 }
 
 func (cpu *CPU) stop() {
