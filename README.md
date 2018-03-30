@@ -13,26 +13,23 @@ Tetromino isn't functional yet but can run Tetris as far as the title and new ga
 
 Things that work:
 
-* Maybe 80% of the instructions are implemented, including flags
+* All instructions are implemented, including flags, but there are definitely bugs
 * The fetch-execute architecture is pretty sound
 * V-Blank interrupt works
-* LCD is able to display backgrounds and small sprites (with caveats)
+* LCD is able to display background, window and small sprites
 * The joypad and buttons are connected
 
 Here is a sample of the todo list:
 
-* Implement the rest of the instructions
-    * About three quarters are implemented now
-    * Testing of what's there is not terrible but not great, and really just what fell out of TDD
 * Implement more LCD stuff
     * Sprite attributes
     * Large sprite support
-    * Window support is ropey to the point of non-functional
 * More on interrupts
     * Implement the rest of the interrupts
     * Multiple interrupts isn't right at the moment either
 * Full on validation with test ROMs
     * Use blargg tests or similar to have more confidence that it's all solid
+    * Find the bugs with the current instruction implementations
 * Sound
     * Not even close to starting this one ...
 
