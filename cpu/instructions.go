@@ -146,7 +146,7 @@ func (cpu *CPU) dec16(msb, lsb *uint8) {
 }
 
 func (cpu *CPU) decSP() {
-	panic(fmt.Sprintf("Missing implementation for decSP"))
+	cpu.sp--
 }
 
 func (cpu *CPU) decAddr(a16 uint16, mem *mem.Memory) {
@@ -164,7 +164,7 @@ func (cpu *CPU) ei() {
 }
 
 func (cpu *CPU) halt() {
-	panic(fmt.Sprintf("Missing implementation for halt"))
+	cpu.halted = true
 }
 
 func (cpu *CPU) inc(r8 *uint8) {
@@ -182,7 +182,7 @@ func (cpu *CPU) inc16(msb, lsb *uint8) {
 }
 
 func (cpu *CPU) incSP() {
-	panic(fmt.Sprintf("Missing implementation for incSP"))
+	cpu.sp++
 }
 
 func (cpu *CPU) incAddr(a16 uint16, mem *mem.Memory) {

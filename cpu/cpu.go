@@ -50,9 +50,10 @@ type CPU struct {
 	cf bool
 
 	// State
-	sp  uint16
-	pc  uint16
-	ime bool
+	sp     uint16
+	pc     uint16
+	ime    bool
+	halted bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -130,6 +131,7 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 		interrupts := ifr & ife
 		if interrupts > 0 {
 			cpu.ime = false
+			cpu.halted = false
 			switch {
 			case interrupts&0x01 > 0: // V-Blank
 				if options.DebugFlowControl() {
@@ -144,6 +146,9 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 
 func (cpu *CPU) execute(mem *mem.Memory) {
 	cpu.checkInterrupts(mem)
+	if cpu.halted {
+		return
+	}
 	instruction := mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
 	if im.Addr == "" {
