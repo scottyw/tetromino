@@ -128,7 +128,23 @@ func (cpu *CPU) cpl() {
 }
 
 func (cpu *CPU) daa() {
-	panic(fmt.Sprintf("Missing implementation for daa"))
+	if !cpu.nf {
+		if cpu.cf || cpu.a > 0x99 {
+			cpu.a += 0x60
+			cpu.cf = true
+		}
+		if cpu.hf || (cpu.a&0x0f) > 0x09 {
+			cpu.a += 0x6
+		}
+	} else {
+		if cpu.cf {
+			cpu.a -= 0x60
+		}
+		if cpu.hf {
+			cpu.a -= 0x6
+		}
+	}
+	cpu.flags(z(cpu.a), cpu.nf, true, cpu.cf) // [Z - 0 C]
 }
 
 func (cpu *CPU) dec(r8 *uint8) {
