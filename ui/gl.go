@@ -7,6 +7,8 @@ import (
 	"log"
 	"runtime"
 
+	"github.com/scottyw/tetromino/options"
+
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/scottyw/tetromino/cpu"
@@ -192,7 +194,9 @@ func drawBuffer(window *glfw.Window) {
 }
 
 func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
-	// pixel = pixel % 0x10 // Remove colour offset
+	if !options.DebugLCD() {
+		pixel = pixel % 0x10 // Remove colour offset
+	}
 	switch pixel {
 	case 0x00:
 		im.SetRGBA(x, y, color.RGBA{0xff, 0xff, 0xff, 0xff})

@@ -14,3 +14,8 @@ func DebugFlowControl() bool {
 func DebugJumps() bool {
 	return false
 }
+
+// DebugLCD returns true if LCD debug colouring is enabled
+func DebugLCD() bool {
+	return false
+}
