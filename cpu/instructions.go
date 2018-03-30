@@ -107,7 +107,7 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 			cpu.call("", a16, mem)
 		}
 	default:
-		panic(fmt.Sprintf("Missing implementation for call: %v %v", kind, a16))
+		panic(fmt.Sprintf("No implementation for call: %v %v", kind, a16))
 	}
 }
 
@@ -245,7 +245,7 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 			cpu.jp("", a16)
 		}
 	default:
-		panic(fmt.Sprintf("Missing implementation for jp: %v %v", kind, a16))
+		panic(fmt.Sprintf("No implementation for jp: %v %v", kind, a16))
 	}
 }
 
@@ -417,7 +417,7 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 			cpu.ret("", mem)
 		}
 	default:
-		panic(fmt.Sprintf("Missing implementation for ret"))
+		panic(fmt.Sprintf("No implementation for ret"))
 	}
 }
 
