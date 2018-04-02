@@ -9,10 +9,11 @@ import (
 )
 
 func main() {
-	cpu := cpu.NewCPU()
-	mem := mem.NewMemory()
-	lcd := lcd.NewLCD()
-	ui := ui.NewGL(cpu, mem)
+	hwr := mem.NewHardwareRegisters()
+	cpu := cpu.NewCPU(hwr)
+	mem := mem.NewMemory(hwr)
+	lcd := lcd.NewLCD(hwr, mem)
+	ui := ui.NewGL(hwr, cpu)
 	gameboy := gb.NewGameboy(cpu, mem, lcd, ui)
 	gameboy.Run()
 }

@@ -29,7 +29,7 @@ func (gb Gameboy) runFrame() {
 	// Each loop iteration below represents one machine cycle (i.e. 4 clock cycles)
 	// Each LCD frame is 17556 machine cycles
 	for cycle := 0; cycle < 17556; cycle++ {
-		gb.lcd.Tick(gb.mem, cycle)
+		gb.lcd.Tick(cycle)
 		gb.cpu.Tick(gb.mem)
 	}
 	gb.ui.DrawFrame(gb.lcd)

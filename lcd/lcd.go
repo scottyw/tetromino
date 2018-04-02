@@ -19,57 +19,57 @@ const (
 
 // LCD represents the LCD display of the Gameboy
 type LCD struct {
-	data [23040]uint8
+	hwr    *mem.HardwareRegisters
+	memory *mem.Memory
+	data   [23040]uint8
 }
 
 // NewLCD returns the configured LCD
-func NewLCD() *LCD {
-	return &LCD{}
+func NewLCD(hwr *mem.HardwareRegisters, memory *mem.Memory) *LCD {
+	return &LCD{
+		hwr:    hwr,
+		memory: memory,
+	}
 }
 
 // Tick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) Tick(memory *mem.Memory, cycle int) {
-	ly := uint8(cycle / 114)
+func (lcd *LCD) Tick(cycle int) {
+	lcd.hwr.LY = uint8(cycle / 114)
 	lyRemainder := cycle % 114
-	var stat uint8
 	// Set mode on stat register
 	switch {
-	case ly == 144:
+	case lcd.hwr.LY == 144:
 		// V-Blank period starts
-		stat = 1
-		memory.RaiseInterrupt(0x01)
+		lcd.hwr.STAT = 1
+		lcd.hwr.IF |= 0x01
 	case lyRemainder == 0:
 		// OAM period starts
-		stat = 2
+		lcd.hwr.STAT = 2
 	case lyRemainder == 20:
 		// LCD data transfer period starts
-		stat = 3
+		lcd.hwr.STAT = 3
 	case lyRemainder == 63:
 		// H-Blank period starts
-		stat = 0
-		if ly < 144 {
-			lcd.updateLcdLine(memory, ly)
+		lcd.hwr.STAT = 0
+		if lcd.hwr.LY < 144 {
+			lcd.updateLcdLine(lcd.memory, lcd.hwr.LY)
 		}
-	default:
-		stat = memory.Read(mem.STAT)
 	}
 	// Set coincidence flag and coincidence interrupt on stat register
-	if ly == memory.Read(mem.LYC) {
-		stat |= 0x44
+	if lcd.hwr.LY == lcd.hwr.LYC {
+		lcd.hwr.STAT |= 0x44
 	} else {
-		stat &^= 0x44
+		lcd.hwr.STAT &^= 0x44
 	}
 	// Set interrupts on stat register
 	switch {
-	case ly == 144:
-		stat |= 0x10
+	case lcd.hwr.LY == 144:
+		lcd.hwr.STAT |= 0x10
 	case lyRemainder == 0:
-		stat |= 0x20
+		lcd.hwr.STAT |= 0x20
 	case lyRemainder == 63:
-		stat |= 0x08
+		lcd.hwr.STAT |= 0x08
 	}
-	memory.Write(mem.STAT, stat)
-	memory.Write(mem.LY, ly)
 }
 
 // FrameData returns the frame data as a 160x144 array of bytes where each element is a colour value between 0 and 3
@@ -85,6 +85,14 @@ func highTileAbsoluteAddress(tileNumber int8) uint16 {
 	return uint16(0x9000 + int(tileNumber)*16)
 }
 
+func readRegion(memory *mem.Memory, startAddr, length uint16) []byte {
+	region := make([]byte, length)
+	for addr := uint16(0); addr < length; addr++ {
+		region[addr] = memory.Read(startAddr + addr)
+	}
+	return region
+}
+
 // Returns 16 bytes representing one 8x8 tile
 func tileData(memory *mem.Memory, tile uint16) []byte {
 	var tileAddr uint16
@@ -95,9 +103,9 @@ func tileData(memory *mem.Memory, tile uint16) []byte {
 	}
 	tileNumber := memory.Read(tileAddr)
 	if lowTileDataSelect(memory) {
-		return memory.ReadRegion(lowTileAbsoluteAddress(tileNumber), 16)
+		return readRegion(memory, lowTileAbsoluteAddress(tileNumber), 16)
 	}
-	return memory.ReadRegion(highTileAbsoluteAddress(int8(tileNumber)), 16)
+	return readRegion(memory, highTileAbsoluteAddress(int8(tileNumber)), 16)
 }
 
 func pixel(memory *mem.Memory, memoryAddr uint16, bit uint8) uint8 {

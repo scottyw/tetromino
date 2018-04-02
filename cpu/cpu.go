@@ -55,12 +55,16 @@ type CPU struct {
 	ime     bool
 	halted  bool
 	stopped bool
+
+	// Hardware
+	hwr *mem.HardwareRegisters
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
-func NewCPU() *CPU {
+func NewCPU(hwr *mem.HardwareRegisters) *CPU {
 	return &CPU{
 		ime: true,
+		hwr: hwr,
 		a:   0x01,
 		f:   0xb0,
 		b:   0x00,
@@ -132,9 +136,7 @@ func (cpu *CPU) flags(zf, nf, hf, cf bool) {
 
 func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 	if cpu.ime {
-		ifr := memory.Read(mem.IF)
-		ife := memory.Read(mem.IE)
-		interrupts := ifr & ife
+		interrupts := cpu.hwr.IE & cpu.hwr.IF
 		if interrupts > 0 {
 			cpu.ime = false
 			cpu.halted = false
@@ -144,7 +146,7 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 					fmt.Printf("==== V-Blank interrupt ...\n")
 				}
 				cpu.rst(0x0040, memory)
-				memory.ResetInterrupt(0x01)
+				cpu.hwr.IF &^= 0x01
 			}
 		}
 	}

@@ -7,8 +7,8 @@ import (
 )
 
 type mbc interface {
-	Read(uint16) uint8
-	Write(uint16, uint8)
+	read(uint16) uint8
+	write(uint16, uint8)
 }
 
 type mbc1 struct {
@@ -27,7 +27,7 @@ func (m *mbc1) accessRom(addr uint16) uint8 {
 	return m.rom[addr]
 }
 
-func (m *mbc1) Read(addr uint16) uint8 {
+func (m *mbc1) read(addr uint16) uint8 {
 	switch {
 	case addr < 0x4000:
 		return m.accessRom(addr)
@@ -50,7 +50,7 @@ func (m *mbc1) updateBank() {
 	}
 }
 
-func (m *mbc1) Write(addr uint16, value uint8) {
+func (m *mbc1) write(addr uint16, value uint8) {
 	switch {
 	case addr < 0x2000:
 		//		m.ramEnabled = value&0x0a > 0
