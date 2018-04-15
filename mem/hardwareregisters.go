@@ -155,9 +155,8 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 	// case TMA:
 	// case TAC:
 	default:
-		// fmt.Printf("No read support for hardware register 0x%04x\n", addr)
+		return 0
 	}
-	return 0 // Temporary default value
 }
 
 func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
@@ -184,40 +183,70 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 		mem.hwr.WY = value
 	case WX:
 		mem.hwr.WX = value
-	// case BGP:
-	// case OBP0:
-	// case OBP1:
-	// case NR10:
-	// case NR11:
-	// case NR12:
-	// case NR13:
-	// case NR14:
-	// case NR21:
-	// case NR22:
-	// case NR23:
-	// case NR24:
-	// case NR30:
-	// case NR31:
-	// case NR32:
-	// case NR33:
-	// case NR34:
-	// case NR41:
-	// case NR42:
-	// case NR43:
-	// case NR44:
-	// case NR50:
-	// case NR51:
-	// case NR52:
+	case BGP:
+		// FIXME palette support
+	case OBP0:
+		// FIXME sprite palette support
+	case OBP1:
+		// FIXME sprite palette support
+	case NR10:
+		// FIXME sound support
+	case NR11:
+		// FIXME sound support
+	case NR12:
+		// FIXME sound support
+	case NR13:
+		// FIXME sound support
+	case NR14:
+		// FIXME sound support
+	case NR21:
+		// FIXME sound support
+	case NR22:
+		// FIXME sound support
+	case NR23:
+		// FIXME sound support
+	case NR24:
+		// FIXME sound support
+	case NR30:
+		// FIXME sound support
+	case NR31:
+		// FIXME sound support
+	case NR32:
+		// FIXME sound support
+	case NR33:
+		// FIXME sound support
+	case NR34:
+		// FIXME sound support
+	case NR41:
+		// FIXME sound support
+	case NR42:
+		// FIXME sound support
+	case NR43:
+		// FIXME sound support
+	case NR44:
+		// FIXME sound support
+	case NR50:
+		// FIXME sound support
+	case NR51:
+		// FIXME sound support
+	case NR52:
+		// FIXME sound support
 	case JOYP:
 		mem.hwr.joypWrite(value)
-	// case SB:
-	// case SC:
-	// case DIV:
-	// case TIMA:
-	// case TMA:
-	// case TAC:
+	case SB:
+		// FIXME serial bus support
+	case SC:
+		// FIXME serial bus support
+	case DIV:
+		// FIXME timer
+	case TIMA:
+		// FIXME timer
+	case TMA:
+		// FIXME timer
+	case TAC:
+		// FIXME timer
 	default:
-		// fmt.Printf("No write support for hardware register 0x%04x\n", addr)
+		// Do nothing
 	}
 }
 
