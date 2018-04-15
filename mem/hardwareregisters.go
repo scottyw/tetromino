@@ -83,11 +83,13 @@ type HardwareRegisters struct {
 	STAT byte
 	WX   byte
 	WY   byte
+	DIV  byte
 
 	// JOYP
 	storingDirectionInput bool
 	DirectionInput        uint8
 	ButtonInput           uint8
+	tick                  uint32
 }
 
 // NewHardwareRegisters creates a new representation of the hardware registers
@@ -150,7 +152,8 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 		return mem.hwr.joypRead()
 	// case SB:
 	// case SC:
-	// case DIV:
+	case DIV:
+		return mem.hwr.DIV
 	// case TIMA:
 	// case TMA:
 	// case TAC:
@@ -238,7 +241,7 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 	case SC:
 		// FIXME serial bus support
 	case DIV:
-		// FIXME timer
+		mem.hwr.DIV = 0
 	case TIMA:
 		// FIXME timer
 	case TMA:
@@ -271,5 +274,14 @@ func (mem *Memory) dma(addrPrefix uint8) {
 	srcBaseAddr := uint16(addrPrefix) << 8
 	for i := uint16(0x00); i < 0x0a0; i++ {
 		mem.oam[i] = mem.Read(srcBaseAddr + i)
+	}
+}
+
+// Tick updates the hardware registers on each clock tick
+func (r *HardwareRegisters) Tick() {
+	r.tick++
+	if r.tick == 64 {
+		r.tick = 0
+		r.DIV++
 	}
 }

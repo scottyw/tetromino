@@ -14,13 +14,19 @@ import (
 type Gameboy struct {
 	cpu *cpu.CPU
 	mem *mem.Memory
+	hwr *mem.HardwareRegisters
 	lcd *lcd.LCD
 	ui  ui.UI
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy(cpu *cpu.CPU, mem *mem.Memory, lcd *lcd.LCD, ui ui.UI) Gameboy {
-	return Gameboy{cpu: cpu, mem: mem, lcd: lcd, ui: ui}
+func NewGameboy() Gameboy {
+	hwr := mem.NewHardwareRegisters()
+	cpu := cpu.NewCPU(hwr)
+	mem := mem.NewMemory(hwr)
+	lcd := lcd.NewLCD(hwr, mem)
+	ui := ui.NewGL(hwr, cpu)
+	return Gameboy{cpu: cpu, mem: mem, hwr: hwr, lcd: lcd, ui: ui}
 }
 
 func (gb Gameboy) runFrame() {
@@ -31,6 +37,7 @@ func (gb Gameboy) runFrame() {
 	for cycle := 0; cycle < 17556; cycle++ {
 		gb.lcd.Tick(cycle)
 		gb.cpu.Tick(gb.mem)
+		gb.hwr.Tick()
 	}
 	gb.ui.DrawFrame(gb.lcd)
 }
