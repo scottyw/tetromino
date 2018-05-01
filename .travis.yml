@@ -1,4 +1,11 @@
-  language: go
-  go:
-    - "1.10"
-  
+language: go
+go:
+  - "1.10"
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libgl1-mesa-dev and xorg-dev
+install:
+  - go get github.com/go-gl/gl/v2.1/gl
+  - go get github.com/go-gl/glfw/v3.1/glfw
+script:
+  - go test ./...

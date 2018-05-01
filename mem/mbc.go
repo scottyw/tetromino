@@ -70,10 +70,16 @@ func (m *mbc1) write(addr uint16, value uint8) {
 }
 
 func newMBC() mbc {
+	var rom []byte
 	filename := os.Getenv("ROM_FILENAME")
-	rom, err := ioutil.ReadFile(filename)
-	if err != nil {
-		panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", filename, err))
+	if filename != "" {
+		var err error
+		rom, err = ioutil.ReadFile(filename)
+		if err != nil {
+			panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", filename, err))
+		}
+	} else {
+		fmt.Println("No ROM_FILENAME specified. Continuing ...")
 	}
 	return &mbc1{
 		rom:  rom,
