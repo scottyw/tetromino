@@ -9,29 +9,28 @@ Tetromino is a Game Boy emulator written in Go.
 
 ### Progress so far ...
 
-Tetromino isn't functional yet but can run Tetris as far as the title and new game screens. This probably seems deeply unimpressive but I can tell you that the moment I first saw that screen appear successfully was bliss ...
+Tetromino is functional enough to play Tetris but there is still something of a todo list ...
 
 Things that work:
 
-* All instructions are implemented, including flags, but there are definitely bugs
+* All instructions are implemented, including flags
 * The fetch-execute architecture is pretty sound
-* V-Blank interrupt works
+* V-Blank interrupt implemented
 * LCD is able to display background, window and small sprites
 * The joypad and buttons are connected
 
 Here is a sample of the todo list:
 
-* Implement more LCD stuff
+* Implement remaining LCD stuff
     * Sprite attributes
     * Large sprite support
-* More on interrupts
-    * Implement the rest of the interrupts
+* Implement the rest of the interrupts
     * Multiple interrupts isn't right at the moment either
 * Full on validation with test ROMs
     * Use blargg tests or similar to have more confidence that it's all solid
     * Find the bugs with the current instruction implementations
+* Timer support
 * Sound
-    * Not even close to starting this one ...
 
 ### Running
 
@@ -45,7 +44,7 @@ Run like this:
 
 ### Common Errors
 
-Tetris will corrupt the display and crash as soon as it hits demo mode. Every other ROM will probably immediately crash when it hits an unimplemented instruction. Errors will be very common in other words. Still, it's a bit of fun, isn't it?
+Tetris is playable but I have tested no other ROMs yet, so you'll likely see trouble there. Even Tetris probably isn't 100%. Still, it's a bit of fun, isn't it?
 
 ### Dependencies
 
