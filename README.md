@@ -1,5 +1,7 @@
 ## Welcome to Tetromino
 
+[![Build Status](https://travis-ci.org/scottyw/tetromino.svg?branch=master)](https://travis-ci.org/scottyw/tetromino) [![Go Report Card](https://goreportcard.com/badge/github.com/scottyw/tetromino)](https://goreportcard.com/report/github.com/scottyw/tetromino)
+
 Tetromino is a Game Boy emulator written in Go.
 
 ### Screenshots
