@@ -3,7 +3,8 @@ package mem
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
+
+	"github.com/scottyw/tetromino/options"
 )
 
 type mbc interface {
@@ -71,15 +72,14 @@ func (m *mbc1) write(addr uint16, value uint8) {
 
 func newMBC() mbc {
 	var rom []byte
-	filename := os.Getenv("ROM_FILENAME")
-	if filename != "" {
+	if *options.RomFilename != "" {
 		var err error
-		rom, err = ioutil.ReadFile(filename)
+		rom, err = ioutil.ReadFile(*options.RomFilename)
 		if err != nil {
-			panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", filename, err))
+			panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", *options.RomFilename, err))
 		}
 	} else {
-		fmt.Println("No ROM_FILENAME specified. Continuing ...")
+		fmt.Println("No ROM filename specified. Continuing ...")
 	}
 	return &mbc1{
 		rom:  rom,

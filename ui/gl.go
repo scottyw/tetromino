@@ -193,7 +193,7 @@ func drawBuffer(window *glfw.Window) {
 }
 
 func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
-	if !options.DebugLCD() {
+	if !*options.DebugLCD {
 		pixel = pixel % 0x10 // Remove colour offset
 	}
 	switch pixel {
