@@ -23,6 +23,7 @@ Things that work:
 
 Here is a sample of the todo list:
 
+* Support for cartridge RAM
 * Implement remaining LCD stuff
     * Sprite attributes
     * Large sprite support
@@ -36,13 +37,13 @@ Here is a sample of the todo list:
 
 ### Running
 
-You'll need a ROM. I highly recommend Tetris. For now, create an environment variable called ```ROM_FILENAME``` that contains the ROM filename.
+You'll need a ROM. I highly recommend Tetris. The main command line option is "-rom" which lets you specify the ROM filename. Run like this:
 
-    export ROM_FILENAME=/roms/tetris.gb
+    go run main.go -rom /roms/tetris.gb
 
-Run like this:
+Other options exist for enabling debug. List them like this:
 
-    go run main.go
+    go run main.go -help
 
 ### Common Errors
 
