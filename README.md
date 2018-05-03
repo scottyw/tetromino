@@ -6,8 +6,7 @@ Tetromino is a Game Boy emulator written in Go.
 
 ### Screenshots
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-![Tetris](screenshots/tetris-title.png)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Tetris home screen](screenshots/tetris-home.png)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Tetris mid-game](screenshots/tetris-game.png)
 
 ### Progress so far ...
 
@@ -39,11 +38,11 @@ Here is a sample of the todo list:
 
 You'll need a ROM. I highly recommend Tetris. The main command line option is "-rom" which lets you specify the ROM filename. Run like this:
 
-    go run main.go -rom /roms/tetris.gb
+    go run cmd/tetromino/main.go -rom /roms/tetris.gb
 
 Other options exist for enabling debug. List them like this:
 
-    go run main.go -help
+    go run cmd/tetromino/main.go -help
 
 ### Common Errors
 

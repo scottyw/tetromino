@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/scottyw/tetromino/mem"
+	"github.com/scottyw/tetromino/pkg/mem"
 )
 
 type metadata struct {

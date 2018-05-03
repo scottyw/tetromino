@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/scottyw/tetromino/gb"
+	"github.com/scottyw/tetromino/pkg/gb"
 )
 
 func main() {

@@ -3,8 +3,8 @@ package cpu
 import (
 	"fmt"
 
-	"github.com/scottyw/tetromino/mem"
-	"github.com/scottyw/tetromino/options"
+	"github.com/scottyw/tetromino/pkg/mem"
+	"github.com/scottyw/tetromino/pkg/options"
 )
 
 func (cpu *CPU) adc(u8 uint8) {

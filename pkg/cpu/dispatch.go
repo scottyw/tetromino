@@ -1,7 +1,7 @@
 package cpu
 
 import "fmt"
-import "github.com/scottyw/tetromino/mem"
+import "github.com/scottyw/tetromino/pkg/mem"
 
 func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	switch instruction {

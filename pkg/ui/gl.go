@@ -9,10 +9,10 @@ import (
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/scottyw/tetromino/cpu"
-	"github.com/scottyw/tetromino/lcd"
-	"github.com/scottyw/tetromino/mem"
-	"github.com/scottyw/tetromino/options"
+	"github.com/scottyw/tetromino/pkg/cpu"
+	"github.com/scottyw/tetromino/pkg/lcd"
+	"github.com/scottyw/tetromino/pkg/mem"
+	"github.com/scottyw/tetromino/pkg/options"
 )
 
 // GL maintains state for the GL UI implementation

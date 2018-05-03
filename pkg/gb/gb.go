@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/scottyw/tetromino/cpu"
-	"github.com/scottyw/tetromino/lcd"
-	"github.com/scottyw/tetromino/mem"
-	"github.com/scottyw/tetromino/ui"
+	"github.com/scottyw/tetromino/pkg/cpu"
+	"github.com/scottyw/tetromino/pkg/lcd"
+	"github.com/scottyw/tetromino/pkg/mem"
+	"github.com/scottyw/tetromino/pkg/ui"
 )
 
 // Gameboy represents the Gameboy itself

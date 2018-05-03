@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/scottyw/tetromino/options"
+	"github.com/scottyw/tetromino/pkg/options"
 )
 
 type mbc interface {
