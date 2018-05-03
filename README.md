@@ -6,7 +6,7 @@ Tetromino is a Game Boy emulator written in Go.
 
 ### Screenshots
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Tetris home screen](screenshots/tetris-home.png)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;![Tetris mid-game](screenshots/tetris-game.png)
+![Tetris home screen](screenshots/tetris-home.png)&nbsp;&nbsp;![Tetris mid-game](screenshots/tetris-game.png)
 
 ### Progress so far ...
 
