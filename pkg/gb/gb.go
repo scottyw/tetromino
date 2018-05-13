@@ -2,11 +2,14 @@ package gb
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"time"
 
 	"github.com/scottyw/tetromino/pkg/cpu"
 	"github.com/scottyw/tetromino/pkg/lcd"
 	"github.com/scottyw/tetromino/pkg/mem"
+	"github.com/scottyw/tetromino/pkg/options"
 	"github.com/scottyw/tetromino/pkg/ui"
 )
 
@@ -21,7 +24,11 @@ type Gameboy struct {
 
 // NewGameboy returns a new Gameboy
 func NewGameboy() Gameboy {
-	hwr := mem.NewHardwareRegisters()
+	var sbWriter io.Writer
+	if *options.ShowSerialData {
+		sbWriter = os.Stdout
+	}
+	hwr := mem.NewHardwareRegisters(sbWriter)
 	cpu := cpu.NewCPU(hwr)
 	mem := mem.NewMemory(hwr)
 	lcd := lcd.NewLCD(hwr, mem)

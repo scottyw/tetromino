@@ -1,5 +1,10 @@
 package mem
 
+import (
+	"io"
+	"io/ioutil"
+)
+
 // Register constants
 const (
 	LCDC = 0xFF40
@@ -89,14 +94,21 @@ type HardwareRegisters struct {
 	storingDirectionInput bool
 	DirectionInput        uint8
 	ButtonInput           uint8
-	tick                  uint32
+
+	// Misc
+	tick     uint32
+	sbWriter io.Writer
 }
 
 // NewHardwareRegisters creates a new representation of the hardware registers
-func NewHardwareRegisters() *HardwareRegisters {
+func NewHardwareRegisters(sbWriter io.Writer) *HardwareRegisters {
+	if sbWriter == nil {
+		sbWriter = ioutil.Discard
+	}
 	return &HardwareRegisters{
 		DirectionInput: 0x0f,
 		ButtonInput:    0x0f,
+		sbWriter:       sbWriter,
 	}
 }
 
@@ -237,7 +249,7 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 	case JOYP:
 		mem.hwr.joypWrite(value)
 	case SB:
-		// FIXME serial bus support
+		mem.hwr.sbWriter.Write([]byte{value})
 	case SC:
 		// FIXME serial bus support
 	case DIV:

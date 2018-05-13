@@ -19,6 +19,9 @@ var DebugJumps = flag.Bool("debug-jumps", false, "When true, jump debugging is e
 // DebugLCD is true if LCD debug colouring is enabled
 var DebugLCD = flag.Bool("debug-lcd", false, "When true, LCD colour-based debugging is enabled")
 
+// ShowSerialData is true if serial data should be written to console
+var ShowSerialData = flag.Bool("show-serial-data", false, "When true, data sent to the serial port will be written to console")
+
 func init() {
 	flag.Parse()
 }
