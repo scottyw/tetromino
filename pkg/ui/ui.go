@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"github.com/scottyw/tetromino/pkg/lcd"
+	"github.com/scottyw/tetromino/pkg/gb/lcd"
 )
 
 // UI abstracts over the user interface

@@ -3,7 +3,7 @@ package lcd
 import (
 	"fmt"
 
-	"github.com/scottyw/tetromino/pkg/mem"
+	"github.com/scottyw/tetromino/pkg/gb/mem"
 )
 
 const (
