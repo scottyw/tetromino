@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-
-	"github.com/scottyw/tetromino/pkg/gb/options"
 )
 
 type mbc interface {
@@ -75,13 +73,13 @@ func (m *mbc1) write(addr uint16, value uint8) {
 	m.updateBank()
 }
 
-func newMBC() mbc {
+func newMBC(romFilename string) mbc {
 	var rom []byte
-	if *options.RomFilename != "" {
+	if romFilename != "" {
 		var err error
-		rom, err = ioutil.ReadFile(*options.RomFilename)
+		rom, err = ioutil.ReadFile(romFilename)
 		if err != nil {
-			panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", *options.RomFilename, err))
+			panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", romFilename, err))
 		}
 	}
 	return &mbc1{

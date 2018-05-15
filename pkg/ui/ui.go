@@ -7,6 +7,6 @@ import (
 // UI abstracts over the user interface
 type UI interface {
 	ShouldRun() bool
-	DrawFrame(*lcd.LCD)
+	DrawFrame(*lcd.LCD, bool)
 	Shutdown()
 }

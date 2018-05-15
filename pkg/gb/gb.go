@@ -3,37 +3,42 @@ package gb
 import (
 	"fmt"
 	"io"
-	"os"
 	"time"
 
 	"github.com/scottyw/tetromino/pkg/gb/cpu"
 	"github.com/scottyw/tetromino/pkg/gb/lcd"
 	"github.com/scottyw/tetromino/pkg/gb/mem"
-	"github.com/scottyw/tetromino/pkg/gb/options"
 	"github.com/scottyw/tetromino/pkg/ui"
 )
 
+// Options control emulator behaviour
+type Options struct {
+	RomFilename      string
+	SBWriter         io.Writer
+	DebugCPU         bool
+	DebugFlowControl bool
+	DebugJumps       bool
+	DebugLCD         bool
+}
+
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
-	cpu *cpu.CPU
-	mem *mem.Memory
-	hwr *mem.HardwareRegisters
-	lcd *lcd.LCD
-	ui  ui.UI
+	cpu      *cpu.CPU
+	mem      *mem.Memory
+	hwr      *mem.HardwareRegisters
+	lcd      *lcd.LCD
+	ui       ui.UI
+	debugLCD bool
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy() Gameboy {
-	var sbWriter io.Writer
-	if *options.ShowSerialData {
-		sbWriter = os.Stdout
-	}
-	hwr := mem.NewHardwareRegisters(sbWriter)
+func NewGameboy(opts Options) Gameboy {
+	hwr := mem.NewHardwareRegisters(opts.SBWriter)
 	cpu := cpu.NewCPU(hwr)
-	mem := mem.NewMemory(hwr)
+	mem := mem.NewMemory(hwr, opts.RomFilename)
 	lcd := lcd.NewLCD(hwr, mem)
 	ui := ui.NewGL(hwr, cpu)
-	return Gameboy{cpu: cpu, mem: mem, hwr: hwr, lcd: lcd, ui: ui}
+	return Gameboy{cpu: cpu, mem: mem, hwr: hwr, lcd: lcd, ui: ui, debugLCD: opts.DebugLCD}
 }
 
 func (gb Gameboy) runFrame() {
@@ -46,7 +51,7 @@ func (gb Gameboy) runFrame() {
 		gb.cpu.Tick(gb.mem)
 		gb.hwr.Tick()
 	}
-	gb.ui.DrawFrame(gb.lcd)
+	gb.ui.DrawFrame(gb.lcd, gb.debugLCD)
 }
 
 // Run the Gameboy

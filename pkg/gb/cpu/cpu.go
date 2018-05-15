@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	"github.com/scottyw/tetromino/pkg/gb/mem"
-	"github.com/scottyw/tetromino/pkg/gb/options"
 )
 
 const (
@@ -58,6 +57,11 @@ type CPU struct {
 
 	// Hardware
 	hwr *mem.HardwareRegisters
+
+	// Debug
+	debugCPU         bool
+	debugFlowControl bool
+	debugJumps       bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -142,7 +146,7 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 			cpu.halted = false
 			switch {
 			case interrupts&0x01 > 0: // V-Blank
-				if *options.DebugFlowControl {
+				if cpu.debugFlowControl {
 					fmt.Printf("==== V-Blank interrupt ...\n")
 				}
 				cpu.rst(0x0040, memory)
@@ -165,7 +169,7 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 	if instruction == 0xcb {
 		instruction := mem.Read(cpu.pc + 1)
 		im := prefixedInstructionMetadata[instruction]
-		if *options.DebugCPU {
+		if cpu.debugCPU {
 			fmt.Printf("0x%04x : %v\n%v\n\n", cpu.pc, im, cpu)
 		}
 		cpu.pc += 2
@@ -173,21 +177,21 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 	} else {
 		switch im.Length {
 		case 1:
-			if *options.DebugCPU {
+			if cpu.debugCPU {
 				fmt.Printf("0x%04x : %v\n%v\n\n", cpu.pc, im, cpu)
 			}
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
-			if *options.DebugCPU {
+			if cpu.debugCPU {
 				fmt.Printf("0x%04x : %v u8=0x%02x\n%v\n\n", cpu.pc, im, u8, cpu)
 			}
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
-			if *options.DebugCPU {
+			if cpu.debugCPU {
 				fmt.Printf("0x%04x : %v u16=0x%04x\n%v\n\n", cpu.pc, im, u16, cpu)
 			}
 			cpu.pc += 3

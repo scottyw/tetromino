@@ -12,7 +12,6 @@ import (
 	"github.com/scottyw/tetromino/pkg/gb/cpu"
 	"github.com/scottyw/tetromino/pkg/gb/lcd"
 	"github.com/scottyw/tetromino/pkg/gb/mem"
-	"github.com/scottyw/tetromino/pkg/gb/options"
 )
 
 // GL maintains state for the GL UI implementation
@@ -65,10 +64,10 @@ func (glx *GL) Shutdown() {
 }
 
 // DrawFrame draws a frame to the GL window
-func (glx *GL) DrawFrame(lcd *lcd.LCD) {
+func (glx *GL) DrawFrame(lcd *lcd.LCD, debug bool) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
-	image := renderFrame(lcd.FrameData())
+	image := renderFrame(lcd.FrameData(), debug)
 	setTexture(image)
 	drawBuffer(glx.window)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
@@ -192,8 +191,8 @@ func drawBuffer(window *glfw.Window) {
 	gl.End()
 }
 
-func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
-	if !*options.DebugLCD {
+func renderPixel(im *image.RGBA, x, y int, pixel uint8, debug bool) {
+	if !debug {
 		pixel = pixel % 0x10 // Remove colour offset
 	}
 	switch pixel {
@@ -234,12 +233,12 @@ func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
 	}
 }
 
-func renderFrame(data [23040]uint8) *image.RGBA {
+func renderFrame(data [23040]uint8, debug bool) *image.RGBA {
 	im := image.NewRGBA(image.Rect(0, 0, 160, 144))
 	for y := 0; y < 144; y++ {
 		for x := 0; x < 160; x++ {
 			pixel := data[y*160+x]
-			renderPixel(im, x, y, pixel)
+			renderPixel(im, x, y, pixel, debug)
 		}
 	}
 	return im

@@ -15,10 +15,10 @@ type Memory struct {
 }
 
 // NewMemory creates the memory and initializes it with ROM contents and default values
-func NewMemory(hwr *HardwareRegisters) *Memory {
+func NewMemory(hwr *HardwareRegisters, romFilename string) *Memory {
 	return &Memory{
 		hwr: hwr,
-		mbc: newMBC(),
+		mbc: newMBC(romFilename),
 	}
 }
 
