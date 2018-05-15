@@ -18,27 +18,24 @@ type Options struct {
 	DebugCPU         bool
 	DebugFlowControl bool
 	DebugJumps       bool
-	DebugLCD         bool
 }
 
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
-	cpu      *cpu.CPU
-	mem      *mem.Memory
-	hwr      *mem.HardwareRegisters
-	lcd      *lcd.LCD
-	ui       ui.UI
-	debugLCD bool
+	cpu *cpu.CPU
+	mem *mem.Memory
+	hwr *mem.HardwareRegisters
+	lcd *lcd.LCD
+	ui  ui.UI
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy(opts Options) Gameboy {
-	hwr := mem.NewHardwareRegisters(opts.SBWriter)
+func NewGameboy(ui ui.UI, opts Options) Gameboy {
+	hwr := mem.NewHardwareRegisters(ui.UserInput(), opts.SBWriter)
 	cpu := cpu.NewCPU(hwr)
 	mem := mem.NewMemory(hwr, opts.RomFilename)
 	lcd := lcd.NewLCD(hwr, mem)
-	ui := ui.NewGL(hwr, cpu)
-	return Gameboy{cpu: cpu, mem: mem, hwr: hwr, lcd: lcd, ui: ui, debugLCD: opts.DebugLCD}
+	return Gameboy{cpu: cpu, mem: mem, hwr: hwr, lcd: lcd, ui: ui}
 }
 
 func (gb Gameboy) runFrame() {
@@ -51,12 +48,12 @@ func (gb Gameboy) runFrame() {
 		gb.cpu.Tick(gb.mem)
 		gb.hwr.Tick()
 	}
-	gb.ui.DrawFrame(gb.lcd, gb.debugLCD)
+	gb.ui.HandleFrame(gb.lcd.FrameData())
 }
 
 // Run the Gameboy
 func (gb Gameboy) Run() {
-	for gb.ui.ShouldRun() {
+	for gb.ui.KeepRunning() {
 		gb.runFrame()
 	}
 	gb.ui.Shutdown()
@@ -64,7 +61,7 @@ func (gb Gameboy) Run() {
 
 // Time the Gameboy as it runs
 func (gb Gameboy) Time() {
-	for gb.ui.ShouldRun() {
+	for gb.ui.KeepRunning() {
 		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
 		// On a real Gameboy this would take 1 second
 		t0 := time.Now()

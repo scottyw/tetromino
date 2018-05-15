@@ -3,6 +3,8 @@ package mem
 import (
 	"io"
 	"io/ioutil"
+
+	"github.com/scottyw/tetromino/pkg/ui"
 )
 
 // Register constants
@@ -91,9 +93,8 @@ type HardwareRegisters struct {
 	DIV  byte
 
 	// JOYP
-	storingDirectionInput bool
-	DirectionInput        uint8
-	ButtonInput           uint8
+	joypReadDirection bool
+	input             *ui.UserInput
 
 	// Misc
 	tick     uint32
@@ -101,14 +102,13 @@ type HardwareRegisters struct {
 }
 
 // NewHardwareRegisters creates a new representation of the hardware registers
-func NewHardwareRegisters(sbWriter io.Writer) *HardwareRegisters {
+func NewHardwareRegisters(input *ui.UserInput, sbWriter io.Writer) *HardwareRegisters {
 	if sbWriter == nil {
 		sbWriter = ioutil.Discard
 	}
 	return &HardwareRegisters{
-		DirectionInput: 0x0f,
-		ButtonInput:    0x0f,
-		sbWriter:       sbWriter,
+		input:    input,
+		sbWriter: sbWriter,
 	}
 }
 
@@ -266,19 +266,19 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 }
 
 func (r *HardwareRegisters) joypRead() uint8 {
-	if r.storingDirectionInput {
-		return r.DirectionInput
+	if r.joypReadDirection {
+		return r.input.DirectionInput
 	}
-	return r.ButtonInput
+	return r.input.ButtonInput
 }
 
 func (r *HardwareRegisters) joypWrite(value uint8) {
 	// Bit 5 - P15 Select Button Keys      (0=Select)
 	// Bit 4 - P14 Select Direction Keys   (0=Select)
 	if value&0x20 == 0 {
-		r.storingDirectionInput = false
+		r.joypReadDirection = false
 	} else if value&0x10 == 0 {
-		r.storingDirectionInput = true
+		r.joypReadDirection = true
 	}
 }
 

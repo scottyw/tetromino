@@ -9,19 +9,18 @@ import (
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/scottyw/tetromino/pkg/gb/cpu"
-	"github.com/scottyw/tetromino/pkg/gb/lcd"
-	"github.com/scottyw/tetromino/pkg/gb/mem"
 )
 
 // GL maintains state for the GL UI implementation
 type GL struct {
 	window  *glfw.Window
 	texture uint32
+	input   *UserInput
+	debug   bool
 }
 
 // NewGL implements a user interface in GL
-func NewGL(hwr *mem.HardwareRegisters, cpu *cpu.CPU) UI {
+func NewGL(debug bool) UI {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
@@ -45,16 +44,26 @@ func NewGL(hwr *mem.HardwareRegisters, cpu *cpu.CPU) UI {
 		log.Fatalln(err)
 	}
 	gl.Enable(gl.TEXTURE_2D)
-
-	window.SetKeyCallback(onKeyFunc(hwr, cpu))
+	input := UserInput{
+		DirectionInput: 0x0f,
+		ButtonInput:    0x0f,
+	}
+	window.SetKeyCallback(onKeyFunc(&input))
 	return &GL{
 		window:  window,
 		texture: createTexture(),
+		input:   &input,
+		debug:   debug,
 	}
 }
 
-// ShouldRun indicates whether the emulator should be running e.g. stop when the GL window is closed
-func (glx *GL) ShouldRun() bool {
+// UserInput returns a data structure containing user input
+func (glx *GL) UserInput() *UserInput {
+	return glx.input
+}
+
+// KeepRunning indicates whether the emulator should be running e.g. stop when the GL window is closed
+func (glx *GL) KeepRunning() bool {
 	return !glx.window.ShouldClose()
 }
 
@@ -63,77 +72,85 @@ func (glx *GL) Shutdown() {
 	glfw.Terminate()
 }
 
-// DrawFrame draws a frame to the GL window
-func (glx *GL) DrawFrame(lcd *lcd.LCD, debug bool) {
+// HandleFrame draws a frame to the GL window and returns user input
+func (glx *GL) HandleFrame(lcd [23040]uint8) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
-	image := renderFrame(lcd.FrameData(), debug)
+	image := renderFrame(lcd, glx.debug)
 	setTexture(image)
 	drawBuffer(glx.window)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	glx.window.SwapBuffers()
+	glx.input.InputRecv = false
 	glfw.PollEvents()
 }
 
-func onKeyFunc(hwr *mem.HardwareRegisters, cpu *cpu.CPU) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(input *UserInput) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
 		// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
-		cpu.Start()
 		if key == glfw.KeyS {
 			if action == glfw.Press {
-				hwr.ButtonInput &^= 0x8
+				input.ButtonInput &^= 0x8
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.ButtonInput |= 0x8
+				input.ButtonInput |= 0x8
 			}
 		}
 		if key == glfw.KeyA {
 			if action == glfw.Press {
-				hwr.ButtonInput &^= 0x4
+				input.ButtonInput &^= 0x4
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.ButtonInput |= 0x4
+				input.ButtonInput |= 0x4
 			}
 		}
 		if key == glfw.KeyX {
 			if action == glfw.Press {
-				hwr.ButtonInput &^= 0x2
+				input.ButtonInput &^= 0x2
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.ButtonInput |= 0x2
+				input.ButtonInput |= 0x2
 			}
 		}
 		if key == glfw.KeyZ {
 			if action == glfw.Press {
-				hwr.ButtonInput &^= 0x1
+				input.ButtonInput &^= 0x1
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.ButtonInput |= 0x1
+				input.ButtonInput |= 0x1
 			}
 		}
 		if key == glfw.KeyDown {
 			if action == glfw.Press {
-				hwr.DirectionInput &^= 0x8
+				input.DirectionInput &^= 0x8
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.DirectionInput |= 0x8
+				input.DirectionInput |= 0x8
 			}
 		} else if key == glfw.KeyUp {
 			if action == glfw.Press {
-				hwr.DirectionInput &^= 0x4
+				input.DirectionInput &^= 0x4
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.DirectionInput |= 0x4
+				input.DirectionInput |= 0x4
 			}
 		}
 		if key == glfw.KeyLeft {
 			if action == glfw.Press {
-				hwr.DirectionInput &^= 0x2
+				input.DirectionInput &^= 0x2
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.DirectionInput |= 0x2
+				input.DirectionInput |= 0x2
 			}
 		} else if key == glfw.KeyRight {
 			if action == glfw.Press {
-				hwr.DirectionInput &^= 0x1
+				input.DirectionInput &^= 0x1
+				input.InputRecv = true
 			} else if action == glfw.Release {
-				hwr.DirectionInput |= 0x1
+				input.DirectionInput |= 0x1
 			}
 		}
 	}
