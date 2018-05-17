@@ -3,7 +3,9 @@ package main
 import (
 	"flag"
 	"io"
+	"log"
 	"os"
+	"runtime/pprof"
 
 	"github.com/scottyw/tetromino/pkg/gb"
 	"github.com/scottyw/tetromino/pkg/ui"
@@ -18,7 +20,19 @@ func main() {
 	debugFlowControl := flag.Bool("debug-flow", false, "When true, flow control debugging is enabled")
 	debugJumps := flag.Bool("debug-jumps", false, "When true, jump debugging is enabled")
 	debugLCD := flag.Bool("debug-lcd", false, "When true, LCD colour-based debugging is enabled")
+	enableTiming := flag.Bool("enable-timing", false, "When true, timing is output every 60 frames")
+	enableProfiling := flag.Bool("enable-profiling", false, "When true, CPU profiling data is written to 'cpuprofile.pprof'")
 	flag.Parse()
+
+	// CPU profiling
+	if *enableProfiling {
+		f, err := os.Create("cpuprofile.pprof")
+		if err != nil {
+			log.Fatalf("Failed to write cpuprofile.pprof: %v", err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	// Set up options
 	var sbWriter io.Writer
@@ -36,5 +50,9 @@ func main() {
 	// Start running the Gameboy with a GL UI
 	ui := ui.NewGL(*debugLCD)
 	gameboy := gb.NewGameboy(ui, opts)
-	gameboy.Run()
+	if *enableTiming {
+		gameboy.Time()
+	} else {
+		gameboy.Run()
+	}
 }
