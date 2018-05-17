@@ -65,20 +65,23 @@ type CPU struct {
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
-func NewCPU(hwr *mem.HardwareRegisters) *CPU {
+func NewCPU(hwr *mem.HardwareRegisters, debugCPU, debugFlowControl, debugJumps bool) *CPU {
 	return &CPU{
-		ime: true,
-		hwr: hwr,
-		a:   0x01,
-		f:   0xb0,
-		b:   0x00,
-		c:   0x13,
-		d:   0x00,
-		e:   0xd8,
-		h:   0x01,
-		l:   0x4d,
-		sp:  0xfffe,
-		pc:  0x0100}
+		hwr:              hwr,
+		debugCPU:         debugCPU,
+		debugFlowControl: debugFlowControl,
+		debugJumps:       debugJumps,
+		ime:              true,
+		a:                0x01,
+		f:                0xb0,
+		b:                0x00,
+		c:                0x13,
+		d:                0x00,
+		e:                0xd8,
+		h:                0x01,
+		l:                0x4d,
+		sp:               0xfffe,
+		pc:               0x0100}
 }
 
 func (cpu CPU) String() string {

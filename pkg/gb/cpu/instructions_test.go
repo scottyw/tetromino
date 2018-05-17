@@ -158,6 +158,19 @@ func TestPush(t *testing.T) {
 	}
 }
 
+func TestRes(t *testing.T) {
+	// Flags: [- - - -]
+	for _, test := range []struct {
+		cpu, expectedCPU CPU
+	}{
+		{CPU{c: 0x0a}, CPU{c: 0x0a}},
+		{CPU{c: 0x0e, zf: true, nf: true, hf: true, cf: true}, CPU{c: 0x0a, zf: true, nf: true, hf: true, cf: true}},
+	} {
+		test.cpu.res(2, &test.cpu.c)
+		compareCPUs(t, &test.expectedCPU, &test.cpu)
+	}
+}
+
 func TestRet(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642}},

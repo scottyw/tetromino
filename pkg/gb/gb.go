@@ -32,7 +32,7 @@ type Gameboy struct {
 // NewGameboy returns a new Gameboy
 func NewGameboy(ui ui.UI, opts Options) Gameboy {
 	hwr := mem.NewHardwareRegisters(ui.UserInput(), opts.SBWriter)
-	cpu := cpu.NewCPU(hwr)
+	cpu := cpu.NewCPU(hwr, opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
 	mem := mem.NewMemory(hwr, opts.RomFilename)
 	lcd := lcd.NewLCD(hwr, mem)
 	return Gameboy{cpu: cpu, mem: mem, hwr: hwr, lcd: lcd, ui: ui}
@@ -49,6 +49,9 @@ func (gb Gameboy) runFrame() {
 		gb.hwr.Tick()
 	}
 	gb.ui.HandleFrame(gb.lcd.FrameData())
+	if gb.ui.UserInput().InputRecv {
+		gb.cpu.Start()
+	}
 }
 
 // Run the Gameboy
