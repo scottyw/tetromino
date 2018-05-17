@@ -85,29 +85,6 @@ func highTileAbsoluteAddress(tileNumber int8) uint16 {
 	return uint16(0x9000 + int(tileNumber)*16)
 }
 
-func readRegion(memory *mem.Memory, startAddr, length uint16) []byte {
-	region := make([]byte, length)
-	for addr := uint16(0); addr < length; addr++ {
-		region[addr] = memory.Read(startAddr + addr)
-	}
-	return region
-}
-
-// Returns 16 bytes representing one 8x8 tile
-func tileData(memory *mem.Memory, tile uint16) []byte {
-	var tileAddr uint16
-	if highBgTileMapDisplaySelect(memory) {
-		tileAddr = 0x9c00 + tile
-	} else {
-		tileAddr = 0x9800 + tile
-	}
-	tileNumber := memory.Read(tileAddr)
-	if lowTileDataSelect(memory) {
-		return readRegion(memory, lowTileAbsoluteAddress(tileNumber), 16)
-	}
-	return readRegion(memory, highTileAbsoluteAddress(int8(tileNumber)), 16)
-}
-
 func pixel(memory *mem.Memory, memoryAddr uint16, bit uint8) uint8 {
 	var a, b, pixel uint8
 	a = uint8(memory.Read(memoryAddr))
