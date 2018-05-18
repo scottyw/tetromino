@@ -50,6 +50,16 @@ func (mem *Memory) Read(addr uint16) byte {
 	}
 }
 
+// VideoRAM for direct access
+func (mem *Memory) VideoRAM() *[0x2000]byte {
+	return &mem.videoRAM
+}
+
+// OAM memory for direct access
+func (mem *Memory) OAM() *[0xa0]byte {
+	return &mem.oam
+}
+
 // Write a byte to the chosen memory location
 func (mem *Memory) Write(addr uint16, value byte) {
 	switch {
