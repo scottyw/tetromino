@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"context"
 	"fmt"
 	"image"
 	"image/color"
@@ -13,14 +14,15 @@ import (
 
 // GL maintains state for the GL UI implementation
 type GL struct {
-	window  *glfw.Window
-	texture uint32
-	input   *UserInput
-	debug   bool
+	window     *glfw.Window
+	texture    uint32
+	input      *UserInput
+	cancelFunc context.CancelFunc
+	debug      bool
 }
 
 // NewGL implements a user interface in GL
-func NewGL(debug bool) UI {
+func NewGL(cancelFunc context.CancelFunc, debug bool) UI {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
@@ -50,21 +52,17 @@ func NewGL(debug bool) UI {
 	}
 	window.SetKeyCallback(onKeyFunc(&input))
 	return &GL{
-		window:  window,
-		texture: createTexture(),
-		input:   &input,
-		debug:   debug,
+		window:     window,
+		texture:    createTexture(),
+		input:      &input,
+		cancelFunc: cancelFunc,
+		debug:      debug,
 	}
 }
 
 // UserInput returns a data structure containing user input
 func (glx *GL) UserInput() *UserInput {
 	return glx.input
-}
-
-// KeepRunning indicates whether the emulator should be running e.g. stop when the GL window is closed
-func (glx *GL) KeepRunning() bool {
-	return !glx.window.ShouldClose()
 }
 
 // Shutdown the GL framework
@@ -83,6 +81,9 @@ func (glx *GL) HandleFrame(lcd [23040]uint8) {
 	glx.window.SwapBuffers()
 	glx.input.InputRecv = false
 	glfw.PollEvents()
+	if glx.window.ShouldClose() {
+		glx.cancelFunc()
+	}
 }
 
 func onKeyFunc(input *UserInput) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {

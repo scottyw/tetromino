@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"io"
 	"log"
@@ -48,11 +49,13 @@ func main() {
 	}
 
 	// Start running the Gameboy with a GL UI
-	ui := ui.NewGL(*debugLCD)
+	ctx, cancelFunc := context.WithCancel(context.Background())
+	defer cancelFunc()
+	ui := ui.NewGL(cancelFunc, *debugLCD)
 	gameboy := gb.NewGameboy(ui, opts)
 	if *enableTiming {
-		gameboy.Time()
+		gameboy.Time(ctx)
 	} else {
-		gameboy.Run()
+		gameboy.Run(ctx)
 	}
 }

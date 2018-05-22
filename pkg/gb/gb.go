@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"time"
@@ -55,24 +56,34 @@ func (gb Gameboy) runFrame() {
 }
 
 // Run the Gameboy
-func (gb Gameboy) Run() {
-	for gb.ui.KeepRunning() {
-		gb.runFrame()
+func (gb Gameboy) Run(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			gb.ui.Shutdown()
+			return
+		default:
+			gb.runFrame()
+		}
 	}
-	gb.ui.Shutdown()
 }
 
 // Time the Gameboy as it runs
-func (gb Gameboy) Time() {
-	for gb.ui.KeepRunning() {
+func (gb Gameboy) Time(ctx context.Context) {
+	for {
 		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
 		// On a real Gameboy this would take 1 second
 		t0 := time.Now()
 		for i := 0; i < 60; i++ {
-			gb.runFrame()
+			select {
+			case <-ctx.Done():
+				gb.ui.Shutdown()
+				return
+			default:
+				gb.runFrame()
+			}
 		}
 		t1 := time.Now()
 		fmt.Println("=========>", (t1.Sub(t0)))
 	}
-	gb.ui.Shutdown()
 }

@@ -11,6 +11,5 @@ type UserInput struct {
 type UI interface {
 	HandleFrame([23040]uint8)
 	UserInput() *UserInput
-	KeepRunning() bool
 	Shutdown()
 }
