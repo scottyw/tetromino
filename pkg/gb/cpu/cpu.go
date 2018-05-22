@@ -148,12 +148,41 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 			cpu.ime = false
 			cpu.halted = false
 			switch {
-			case interrupts&0x01 > 0: // V-Blank
+			case interrupts&bit0 > 0:
+				// 0040 Vertical Blank Interrupt Start Address
 				if cpu.debugFlowControl {
 					fmt.Printf("==== V-Blank interrupt ...\n")
 				}
 				cpu.rst(0x0040, memory)
-				cpu.hwr.IF &^= 0x01
+				cpu.hwr.IF &^= bit0
+			case interrupts&bit1 > 0:
+				// 0048 LCDC Status Interrupt Start Address
+				if cpu.debugFlowControl {
+					fmt.Printf("==== LCDC Status interrupt ...\n")
+				}
+				cpu.rst(0x0048, memory)
+				cpu.hwr.IF &^= bit1
+			case interrupts&bit2 > 0:
+				// 0050 Timer OverflowInterrupt Start Address
+				if cpu.debugFlowControl {
+					fmt.Printf("==== Timer Overflow interrupt ...\n")
+				}
+				cpu.rst(0x0050, memory)
+				cpu.hwr.IF &^= bit2
+			case interrupts&bit3 > 0:
+				// 0058 Serial Transfer Completion Interrupt Start Address
+				if cpu.debugFlowControl {
+					fmt.Printf("==== Serial Transfer interrupt ...\n")
+				}
+				cpu.rst(0x0058, memory)
+				cpu.hwr.IF &^= bit3
+			case interrupts&bit4 > 0:
+				// 0060 High-to-Low of P10-P13 Interrupt Start Address
+				if cpu.debugFlowControl {
+					fmt.Printf("==== High-to-Low Pin interrupt ...\n")
+				}
+				cpu.rst(0x0060, memory)
+				cpu.hwr.IF &^= bit4
 			}
 		}
 	}
@@ -173,7 +202,8 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 		instruction := mem.Read(cpu.pc + 1)
 		im := prefixedInstructionMetadata[instruction]
 		if cpu.debugCPU {
-			fmt.Printf("0x%04x : %v\n%v\n\n", cpu.pc, im, cpu)
+			fmt.Printf("0x%04x: %-12s |      | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
+				cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 		}
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
@@ -181,21 +211,24 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 		switch im.Length {
 		case 1:
 			if cpu.debugCPU {
-				fmt.Printf("0x%04x : %v\n%v\n\n", cpu.pc, im, cpu)
+				fmt.Printf("0x%04x: %-12s |      | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
+					cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 			}
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
 			if cpu.debugCPU {
-				fmt.Printf("0x%04x : %v u8=0x%02x\n%v\n\n", cpu.pc, im, u8, cpu)
+				fmt.Printf("0x%04x: %-12s | %02x   | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
+					cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u8, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 			}
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
 			if cpu.debugCPU {
-				fmt.Printf("0x%04x : %v u16=0x%04x\n%v\n\n", cpu.pc, im, u16, cpu)
+				fmt.Printf("0x%04x: %-12s | %04x | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
+					cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u16, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 			}
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
