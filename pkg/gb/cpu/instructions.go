@@ -403,6 +403,8 @@ func (cpu *CPU) pop(msb, lsb *uint8, mem *mem.Memory) {
 
 func (cpu *CPU) popAF(mem *mem.Memory) {
 	cpu.pop(&cpu.a, &cpu.f, mem)
+	// Lower nibble is always zero no matter what data was written
+	cpu.f &= 0xf0
 }
 
 func (cpu *CPU) push(msb, lsb uint8, mem *mem.Memory) {

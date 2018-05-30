@@ -48,9 +48,9 @@ func runBlarggTest(t *testing.T, filename string) {
 	}
 }
 
-// func TestBlarggCpuInstrs01(t *testing.T) {
-// 	runBlarggTest(t, "cpu_instrs/01-special.gb")
-// }
+func TestBlarggCpuInstrs01(t *testing.T) {
+	runBlarggTest(t, "cpu_instrs/01-special.gb")
+}
 
 // func TestBlarggCpuInstrs02(t *testing.T) {
 // 	runBlarggTest(t, "cpu_instrs/02-interrupts.gb")
