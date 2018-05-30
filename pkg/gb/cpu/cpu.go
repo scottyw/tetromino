@@ -220,6 +220,7 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 	if cpu.halted || cpu.stopped {
 		return
 	}
+	pc := cpu.pc
 	instruction := mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
 	if im.Addr == "" {
@@ -228,37 +229,37 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 	if instruction == 0xcb {
 		instruction := mem.Read(cpu.pc + 1)
 		im := prefixedInstructionMetadata[instruction]
-		if cpu.debugCPU {
-			fmt.Printf("0x%04x: %-12s |      | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
-				cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-		}
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
+		if cpu.debugCPU {
+			fmt.Printf("0x%04x: %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+				pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+		}
 	} else {
 		switch im.Length {
 		case 1:
-			if cpu.debugCPU {
-				fmt.Printf("0x%04x: %-12s |      | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
-					cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-			}
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
+			if cpu.debugCPU {
+				fmt.Printf("0x%04x: %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+					pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+			}
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
-			if cpu.debugCPU {
-				fmt.Printf("0x%04x: %-12s | %02x   | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
-					cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u8, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-			}
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
+			if cpu.debugCPU {
+				fmt.Printf("0x%04x: %-12s | %02x   | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+					pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u8, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+			}
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
-			if cpu.debugCPU {
-				fmt.Printf("0x%04x: %-12s | %04x | a%02x b%02x c%02x d%02x e%02x f%02x h%02x l%02x sp%04x \n",
-					cpu.pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u16, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-			}
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
+			if cpu.debugCPU {
+				fmt.Printf("0x%04x: %-12s | %04x | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+					pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u16, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+			}
 		}
 	}
 	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.

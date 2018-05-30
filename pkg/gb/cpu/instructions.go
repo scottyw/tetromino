@@ -94,10 +94,10 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 		if cpu.debugFlowControl {
 			fmt.Printf("==== CALL %04x --> %04x\n", cpu.pc, a16)
 		}
-		mem.Write(cpu.sp, byte(cpu.pc&0xff))
 		cpu.sp--
 		mem.Write(cpu.sp, byte(cpu.pc>>8))
 		cpu.sp--
+		mem.Write(cpu.sp, byte(cpu.pc&0xff))
 		cpu.pc = a16
 	case "NZ":
 		if !cpu.zf() {
@@ -352,8 +352,9 @@ func (cpu *CPU) ldSPToAddr(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) ldSPToHL(i8 int8) {
-	cpu.h = uint8(cpu.sp >> 8)
-	cpu.l = uint8(cpu.sp)
+	sp := uint16(int16(cpu.sp) + int16(i8))
+	cpu.h = uint8(sp >> 8)
+	cpu.l = uint8(sp)
 }
 
 func (cpu *CPU) lddFromAddr(mem *mem.Memory) {
@@ -395,10 +396,10 @@ func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) pop(msb, lsb *uint8, mem *mem.Memory) {
+	*lsb = mem.Read(cpu.sp)
 	cpu.sp++
 	*msb = mem.Read(cpu.sp)
 	cpu.sp++
-	*lsb = mem.Read(cpu.sp)
 }
 
 func (cpu *CPU) popAF(mem *mem.Memory) {
@@ -408,10 +409,10 @@ func (cpu *CPU) popAF(mem *mem.Memory) {
 }
 
 func (cpu *CPU) push(msb, lsb uint8, mem *mem.Memory) {
-	mem.Write(cpu.sp, lsb)
 	cpu.sp--
 	mem.Write(cpu.sp, msb)
 	cpu.sp--
+	mem.Write(cpu.sp, lsb)
 }
 
 func (cpu *CPU) res(pos uint8, r8 *uint8) {
@@ -427,10 +428,10 @@ func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 	switch kind {
 	case "":
+		lsb := mem.Read(cpu.sp)
 		cpu.sp++
 		msb := mem.Read(cpu.sp)
 		cpu.sp++
-		lsb := mem.Read(cpu.sp)
 		retAddr := uint16(msb)<<8 | uint16(lsb)
 		cpu.pc = retAddr
 		if cpu.debugFlowControl {

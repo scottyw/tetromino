@@ -118,8 +118,8 @@ func TestCall(t *testing.T) {
 		actual := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
 		test.cpu.call("", 0x1af2, actual)
 		expected := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
+		expected.Write(0x8640, 0xcd)
 		expected.Write(0x8641, 0xab)
-		expected.Write(0x8642, 0xcd)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
 	}
 }
@@ -138,8 +138,8 @@ func TestPop(t *testing.T) {
 		{CPU{b: 0xff, c: 0x11, sp: 0x8640}, CPU{b: 0x1a, c: 0xf2, sp: 0x8642}},
 	} {
 		actual := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
+		actual.Write(0x8640, 0xf2)
 		actual.Write(0x8641, 0x1a)
-		actual.Write(0x8642, 0xf2)
 		test.cpu.pop(&test.cpu.b, &test.cpu.c, actual)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
@@ -152,8 +152,8 @@ func TestPush(t *testing.T) {
 		actual := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
 		test.cpu.push(test.cpu.b, test.cpu.c, actual)
 		expected := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
+		expected.Write(0x8640, 0xf2)
 		expected.Write(0x8641, 0x1a)
-		expected.Write(0x8642, 0xf2)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
 	}
 }
@@ -176,8 +176,8 @@ func TestRet(t *testing.T) {
 		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642}},
 	} {
 		mem := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
+		mem.Write(0x8640, 0xf2)
 		mem.Write(0x8641, 0x1a)
-		mem.Write(0x8642, 0xf2)
 		test.cpu.ret("", mem)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
@@ -188,8 +188,8 @@ func TestReti(t *testing.T) {
 		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642, ime: true}},
 	} {
 		mem := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
+		mem.Write(0x8640, 0xf2)
 		mem.Write(0x8641, 0x1a)
-		mem.Write(0x8642, 0xf2)
 		test.cpu.reti(mem)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
@@ -306,8 +306,8 @@ func TestRst(t *testing.T) {
 		actual := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
 		test.cpu.rst(0x0008, actual)
 		expected := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), "")
+		expected.Write(0x8640, 0xcd)
 		expected.Write(0x8641, 0xab)
-		expected.Write(0x8642, 0xcd)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
 	}
 }
