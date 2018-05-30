@@ -42,12 +42,6 @@ type CPU struct {
 	h uint8
 	l uint8
 
-	// Flags
-	zf bool
-	nf bool
-	hf bool
-	cf bool
-
 	// State
 	sp      uint16
 	pc      uint16
@@ -85,8 +79,8 @@ func NewCPU(hwr *mem.HardwareRegisters, debugCPU, debugFlowControl, debugJumps b
 }
 
 func (cpu CPU) String() string {
-	return fmt.Sprintf("{ime:%v a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x pc:%04x zf:%v nf:%v hf:%v cf:%v}",
-		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc, cpu.zf, cpu.nf, cpu.hf, cpu.cf)
+	return fmt.Sprintf("{ime:%v a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x pc:%04x}",
+		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc)
 }
 
 // Start the CPU again on button press
@@ -110,35 +104,68 @@ func (cpu *CPU) hl() uint16 {
 	return uint16(cpu.h)<<8 + uint16(cpu.l)
 }
 
-func z(new uint8) bool {
-	return new == 0
+func (cpu *CPU) zf() bool {
+	return cpu.f&zFlag > 0
 }
 
-func z16(new uint16) bool {
-	return new == 0
+func (cpu *CPU) nf() bool {
+	return cpu.f&nFlag > 0
 }
 
-func h(old, new uint8) bool {
+func (cpu *CPU) hf() bool {
+	return cpu.f&hFlag > 0
+}
+
+func (cpu *CPU) cf() bool {
+	return cpu.f&cFlag > 0
+}
+
+func (cpu *CPU) setZf(value bool) {
+	if value {
+		cpu.f |= zFlag
+	} else {
+		cpu.f &^= zFlag
+	}
+}
+
+func (cpu *CPU) setNf(value bool) {
+	if value {
+		cpu.f |= nFlag
+	} else {
+		cpu.f &^= nFlag
+	}
+}
+
+func (cpu *CPU) setHf(value bool) {
+	if value {
+		cpu.f |= hFlag
+	} else {
+		cpu.f &^= hFlag
+	}
+}
+
+func (cpu *CPU) setCf(value bool) {
+	if value {
+		cpu.f |= cFlag
+	} else {
+		cpu.f &^= cFlag
+	}
+}
+
+func halfCarry(old, new uint8) bool {
 	return old&0xf > new&0xf
 }
 
-func h16(old, new uint16) bool {
-	return h(uint8(old>>8), uint8(new>>8))
+func halfCarry16(old, new uint16) bool {
+	return halfCarry(uint8(old>>8), uint8(new>>8))
 }
 
-func c(old, new uint8) bool {
+func carry(old, new uint8) bool {
 	return old > new
 }
 
-func c16(old, new uint16) bool {
-	return c(uint8(old>>8), uint8(new>>8))
-}
-
-func (cpu *CPU) flags(zf, nf, hf, cf bool) {
-	cpu.zf = zf
-	cpu.nf = nf
-	cpu.hf = hf
-	cpu.cf = cf
+func carry16(old, new uint16) bool {
+	return uint8(old>>8) > uint8(new>>8)
 }
 
 func (cpu *CPU) checkInterrupts(memory *mem.Memory) {

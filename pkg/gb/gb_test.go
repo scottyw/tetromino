@@ -12,7 +12,7 @@ import (
 
 var (
 	blarggDir = os.Getenv("GOPATH") + "/src/github.com/scottyw/tetromino/test/blargg/"
-	timeout   = 5 * time.Second
+	timeout   = 10 * time.Second
 )
 
 func runBlarggTest(t *testing.T, filename string) {
@@ -84,9 +84,9 @@ func TestBlarggCpuInstrs06(t *testing.T) {
 // 	runBlarggTest(t, "cpu_instrs/09-op r,r.gb")
 // }
 
-// func TestBlarggCpuInstrs10(t *testing.T) {
-// 	runBlarggTest(t, "cpu_instrs/10-bit ops.gb")
-// }
+func TestBlarggCpuInstrs10(t *testing.T) {
+	runBlarggTest(t, "cpu_instrs/10-bit ops.gb")
+}
 
 // func TestBlarggCpuInstrs11(t *testing.T) {
 // 	runBlarggTest(t, "cpu_instrs/11-op a,(hl).gb")

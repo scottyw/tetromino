@@ -9,15 +9,19 @@ import (
 func (cpu *CPU) adc(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
-	hf := h(a, cpu.a)
-	cf := c(a, cpu.a)
-	if cpu.cf {
+	hf := halfCarry(a, cpu.a)
+	cf := carry(a, cpu.a)
+	if cpu.cf() {
 		a = cpu.a
 		cpu.a++
-		hf = hf || h(a, cpu.a)
-		cf = cf || c(a, cpu.a)
+		hf = hf || halfCarry(a, cpu.a)
+		cf = cf || carry(a, cpu.a)
 	}
-	cpu.flags(z(cpu.a), false, hf, cf) // [Z 0 H C]
+	// [Z 0 H C]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(hf)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) adcAddr(a16 uint16, mem *mem.Memory) {
@@ -27,7 +31,11 @@ func (cpu *CPU) adcAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) add(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
-	cpu.flags(z(cpu.a), false, h(a, cpu.a), c(a, cpu.a)) // [Z 0 H C]
+	// [Z 0 H C]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(halfCarry(a, cpu.a))
+	cpu.setCf(carry(a, cpu.a))
 }
 
 func (cpu *CPU) addHL(u16 uint16) {
@@ -35,13 +43,20 @@ func (cpu *CPU) addHL(u16 uint16) {
 	new := old + u16
 	cpu.h = uint8(new >> 8)
 	cpu.l = uint8(new)
-	cpu.flags(cpu.zf, false, h16(old, new), c16(old, new)) // [- 0 H C]
+	// [- 0 H C]
+	cpu.setNf(false)
+	cpu.setHf(halfCarry16(old, new))
+	cpu.setCf(carry16(old, new))
 }
 
 func (cpu *CPU) addSP(i8 int8) {
-	old := cpu.sp
+	sp := cpu.sp
 	cpu.sp = uint16(int16(cpu.sp) + int16(i8))
-	cpu.flags(false, false, h16(old, cpu.sp), c16(old, cpu.sp)) // [0 0 H C]
+	// [0 0 H C]
+	cpu.setZf(false)
+	cpu.setNf(false)
+	cpu.setHf(halfCarry16(sp, cpu.sp))
+	cpu.setCf(carry16(sp, cpu.sp))
 }
 
 func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
@@ -50,7 +65,11 @@ func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
 
 func (cpu *CPU) and(u8 uint8) {
 	cpu.a &= u8
-	cpu.flags(z(cpu.a), false, true, false) // [Z 0 1 0]
+	// [Z 0 1 0]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(true)
+	cpu.setCf(false)
 }
 
 func (cpu *CPU) andAddr(a16 uint16, mem *mem.Memory) {
@@ -59,7 +78,10 @@ func (cpu *CPU) andAddr(a16 uint16, mem *mem.Memory) {
 
 func (cpu *CPU) bit(pos uint8, u8 uint8) {
 	zero := u8&bits[pos] == 0
-	cpu.flags(zero, false, true, cpu.cf) // [Z 0 1 -]
+	// [Z 0 1 -]
+	cpu.setZf(zero)
+	cpu.setNf(false)
+	cpu.setHf(true)
 }
 
 func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem *mem.Memory) {
@@ -78,28 +100,28 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 		cpu.sp--
 		cpu.pc = a16
 	case "NZ":
-		if !cpu.zf {
+		if !cpu.zf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== CALL NZ ...\n")
 			}
 			cpu.call("", a16, mem)
 		}
 	case "Z":
-		if cpu.zf {
+		if cpu.zf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== CALL Z ...\n")
 			}
 			cpu.call("", a16, mem)
 		}
 	case "NC":
-		if !cpu.cf {
+		if !cpu.cf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== CALL NC ...\n")
 			}
 			cpu.call("", a16, mem)
 		}
 	case "C":
-		if cpu.cf {
+		if cpu.cf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== CALL C ...\n")
 			}
@@ -111,12 +133,19 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) ccf() {
-	cpu.cf = !cpu.cf
-	cpu.flags(z(cpu.a), false, false, cpu.cf) // [- 0 0 *]
+	// [- 0 0 *]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(!cpu.cf())
 }
 
 func (cpu *CPU) cp(u8 uint8) {
-	cpu.flags(cpu.a == u8, true, h(u8, cpu.a), c(u8, cpu.a)) // [Z 1 H C]
+	// [Z 1 H C]
+	cpu.setZf(cpu.a == u8)
+	cpu.setNf(true)
+	cpu.setHf(halfCarry(u8, cpu.a))
+	cpu.setCf(carry(u8, cpu.a))
 }
 
 func (cpu *CPU) cpAddr(a16 uint16, mem *mem.Memory) {
@@ -125,33 +154,42 @@ func (cpu *CPU) cpAddr(a16 uint16, mem *mem.Memory) {
 
 func (cpu *CPU) cpl() {
 	cpu.a = ^cpu.a
-	cpu.flags(cpu.zf, true, true, cpu.cf)
+	// [- 1 1 -]
+	cpu.setNf(true)
+	cpu.setHf(true)
 }
 
 func (cpu *CPU) daa() {
-	if !cpu.nf {
-		if cpu.cf || cpu.a > 0x99 {
+	cf := cpu.cf()
+	if !cpu.nf() {
+		if cpu.cf() || cpu.a > 0x99 {
 			cpu.a += 0x60
-			cpu.cf = true
+			cf = true
 		}
-		if cpu.hf || (cpu.a&0x0f) > 0x09 {
+		if cpu.hf() || (cpu.a&0x0f) > 0x09 {
 			cpu.a += 0x6
 		}
 	} else {
-		if cpu.cf {
+		if cpu.cf() {
 			cpu.a -= 0x60
 		}
-		if cpu.hf {
+		if cpu.hf() {
 			cpu.a -= 0x6
 		}
 	}
-	cpu.flags(z(cpu.a), cpu.nf, true, cpu.cf) // [Z - 0 C]
+	// [Z - 0 C]
+	cpu.setZf(cpu.a == 0)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) dec(r8 *uint8) {
 	old := *r8
 	*r8--
-	cpu.flags(z(*r8), true, h(*r8, old), cpu.cf) //	[Z 1 H -]
+	// [Z 1 H -]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(true)
+	cpu.setHf(halfCarry(*r8, old))
 }
 
 func (cpu *CPU) dec16(msb, lsb *uint8) {
@@ -159,7 +197,10 @@ func (cpu *CPU) dec16(msb, lsb *uint8) {
 	new := old - 1
 	*msb = uint8(new >> 8)
 	*lsb = uint8(new)
-	cpu.flags(z16(new), true, h16(new, old), cpu.cf) //	[Z 1 H -]
+	// [Z 1 H -]
+	cpu.setZf(new == 0)
+	cpu.setNf(true)
+	cpu.setHf(halfCarry16(new, old))
 }
 
 func (cpu *CPU) decSP() {
@@ -187,7 +228,10 @@ func (cpu *CPU) halt() {
 func (cpu *CPU) inc(r8 *uint8) {
 	old := *r8
 	*r8++
-	cpu.flags(z(*r8), true, h(old, *r8), cpu.cf) // [Z 0 H -]
+	// [Z 0 H -]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(halfCarry(old, *r8))
 }
 
 func (cpu *CPU) inc16(msb, lsb *uint8) {
@@ -195,7 +239,10 @@ func (cpu *CPU) inc16(msb, lsb *uint8) {
 	new := old + 1
 	*msb = uint8(new >> 8)
 	*lsb = uint8(new)
-	cpu.flags(z16(new), true, h16(old, new), cpu.cf) //	[Z 1 H -]
+	// [Z 1 H -]
+	cpu.setZf(new == 0)
+	cpu.setNf(true)
+	cpu.setHf(halfCarry16(old, new))
 }
 
 func (cpu *CPU) incSP() {
@@ -216,28 +263,28 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 		}
 		cpu.pc = a16
 	case "NZ":
-		if !cpu.zf {
+		if !cpu.zf() {
 			if cpu.debugJumps {
 				fmt.Printf("==== JP NZ\n")
 			}
 			cpu.jp("", a16)
 		}
 	case "Z":
-		if cpu.zf {
+		if cpu.zf() {
 			if cpu.debugJumps {
 				fmt.Printf("==== JP Z\n")
 			}
 			cpu.jp("", a16)
 		}
 	case "NC":
-		if !cpu.cf {
+		if !cpu.cf() {
 			if cpu.debugJumps {
 				fmt.Printf("==== JP NC\n")
 			}
 			cpu.jp("", a16)
 		}
 	case "C":
-		if cpu.cf {
+		if cpu.cf() {
 			if cpu.debugJumps {
 				fmt.Printf("==== JP C\n")
 			}
@@ -336,7 +383,11 @@ func (cpu *CPU) nop() {
 
 func (cpu *CPU) or(u8 uint8) {
 	cpu.a |= u8
-	cpu.flags(z(cpu.a), false, false, false) // [Z 0 0 0]
+	// [Z 0 0 0]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(false)
 }
 
 func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
@@ -352,10 +403,6 @@ func (cpu *CPU) pop(msb, lsb *uint8, mem *mem.Memory) {
 
 func (cpu *CPU) popAF(mem *mem.Memory) {
 	cpu.pop(&cpu.a, &cpu.f, mem)
-	cpu.zf = cpu.f&8 > 1
-	cpu.nf = cpu.f&4 > 1
-	cpu.hf = cpu.f&2 > 1
-	cpu.cf = cpu.f&1 > 1
 }
 
 func (cpu *CPU) push(msb, lsb uint8, mem *mem.Memory) {
@@ -388,28 +435,28 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 			fmt.Printf("==== RET %04x --> %04x\n", retAddr, cpu.pc)
 		}
 	case "NZ":
-		if !cpu.zf {
+		if !cpu.zf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== RET NZ ...\n")
 			}
 			cpu.ret("", mem)
 		}
 	case "Z":
-		if cpu.zf {
+		if cpu.zf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== RET Z ...\n")
 			}
 			cpu.ret("", mem)
 		}
 	case "NC":
-		if !cpu.cf {
+		if !cpu.cf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== RET NC ...\n")
 			}
 			cpu.ret("", mem)
 		}
 	case "C":
-		if cpu.cf {
+		if cpu.cf() {
 			if cpu.debugFlowControl {
 				fmt.Printf("==== RET C ...\n")
 			}
@@ -431,10 +478,14 @@ func (cpu *CPU) reti(mem *mem.Memory) {
 func (cpu *CPU) rl(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
-	if cpu.cf {
+	if cpu.cf() {
 		*r8 |= 0x01
 	}
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) rlAddr(a16 uint16, mem *mem.Memory) {
@@ -445,7 +496,7 @@ func (cpu *CPU) rlAddr(a16 uint16, mem *mem.Memory) {
 
 func (cpu *CPU) rla() {
 	cpu.rl(&cpu.a)
-	cpu.zf = false
+	cpu.f &^= zFlag
 }
 
 func (cpu *CPU) rlc(r8 *uint8) {
@@ -454,12 +505,16 @@ func (cpu *CPU) rlc(r8 *uint8) {
 	if cf {
 		*r8 |= 0x01
 	}
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) rlca() {
 	cpu.rlc(&cpu.a)
-	cpu.zf = false
+	cpu.f &^= zFlag
 }
 
 func (cpu *CPU) rlcAddr(a16 uint16, mem *mem.Memory) {
@@ -471,10 +526,14 @@ func (cpu *CPU) rlcAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) rr(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
-	if cpu.cf {
+	if cpu.cf() {
 		*r8 |= 0x80
 	}
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) rra() {
@@ -493,7 +552,11 @@ func (cpu *CPU) rrc(r8 *uint8) {
 	if cf {
 		*r8 |= 0x80
 	}
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) rrca() {
@@ -526,7 +589,11 @@ func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) sla(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) slaAddr(a16 uint16, mem *mem.Memory) {
@@ -542,7 +609,11 @@ func (cpu *CPU) sra(r8 *uint8) {
 	if bit7 {
 		*r8 |= 0x80
 	}
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) sraAddr(a16 uint16, mem *mem.Memory) {
@@ -554,7 +625,11 @@ func (cpu *CPU) sraAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) srl(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
-	cpu.flags(z(*r8), false, false, cf) //  [Z 0 0 C]
+	// [Z 0 0 C]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) srlAddr(a16 uint16, mem *mem.Memory) {
@@ -566,7 +641,11 @@ func (cpu *CPU) srlAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) swap(r8 *uint8) {
 	u8 := *r8
 	*r8 = u8<<4 | u8>>4
-	cpu.flags(z(*r8), false, false, false)
+	// [Z 0 0 0]
+	cpu.setZf(*r8 == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(false)
 }
 
 func (cpu *CPU) swapAddr(a16 uint16, mem *mem.Memory) {
@@ -576,8 +655,11 @@ func (cpu *CPU) swapAddr(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) scf() {
-	cpu.cf = true
-	cpu.flags(z(cpu.a), false, false, true) // [- 0 0 1]
+	// [- 0 0 1]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(true)
 }
 
 func (cpu *CPU) stop() {
@@ -587,15 +669,19 @@ func (cpu *CPU) stop() {
 func (cpu *CPU) sbc(u8 uint8) {
 	a := cpu.a
 	cpu.a -= u8
-	hf := h(cpu.a, a)
-	cf := c(cpu.a, a)
-	if cpu.cf {
+	hf := halfCarry(cpu.a, a)
+	cf := carry(cpu.a, a)
+	if cpu.cf() {
 		a = cpu.a
 		cpu.a--
-		hf = hf || h(cpu.a, a)
-		cf = cf || c(cpu.a, a)
+		hf = hf || halfCarry(cpu.a, a)
+		cf = cf || carry(cpu.a, a)
 	}
-	cpu.flags(z(cpu.a), true, hf, cf) // [Z 1 H C]
+	// [Z 1 H C]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(true)
+	cpu.setHf(hf)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
@@ -605,7 +691,11 @@ func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) sub(u8 uint8) {
 	a := cpu.a
 	cpu.a -= u8
-	cpu.flags(z(cpu.a), false, h(cpu.a, a), c(cpu.a, a)) // [Z 0 H C]
+	// [Z 0 H C]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(halfCarry(cpu.a, a))
+	cpu.setCf(carry(cpu.a, a))
 }
 
 func (cpu *CPU) subAddr(a16 uint16, mem *mem.Memory) {
@@ -614,7 +704,11 @@ func (cpu *CPU) subAddr(a16 uint16, mem *mem.Memory) {
 
 func (cpu *CPU) xor(u8 uint8) {
 	cpu.a = cpu.a ^ u8
-	cpu.flags(z(cpu.a), false, false, false) // [Z 0 0 0]
+	// [Z 0 0 0]
+	cpu.setZf(cpu.a == 0)
+	cpu.setNf(false)
+	cpu.setHf(false)
+	cpu.setCf(false)
 }
 
 func (cpu *CPU) xorAddr(a16 uint16, mem *mem.Memory) {
