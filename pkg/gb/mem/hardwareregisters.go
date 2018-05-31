@@ -3,6 +3,7 @@ package mem
 import (
 	"io"
 	"io/ioutil"
+	"log"
 
 	"github.com/scottyw/tetromino/pkg/ui"
 )
@@ -91,14 +92,18 @@ type HardwareRegisters struct {
 	WX   byte
 	WY   byte
 	DIV  byte
+	TIMA byte
+	TMA  byte
+	TAC  byte
 
 	// JOYP
 	joypReadDirection bool
 	input             *ui.UserInput
 
 	// Misc
-	tick     uint32
-	sbWriter io.Writer
+	divTick   uint32
+	timerTick uint32
+	sbWriter  io.Writer
 }
 
 // NewHardwareRegisters creates a new representation of the hardware registers
@@ -166,9 +171,12 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 	// case SC:
 	case DIV:
 		return mem.hwr.DIV
-	// case TIMA:
-	// case TMA:
-	// case TAC:
+	case TIMA:
+		return mem.hwr.TIMA
+	case TMA:
+		return mem.hwr.TMA
+	case TAC:
+		return mem.hwr.TAC
 	default:
 		return 0
 	}
@@ -255,11 +263,11 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 	case DIV:
 		mem.hwr.DIV = 0
 	case TIMA:
-		// FIXME timer
+		mem.hwr.TIMA = value
 	case TMA:
-		// FIXME timer
+		mem.hwr.TMA = value
 	case TAC:
-		// FIXME timer
+		mem.hwr.TAC = value
 	default:
 		// Do nothing
 	}
@@ -289,11 +297,46 @@ func (mem *Memory) dma(addrPrefix uint8) {
 	}
 }
 
+func (r *HardwareRegisters) timerRunning() bool {
+	return r.TAC&0x04 > 0
+}
+
+func (r *HardwareRegisters) timerIncrementFreq() uint32 {
+	// 00:   4096 Hz    (~4194 Hz SGB)
+	// 01: 262144 Hz  (~268400 Hz SGB)
+	// 10:  65536 Hz   (~67110 Hz SGB)
+	// 11:  16384 Hz   (~16780 Hz SGB)
+	switch r.TAC & 0x03 {
+	case 0:
+		return 256
+	case 1:
+		return 4
+	case 2:
+		return 16
+	case 3:
+		return 64
+	}
+	log.Fatal("Timer frequency error")
+	return 0
+}
+
 // Tick updates the hardware registers on each clock tick
 func (r *HardwareRegisters) Tick() {
-	r.tick++
-	if r.tick == 64 {
-		r.tick = 0
+	r.divTick++
+	if r.divTick >= 64 {
+		r.divTick = 0
 		r.DIV++
+	}
+	if r.timerRunning() {
+		r.timerTick++
+		if r.timerTick >= r.timerIncrementFreq() {
+			r.timerTick = 0
+			r.TIMA++
+			if r.TIMA == 0 {
+				// Raise timer interrupt and reset the timer itself
+				r.IF |= 0x04
+				r.TIMA = r.TMA
+			}
+		}
 	}
 }

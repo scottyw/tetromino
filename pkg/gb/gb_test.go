@@ -52,17 +52,17 @@ func TestBlarggCpuInstrs01(t *testing.T) {
 	runBlarggTest(t, "cpu_instrs/01-special.gb")
 }
 
-// func TestBlarggCpuInstrs02(t *testing.T) {
-// 	runBlarggTest(t, "cpu_instrs/02-interrupts.gb")
-// }
+func TestBlarggCpuInstrs02(t *testing.T) {
+	runBlarggTest(t, "cpu_instrs/02-interrupts.gb")
+}
 
 // func TestBlarggCpuInstrs03(t *testing.T) {
 // 	runBlarggTest(t, "cpu_instrs/03-op sp,hl.gb")
 // }
 
-// func TestBlarggCpuInstrs04(t *testing.T) {
-// 	runBlarggTest(t, "cpu_instrs/04-op r,imm.gb")
-// }
+func TestBlarggCpuInstrs04(t *testing.T) {
+	runBlarggTest(t, "cpu_instrs/04-op r,imm.gb")
+}
 
 // func TestBlarggCpuInstrs05(t *testing.T) {
 // 	runBlarggTest(t, "cpu_instrs/05-op rp.gb")

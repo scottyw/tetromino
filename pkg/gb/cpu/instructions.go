@@ -223,6 +223,7 @@ func (cpu *CPU) ei() {
 
 func (cpu *CPU) halt() {
 	cpu.halted = true
+	// FIXME halt bug needs to be implemented
 }
 
 func (cpu *CPU) inc(r8 *uint8) {
@@ -694,9 +695,9 @@ func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) sub(u8 uint8) {
 	a := cpu.a
 	cpu.a -= u8
-	// [Z 0 H C]
+	// [Z 1 H C]
 	cpu.setZf(cpu.a == 0)
-	cpu.setNf(false)
+	cpu.setNf(true)
 	cpu.setHf(halfCarry(cpu.a, a))
 	cpu.setCf(carry(cpu.a, a))
 }

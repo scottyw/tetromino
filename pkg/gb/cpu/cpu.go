@@ -28,8 +28,6 @@ var instructionMetadata [256]metadata
 
 var prefixedInstructionMetadata [256]metadata
 
-var cycles int
-
 // CPU stores the internal CPU state
 type CPU struct {
 	// 8-bit registers
@@ -50,7 +48,8 @@ type CPU struct {
 	stopped bool
 
 	// Hardware
-	hwr *mem.HardwareRegisters
+	hwr   *mem.HardwareRegisters
+	ticks int
 
 	// Debug
 	debugCPU         bool
@@ -169,11 +168,11 @@ func carry16(old, new uint16) bool {
 }
 
 func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
-	if cpu.ime {
-		interrupts := cpu.hwr.IE & cpu.hwr.IF
-		if interrupts > 0 {
+	interrupts := cpu.hwr.IE & cpu.hwr.IF
+	if interrupts > 0 {
+		cpu.halted = false
+		if cpu.ime {
 			cpu.ime = false
-			cpu.halted = false
 			switch {
 			case interrupts&bit0 > 0:
 				// 0040 Vertical Blank Interrupt Start Address
@@ -215,11 +214,7 @@ func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 	}
 }
 
-func (cpu *CPU) execute(mem *mem.Memory) {
-	cpu.checkInterrupts(mem)
-	if cpu.halted || cpu.stopped {
-		return
-	}
+func (cpu *CPU) execute(mem *mem.Memory) int {
 	pc := cpu.pc
 	instruction := mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
@@ -232,8 +227,8 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
 		if cpu.debugCPU {
-			fmt.Printf("0x%04x: %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-				pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+			fmt.Printf("0x%04x: [%02x] %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+				pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 		}
 	} else {
 		switch im.Length {
@@ -241,35 +236,39 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 			cpu.pc++
 			cpu.dispatchOneByteInstruction(mem, instruction)
 			if cpu.debugCPU {
-				fmt.Printf("0x%04x: %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-					pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+				fmt.Printf("0x%04x: [%02x] %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+					pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 			}
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
 			cpu.pc += 2
 			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
 			if cpu.debugCPU {
-				fmt.Printf("0x%04x: %-12s | %02x   | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-					pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u8, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+				fmt.Printf("0x%04x: [%02x] %-12s | %02x   | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+					pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u8, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 			}
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
 			cpu.pc += 3
 			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
 			if cpu.debugCPU {
-				fmt.Printf("0x%04x: %-12s | %04x | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-					pc, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u16, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+				fmt.Printf("0x%04x: [%02x] %-12s | %04x | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+					pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u16, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 			}
 		}
 	}
 	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.
-	cycles = im.Cycles[0]
+	return im.Cycles[0]
 }
 
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
 func (cpu *CPU) Tick(mem *mem.Memory) {
-	if cycles == 0 {
-		cpu.execute(mem)
+	if cpu.ticks == 0 {
+		cpu.checkInterrupts(mem)
+		if !cpu.halted && !cpu.stopped {
+			cpu.ticks = cpu.execute(mem)
+		}
+	} else {
+		cpu.ticks--
 	}
-	cycles--
 }
