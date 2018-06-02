@@ -9,13 +9,12 @@ import (
 func (cpu *CPU) adc(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
-	hf := halfCarry(a, cpu.a)
-	cf := carry(a, cpu.a)
+	hf := hc8(a, u8)
+	cf := c8(a, u8)
 	if cpu.cf() {
-		a = cpu.a
 		cpu.a++
-		hf = hf || halfCarry(a, cpu.a)
-		cf = cf || carry(a, cpu.a)
+		hf = hf || cpu.a&0x0f == 0
+		cf = cf || cpu.a == 0
 	}
 	// [Z 0 H C]
 	cpu.setZf(cpu.a == 0)
@@ -34,29 +33,38 @@ func (cpu *CPU) add(u8 uint8) {
 	// [Z 0 H C]
 	cpu.setZf(cpu.a == 0)
 	cpu.setNf(false)
-	cpu.setHf(halfCarry(a, cpu.a))
-	cpu.setCf(carry(a, cpu.a))
+	cpu.setHf(hc8(a, u8))
+	cpu.setCf(c8(a, u8))
 }
 
 func (cpu *CPU) addHL(u16 uint16) {
-	old := cpu.hl()
-	new := old + u16
+	hl := cpu.hl()
+	new := hl + u16
 	cpu.h = uint8(new >> 8)
 	cpu.l = uint8(new)
 	// [- 0 H C]
 	cpu.setNf(false)
-	cpu.setHf(halfCarry16(old, new))
-	cpu.setCf(carry16(old, new))
+	cpu.setHf(hc16(hl, u16))
+	cpu.setCf(c16(hl, u16))
 }
 
 func (cpu *CPU) addSP(i8 int8) {
 	sp := cpu.sp
-	cpu.sp = uint16(int16(cpu.sp) + int16(i8))
+	delta := int16(i8)
+	cpu.sp = uint16(int16(cpu.sp) + delta)
+	var hf, cf bool
+	if delta >= 0 {
+		hf = hc16(sp, uint16(delta))
+		cf = c16(sp, uint16(delta))
+	} else {
+		hf = hc16Sub(sp, uint16(-delta))
+		cf = c16Sub(sp, uint16(-delta))
+	}
 	// [0 0 H C]
 	cpu.setZf(false)
 	cpu.setNf(false)
-	cpu.setHf(halfCarry16(sp, cpu.sp))
-	cpu.setCf(carry16(sp, cpu.sp))
+	cpu.setHf(hf)
+	cpu.setCf(cf)
 }
 
 func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
@@ -144,8 +152,8 @@ func (cpu *CPU) cp(u8 uint8) {
 	// [Z 1 H C]
 	cpu.setZf(cpu.a == u8)
 	cpu.setNf(true)
-	cpu.setHf(halfCarry(u8, cpu.a))
-	cpu.setCf(carry(u8, cpu.a))
+	cpu.setHf(hc8Sub(cpu.a, u8))
+	cpu.setCf(c8Sub(cpu.a, u8))
 }
 
 func (cpu *CPU) cpAddr(a16 uint16, mem *mem.Memory) {
@@ -189,7 +197,7 @@ func (cpu *CPU) dec(r8 *uint8) {
 	// [Z 1 H -]
 	cpu.setZf(*r8 == 0)
 	cpu.setNf(true)
-	cpu.setHf(halfCarry(*r8, old))
+	cpu.setHf(hc8Sub(old, 1))
 }
 
 func (cpu *CPU) dec16(msb, lsb *uint8) {
@@ -200,7 +208,7 @@ func (cpu *CPU) dec16(msb, lsb *uint8) {
 	// [Z 1 H -]
 	cpu.setZf(new == 0)
 	cpu.setNf(true)
-	cpu.setHf(halfCarry16(new, old))
+	cpu.setHf(hc16Sub(old, 1))
 }
 
 func (cpu *CPU) decSP() {
@@ -232,7 +240,7 @@ func (cpu *CPU) inc(r8 *uint8) {
 	// [Z 0 H -]
 	cpu.setZf(*r8 == 0)
 	cpu.setNf(false)
-	cpu.setHf(halfCarry(old, *r8))
+	cpu.setHf(hc8(old, 1))
 }
 
 func (cpu *CPU) inc16(msb, lsb *uint8) {
@@ -243,7 +251,7 @@ func (cpu *CPU) inc16(msb, lsb *uint8) {
 	// [Z 1 H -]
 	cpu.setZf(new == 0)
 	cpu.setNf(true)
-	cpu.setHf(halfCarry16(old, new))
+	cpu.setHf(hc16(old, 1))
 }
 
 func (cpu *CPU) incSP() {
@@ -673,19 +681,19 @@ func (cpu *CPU) stop() {
 func (cpu *CPU) sbc(u8 uint8) {
 	a := cpu.a
 	cpu.a -= u8
-	hf := halfCarry(cpu.a, a)
-	cf := carry(cpu.a, a)
+	hf := hc8Sub(a, u8)
+	cf := c8Sub(a, u8)
 	if cpu.cf() {
-		a = cpu.a
 		cpu.a--
-		hf = hf || halfCarry(cpu.a, a)
-		cf = cf || carry(cpu.a, a)
+		hf = hf || cpu.a&0x0f == 0x0f
+		cf = cf || cpu.a == 0xff
 	}
 	// [Z 1 H C]
 	cpu.setZf(cpu.a == 0)
 	cpu.setNf(true)
 	cpu.setHf(hf)
 	cpu.setCf(cf)
+
 }
 
 func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
@@ -698,8 +706,8 @@ func (cpu *CPU) sub(u8 uint8) {
 	// [Z 1 H C]
 	cpu.setZf(cpu.a == 0)
 	cpu.setNf(true)
-	cpu.setHf(halfCarry(cpu.a, a))
-	cpu.setCf(carry(cpu.a, a))
+	cpu.setHf(hc8Sub(a, u8))
+	cpu.setCf(c8Sub(a, u8))
 }
 
 func (cpu *CPU) subAddr(a16 uint16, mem *mem.Memory) {

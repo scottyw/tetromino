@@ -151,20 +151,35 @@ func (cpu *CPU) setCf(value bool) {
 	}
 }
 
-func halfCarry(old, new uint8) bool {
-	return old&0xf > new&0xf
+func hc8(a, b uint8) bool {
+	return a&0x0f+b&0x0f > 0x0f
+}
+func c8(a, b uint8) bool {
+	return int(a)+int(b) > 0xff
 }
 
-func halfCarry16(old, new uint16) bool {
-	return halfCarry(uint8(old>>8), uint8(new>>8))
+func hc16(a, b uint16) bool {
+	return a&0x0fff+b&0x0fff > 0x0fff
 }
 
-func carry(old, new uint8) bool {
-	return old > new
+func c16(a, b uint16) bool {
+	return int(a)+int(b) > 0xffff
 }
 
-func carry16(old, new uint16) bool {
-	return uint8(old>>8) > uint8(new>>8)
+func hc8Sub(a, b uint8) bool {
+	return int(a)&0x0f-int(b)&0x0f < 0
+}
+
+func c8Sub(a, b uint8) bool {
+	return int(a)-int(b) < 0
+}
+
+func hc16Sub(a, b uint16) bool {
+	return int(a)&0x0fff-int(b)&0x0fff < 0
+}
+
+func c16Sub(a, b uint16) bool {
+	return int(a)-int(b) < 0
 }
 
 func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
