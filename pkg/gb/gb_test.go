@@ -1,6 +1,7 @@
 package gb
 
 import (
+	"bytes"
 	"context"
 	"os"
 	"strings"
@@ -16,7 +17,7 @@ var (
 )
 
 func runBlarggTest(t *testing.T, filename string) {
-	sbWriter := &strings.Builder{}
+	sbWriter := &bytes.Buffer{}
 	opts := Options{
 		RomFilename: blarggDir + filename,
 		SBWriter:    sbWriter,
