@@ -236,29 +236,29 @@ func flagMetadata(i uint, flags []string) string {
 	return flags[i]
 }
 
-func validateFlag(label string, i uint, f1, f2 uint8, flags []string) {
+func validateFlag(label string, i uint, f1, f2 uint8, im metadata) {
 	bit := uint8(0x80) >> i
-	switch flagMetadata(i, flags) {
+	switch flagMetadata(i, im.Flags) {
 	case "-":
 		if f1&bit != f2&bit {
-			panic(fmt.Sprintf("%s flag invalid! before=0x%02x after=0x%02x metadata=%v", label, f1, f2, flags))
+			panic(fmt.Sprintf("%s flag invalid! Should not change: before=0x%02x after=0x%02x metadata=%v", label, f1, f2, im))
 		}
 	case "0":
 		if f2&bit != 0 {
-			panic(fmt.Sprintf("%s flag invalid! Should be reset: flags=0x%02x", label, f2))
+			panic(fmt.Sprintf("%s flag invalid! Should be reset: flags=0x%02x metadata=%v", label, f2, im))
 		}
 	case "1":
 		if f2&bit == 0 {
-			panic(fmt.Sprintf("%s flag invalid! Should be set: flags=0x%02x", label, f2))
+			panic(fmt.Sprintf("%s flag invalid! Should be set: flags=0x%02x metadata=%v", label, f2, im))
 		}
 	}
 }
 
-func validateFlags(f1, f2 uint8, flags []string) {
-	validateFlag("Z", 0, f1, f2, flags)
-	validateFlag("N", 1, f1, f2, flags)
-	validateFlag("H", 2, f1, f2, flags)
-	validateFlag("C", 3, f1, f2, flags)
+func validateFlags(f1, f2 uint8, im metadata) {
+	validateFlag("Z", 0, f1, f2, im)
+	validateFlag("N", 1, f1, f2, im)
+	validateFlag("H", 2, f1, f2, im)
+	validateFlag("C", 3, f1, f2, im)
 }
 
 func (cpu *CPU) execute(mem *mem.Memory) int {
@@ -270,8 +270,8 @@ func (cpu *CPU) execute(mem *mem.Memory) int {
 		panic(fmt.Sprintf("Unknown instruction opcode: %v", instruction))
 	}
 	if instruction == 0xcb {
-		instruction := mem.Read(cpu.pc + 1)
-		im := prefixedInstructionMetadata[instruction]
+		instruction = mem.Read(cpu.pc + 1)
+		im = prefixedInstructionMetadata[instruction]
 		cpu.pc += 2
 		cpu.dispatchPrefixedInstruction(mem, instruction)
 		if cpu.debugCPU {
@@ -306,7 +306,7 @@ func (cpu *CPU) execute(mem *mem.Memory) int {
 		}
 	}
 	// FIXME temporary flag validation
-	// validateFlags(f, cpu.f, im.Flags)
+	// validateFlags(f, cpu.f, im)
 	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.
 	return im.Cycles[0]
 }

@@ -287,7 +287,7 @@ func TestRra(t *testing.T) {
 		{CPU{a: 0x15, f: 0x10}, CPU{a: 0x8a, f: 0x10}},
 		{CPU{a: 0xa8}, CPU{a: 0x54}},
 		{CPU{a: 0xa8, f: 0x10}, CPU{a: 0xd4}},
-		{CPU{a: 0x00}, CPU{a: 0x00, f: 0x80}},
+		{CPU{a: 0x00}, CPU{a: 0x00, f: 0x00}},
 	} {
 		test.cpu.rra()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
@@ -313,7 +313,7 @@ func TestRrca(t *testing.T) {
 		{CPU{a: 0x15, f: 0x10}, CPU{a: 0x8a, f: 0x10}},
 		{CPU{a: 0xa8}, CPU{a: 0x54}},
 		{CPU{a: 0xa8, f: 0x10}, CPU{a: 0x54}},
-		{CPU{a: 0x00}, CPU{a: 0x00, f: 0x80}},
+		{CPU{a: 0x00}, CPU{a: 0x00, f: 0x00}},
 	} {
 		test.cpu.rrca()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)

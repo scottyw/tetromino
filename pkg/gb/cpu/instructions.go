@@ -201,14 +201,9 @@ func (cpu *CPU) dec(r8 *uint8) {
 }
 
 func (cpu *CPU) dec16(msb, lsb *uint8) {
-	old := uint16(*msb)<<8 + uint16(*lsb)
-	new := old - 1
+	new := uint16(*msb)<<8 + uint16(*lsb) - 1
 	*msb = uint8(new >> 8)
 	*lsb = uint8(new)
-	// [Z 1 H -]
-	cpu.setZf(new == 0)
-	cpu.setNf(true)
-	cpu.setHf(hc16Sub(old, 1))
 }
 
 func (cpu *CPU) decSP() {
@@ -244,14 +239,9 @@ func (cpu *CPU) inc(r8 *uint8) {
 }
 
 func (cpu *CPU) inc16(msb, lsb *uint8) {
-	old := uint16(*msb)<<8 + uint16(*lsb)
-	new := old + 1
+	new := uint16(*msb)<<8 + uint16(*lsb) + 1
 	*msb = uint8(new >> 8)
 	*lsb = uint8(new)
-	// [Z 1 H -]
-	cpu.setZf(new == 0)
-	cpu.setNf(true)
-	cpu.setHf(hc16(old, 1))
 }
 
 func (cpu *CPU) incSP() {
@@ -509,6 +499,8 @@ func (cpu *CPU) rlAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) rla() {
 	cpu.rl(&cpu.a)
 	cpu.f &^= zFlag
+	// [0 0 0 C]
+	cpu.setZf(false)
 }
 
 func (cpu *CPU) rlc(r8 *uint8) {
@@ -527,6 +519,8 @@ func (cpu *CPU) rlc(r8 *uint8) {
 func (cpu *CPU) rlca() {
 	cpu.rlc(&cpu.a)
 	cpu.f &^= zFlag
+	// [0 0 0 C]
+	cpu.setZf(false)
 }
 
 func (cpu *CPU) rlcAddr(a16 uint16, mem *mem.Memory) {
@@ -550,6 +544,8 @@ func (cpu *CPU) rr(r8 *uint8) {
 
 func (cpu *CPU) rra() {
 	cpu.rr(&cpu.a)
+	// [0 0 0 C]
+	cpu.setZf(false)
 }
 
 func (cpu *CPU) rrAddr(a16 uint16, mem *mem.Memory) {
@@ -573,6 +569,8 @@ func (cpu *CPU) rrc(r8 *uint8) {
 
 func (cpu *CPU) rrca() {
 	cpu.rrc(&cpu.a)
+	// [0 0 0 C]
+	cpu.setZf(false)
 }
 
 func (cpu *CPU) rrcAddr(a16 uint16, mem *mem.Memory) {
