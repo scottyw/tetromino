@@ -343,9 +343,15 @@ func (cpu *CPU) ldA16SP(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) ldHLSP(i8 int8) {
-	sp := uint16(int16(cpu.sp) + int16(i8))
-	cpu.h = uint8(sp >> 8)
-	cpu.l = uint8(sp)
+	old := cpu.hl()
+	new := uint16(int16(cpu.sp) + int16(i8))
+	cpu.h = uint8(new >> 8)
+	cpu.l = uint8(new)
+	// [0 0 H C]
+	cpu.setZf(false)
+	cpu.setNf(false)
+	cpu.setHf(hc16(old, new))
+	cpu.setCf(c16(old, new))
 }
 
 func (cpu *CPU) lddAA16(mem *mem.Memory) {

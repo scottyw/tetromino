@@ -4522,7 +4522,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x28",
 		"operand1": "B"
@@ -4537,7 +4537,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x29",
 		"operand1": "C"
@@ -4552,7 +4552,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x2a",
 		"operand1": "D"
@@ -4567,7 +4567,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x2b",
 		"operand1": "E"
@@ -4582,7 +4582,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x2c",
 		"operand1": "H"
@@ -4597,7 +4597,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x2d",
 		"operand1": "L"
@@ -4612,7 +4612,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x2e",
 		"operand1": "(HL)"
@@ -4627,7 +4627,7 @@ var metadataJSON = `
 		  "Z",
 		  "0",
 		  "0",
-		  "0"
+		  "C"
 		],
 		"addr": "0x2f",
 		"operand1": "A"

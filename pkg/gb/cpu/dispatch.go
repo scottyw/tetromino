@@ -979,21 +979,21 @@ func (cpu *CPU) dispatchPrefixedInstruction(mem *mem.Memory, instruction uint8) 
 	case 0x25:
 		cpu.sla(&cpu.l) // SLA L  [Z 0 0 C]
 	case 0x2f:
-		cpu.sra(&cpu.a) // SRA A  [Z 0 0 0]
+		cpu.sra(&cpu.a) // SRA A  [Z 0 0 C]
 	case 0x28:
-		cpu.sra(&cpu.b) // SRA B  [Z 0 0 0]
+		cpu.sra(&cpu.b) // SRA B  [Z 0 0 C]
 	case 0x29:
-		cpu.sra(&cpu.c) // SRA C  [Z 0 0 0]
+		cpu.sra(&cpu.c) // SRA C  [Z 0 0 C]
 	case 0x2a:
-		cpu.sra(&cpu.d) // SRA D  [Z 0 0 0]
+		cpu.sra(&cpu.d) // SRA D  [Z 0 0 C]
 	case 0x2b:
-		cpu.sra(&cpu.e) // SRA E  [Z 0 0 0]
+		cpu.sra(&cpu.e) // SRA E  [Z 0 0 C]
 	case 0x2c:
-		cpu.sra(&cpu.h) // SRA H  [Z 0 0 0]
+		cpu.sra(&cpu.h) // SRA H  [Z 0 0 C]
 	case 0x2e:
-		cpu.sraAddr(cpu.hl(), mem) // SRA (HL)  [Z 0 0 0]
+		cpu.sraAddr(cpu.hl(), mem) // SRA (HL)  [Z 0 0 C]
 	case 0x2d:
-		cpu.sra(&cpu.l) // SRA L  [Z 0 0 0]
+		cpu.sra(&cpu.l) // SRA L  [Z 0 0 C]
 	case 0x3f:
 		cpu.srl(&cpu.a) // SRL A  [Z 0 0 C]
 	case 0x38:
