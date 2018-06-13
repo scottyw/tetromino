@@ -226,7 +226,7 @@ func (lcd *LCD) derivePixel(highBgTileMap, highWindowTileMap, lowTileData bool, 
 		return pixel + 0x20 // Colour offset
 	}
 	pixel := lcd.deriveBackgroundPixel(highBgTileMap, lowTileData, scx, scy, lcdX, lcdY)
-	return pixel + 0x10 // Colour offset
+	return pixel
 }
 
 func (lcd *LCD) updateLcdLine() {
