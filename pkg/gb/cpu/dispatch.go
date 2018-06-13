@@ -140,27 +140,27 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0xe9:
 		cpu.jp("", cpu.hl()) // JP (HL)  []
 	case 0xe2:
-		cpu.ldAToAddrC(mem) // LD (C) A []
+		cpu.ldhA8A(cpu.c, mem) // LD (C) A []
 	case 0x12:
-		cpu.ldToAddr(cpu.de(), cpu.a, mem) // LD (DE) A []
+		cpu.ldA16U8(cpu.de(), cpu.a, mem) // LD (DE) A []
 	case 0xf2:
-		cpu.ldAFromAddrC(mem) // LD A (C) []
+		cpu.ldhAA8(cpu.c, mem) // LD A (C) []
 	case 0x1a:
-		cpu.ldFromAddr(&cpu.a, cpu.de(), mem) // LD A (DE) []
+		cpu.ldR8A16(&cpu.a, cpu.de(), mem) // LD A (DE) []
 	case 0x3a:
-		cpu.lddFromAddr(mem) // LD A (HL-) []
+		cpu.lddAA16(mem) // LD A (HL-) []
 	case 0x32:
-		cpu.lddToAddr(mem) // LD (HL-) A []
+		cpu.lddA16A(mem) // LD (HL-) A []
 	case 0x2a:
-		cpu.ldiFromAddr(mem) // LD A (HL+) []
+		cpu.ldiAA16(mem) // LD A (HL+) []
 	case 0x22:
-		cpu.ldiToAddr(mem) // LD (HL+) A []
+		cpu.ldiA16A(mem) // LD (HL+) A []
 	case 0x7f:
 		cpu.ld(&cpu.a, cpu.a) // LD A A []
 	case 0x78:
 		cpu.ld(&cpu.a, cpu.b) // LD A B []
 	case 0x0a:
-		cpu.ldFromAddr(&cpu.a, cpu.bc(), mem) // LD A (BC) []
+		cpu.ldR8A16(&cpu.a, cpu.bc(), mem) // LD A (BC) []
 	case 0x79:
 		cpu.ld(&cpu.a, cpu.c) // LD A C []
 	case 0x7a:
@@ -170,7 +170,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x7c:
 		cpu.ld(&cpu.a, cpu.h) // LD A H []
 	case 0x7e:
-		cpu.ldFromAddr(&cpu.a, cpu.hl(), mem) // LD A (HL) []
+		cpu.ldR8A16(&cpu.a, cpu.hl(), mem) // LD A (HL) []
 	case 0x7d:
 		cpu.ld(&cpu.a, cpu.l) // LD A L []
 	case 0x47:
@@ -186,11 +186,11 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x44:
 		cpu.ld(&cpu.b, cpu.h) // LD B H []
 	case 0x46:
-		cpu.ldFromAddr(&cpu.b, cpu.hl(), mem) // LD B (HL) []
+		cpu.ldR8A16(&cpu.b, cpu.hl(), mem) // LD B (HL) []
 	case 0x45:
 		cpu.ld(&cpu.b, cpu.l) // LD B L []
 	case 0x02:
-		cpu.ldToAddr(cpu.bc(), cpu.a, mem) // LD (BC) A []
+		cpu.ldA16U8(cpu.bc(), cpu.a, mem) // LD (BC) A []
 	case 0x4f:
 		cpu.ld(&cpu.c, cpu.a) // LD C A []
 	case 0x48:
@@ -204,7 +204,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x4c:
 		cpu.ld(&cpu.c, cpu.h) // LD C H []
 	case 0x4e:
-		cpu.ldFromAddr(&cpu.c, cpu.hl(), mem) // LD C (HL) []
+		cpu.ldR8A16(&cpu.c, cpu.hl(), mem) // LD C (HL) []
 	case 0x4d:
 		cpu.ld(&cpu.c, cpu.l) // LD C L []
 	case 0x57:
@@ -220,7 +220,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x54:
 		cpu.ld(&cpu.d, cpu.h) // LD D H []
 	case 0x56:
-		cpu.ldFromAddr(&cpu.d, cpu.hl(), mem) // LD D (HL) []
+		cpu.ldR8A16(&cpu.d, cpu.hl(), mem) // LD D (HL) []
 	case 0x55:
 		cpu.ld(&cpu.d, cpu.l) // LD D L []
 	case 0x5f:
@@ -236,7 +236,7 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x5c:
 		cpu.ld(&cpu.e, cpu.h) // LD E H []
 	case 0x5e:
-		cpu.ldFromAddr(&cpu.e, cpu.hl(), mem) // LD E (HL) []
+		cpu.ldR8A16(&cpu.e, cpu.hl(), mem) // LD E (HL) []
 	case 0x5d:
 		cpu.ld(&cpu.e, cpu.l) // LD E L []
 	case 0x67:
@@ -252,23 +252,23 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x64:
 		cpu.ld(&cpu.h, cpu.h) // LD H H []
 	case 0x66:
-		cpu.ldFromAddr(&cpu.h, cpu.hl(), mem) // LD H (HL) []
+		cpu.ldR8A16(&cpu.h, cpu.hl(), mem) // LD H (HL) []
 	case 0x65:
 		cpu.ld(&cpu.h, cpu.l) // LD H L []
 	case 0x77:
-		cpu.ldToAddr(cpu.hl(), cpu.a, mem) // LD (HL) A []
+		cpu.ldA16U8(cpu.hl(), cpu.a, mem) // LD (HL) A []
 	case 0x70:
-		cpu.ldToAddr(cpu.hl(), cpu.b, mem) // LD (HL) B []
+		cpu.ldA16U8(cpu.hl(), cpu.b, mem) // LD (HL) B []
 	case 0x71:
-		cpu.ldToAddr(cpu.hl(), cpu.c, mem) // LD (HL) C []
+		cpu.ldA16U8(cpu.hl(), cpu.c, mem) // LD (HL) C []
 	case 0x72:
-		cpu.ldToAddr(cpu.hl(), cpu.d, mem) // LD (HL) D []
+		cpu.ldA16U8(cpu.hl(), cpu.d, mem) // LD (HL) D []
 	case 0x73:
-		cpu.ldToAddr(cpu.hl(), cpu.e, mem) // LD (HL) E []
+		cpu.ldA16U8(cpu.hl(), cpu.e, mem) // LD (HL) E []
 	case 0x74:
-		cpu.ldToAddr(cpu.hl(), cpu.h, mem) // LD (HL) H []
+		cpu.ldA16U8(cpu.hl(), cpu.h, mem) // LD (HL) H []
 	case 0x75:
-		cpu.ldToAddr(cpu.hl(), cpu.l, mem) // LD (HL) L []
+		cpu.ldA16U8(cpu.hl(), cpu.l, mem) // LD (HL) L []
 	case 0x6f:
 		cpu.ld(&cpu.l, cpu.a) // LD L A []
 	case 0x68:
@@ -282,11 +282,11 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 	case 0x6c:
 		cpu.ld(&cpu.l, cpu.h) // LD L H []
 	case 0x6e:
-		cpu.ldFromAddr(&cpu.l, cpu.hl(), mem) // LD L (HL) []
+		cpu.ldR8A16(&cpu.l, cpu.hl(), mem) // LD L (HL) []
 	case 0x6d:
 		cpu.ld(&cpu.l, cpu.l) // LD L L []
 	case 0xf9:
-		cpu.ldHLToSP() // LD SP HL []
+		cpu.ldSPHL() // LD SP HL []
 	case 0x00:
 		cpu.nop() // NOP   []
 	case 0xb7:
@@ -451,13 +451,13 @@ func (cpu *CPU) dispatchTwoByteInstruction(mem *mem.Memory, instruction, u8 uint
 	case 0x2e:
 		cpu.ld(&cpu.l, u8) // LD L d8 []
 	case 0x36:
-		cpu.ldToAddr(cpu.hl(), u8, mem) // LD (HL) d8 []
+		cpu.ldA16U8(cpu.hl(), u8, mem) // LD (HL) d8 []
 	case 0xf8:
-		cpu.ldSPToHL(int8(u8)) // LD HL SP+r8 [0 0 H C]
+		cpu.ldHLSP(int8(u8)) // LD HL SP+r8 [0 0 H C]
 	case 0xe0:
-		cpu.ldhToAddr(u8, mem) // LDH (a8) A []
+		cpu.ldhA8A(u8, mem) // LDH (a8) A []
 	case 0xf0:
-		cpu.ldhFromAddr(u8, mem) // LDH A (a8) []
+		cpu.ldhAA8(u8, mem) // LDH A (a8) []
 	case 0xf6:
 		cpu.or(u8) // OR d8  [Z 0 0 0]
 	case 0xde:
@@ -494,11 +494,11 @@ func (cpu *CPU) dispatchThreeByteInstruction(mem *mem.Memory, instruction uint8,
 	case 0xc2:
 		cpu.jp("NZ", u16) // JP NZ a16 []
 	case 0xea:
-		cpu.ldToAddr(u16, cpu.a, mem) // LD (a16) A []
+		cpu.ldA16U8(u16, cpu.a, mem) // LD (a16) A []
 	case 0x08:
-		cpu.ldSPToAddr(u16, mem) // LD (a16) SP []
+		cpu.ldA16SP(u16, mem) // LD (a16) SP []
 	case 0xfa:
-		cpu.ldFromAddr(&cpu.a, u16, mem) // LD A (a16) []
+		cpu.ldR8A16(&cpu.a, u16, mem) // LD A (a16) []
 	case 0x01:
 		cpu.ld16(&cpu.b, &cpu.c, u16) // LD BC d16 []
 	case 0x11:

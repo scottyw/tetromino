@@ -311,68 +311,60 @@ func (cpu *CPU) ld16(msb, lsb *uint8, u16 uint16) {
 	*lsb = uint8(u16)
 }
 
-func (cpu *CPU) ldFromAddr(r8 *uint8, a16 uint16, mem *mem.Memory) {
+func (cpu *CPU) ldR8A16(r8 *uint8, a16 uint16, mem *mem.Memory) {
 	*r8 = mem.Read(a16)
 }
 
-func (cpu *CPU) ldToAddr(a16 uint16, u8 uint8, mem *mem.Memory) {
+func (cpu *CPU) ldA16U8(a16 uint16, u8 uint8, mem *mem.Memory) {
 	mem.Write(a16, u8)
 }
 
-func (cpu *CPU) ldhFromAddr(u8 uint8, mem *mem.Memory) {
+func (cpu *CPU) ldhAA8(u8 uint8, mem *mem.Memory) {
 	address := uint16(0xff00 + uint16(u8))
 	cpu.a = mem.Read(address)
 }
 
-func (cpu *CPU) ldhToAddr(u8 uint8, mem *mem.Memory) {
+func (cpu *CPU) ldhA8A(u8 uint8, mem *mem.Memory) {
 	address := uint16(0xff00 + uint16(u8))
 	mem.Write(address, cpu.a)
-}
-
-func (cpu *CPU) ldAFromAddrC(mem *mem.Memory) {
-	cpu.ldhFromAddr(cpu.c, mem)
-}
-
-func (cpu *CPU) ldAToAddrC(mem *mem.Memory) {
-	cpu.ldhToAddr(cpu.c, mem)
 }
 
 func (cpu *CPU) ldSP(u16 uint16) {
 	cpu.sp = u16
 }
 
-func (cpu *CPU) ldHLToSP() {
+func (cpu *CPU) ldSPHL() {
 	cpu.sp = cpu.hl()
 }
 
-func (cpu *CPU) ldSPToAddr(a16 uint16, mem *mem.Memory) {
+func (cpu *CPU) ldA16SP(a16 uint16, mem *mem.Memory) {
 	mem.Write(a16, uint8(cpu.sp>>8))
 	mem.Write(a16+1, uint8(cpu.sp|0x0f))
 }
 
-func (cpu *CPU) ldSPToHL(i8 int8) {
+func (cpu *CPU) ldHLSP(i8 int8) {
 	sp := uint16(int16(cpu.sp) + int16(i8))
 	cpu.h = uint8(sp >> 8)
 	cpu.l = uint8(sp)
 }
 
-func (cpu *CPU) lddFromAddr(mem *mem.Memory) {
-	cpu.ldFromAddr(&cpu.a, cpu.hl(), mem)
+func (cpu *CPU) lddAA16(mem *mem.Memory) {
+	cpu.ldR8A16(&cpu.a, cpu.hl(), mem)
 	cpu.dec16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) lddToAddr(mem *mem.Memory) {
-	cpu.ldToAddr(cpu.hl(), cpu.a, mem)
+func (cpu *CPU) lddA16A(mem *mem.Memory) {
+	cpu.ldA16U8(cpu.hl(), cpu.a, mem)
 	cpu.dec16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) ldiFromAddr(mem *mem.Memory) {
-	cpu.ldFromAddr(&cpu.a, cpu.hl(), mem)
+func (cpu *CPU) ldiAA16(mem *mem.Memory) {
+	cpu.ldR8A16(&cpu.a, cpu.hl(), mem)
 	cpu.inc16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) ldiToAddr(mem *mem.Memory) {
-	cpu.ldToAddr(cpu.hl(), cpu.a, mem)
+func (cpu *CPU) ldiA16A(mem *mem.Memory) {
+	cpu.ldA16U8(cpu.hl(), cpu.a, mem)
 	cpu.inc16(&cpu.h, &cpu.l)
 }
 
