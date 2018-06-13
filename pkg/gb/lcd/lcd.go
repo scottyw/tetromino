@@ -42,35 +42,43 @@ func (lcd *LCD) Tick(cycle int) {
 	switch {
 	case lcd.hwr.LY == 144:
 		// V-Blank period starts
-		lcd.hwr.STAT = 1
+		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc) | 0x01
 		lcd.hwr.IF |= 0x01
 	case lyRemainder == 0:
 		// OAM period starts
-		lcd.hwr.STAT = 2
+		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc) | 0x02
 	case lyRemainder == 20:
 		// LCD data transfer period starts
-		lcd.hwr.STAT = 3
+		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc) | 0x03
 	case lyRemainder == 63:
 		// H-Blank period starts
-		lcd.hwr.STAT = 0
+		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc)
 		if lcd.hwr.LY < 144 {
 			lcd.updateLcdLine()
 		}
 	}
-	// Set coincidence flag and coincidence interrupt on stat register
+	// Coincidence flag
 	if lcd.hwr.LY == lcd.hwr.LYC {
-		lcd.hwr.STAT |= 0x44
+		lcd.hwr.STAT |= 0x04
+		if lcd.hwr.STAT&0x40 > 0 {
+			lcd.hwr.IF |= 0x02
+		}
 	} else {
-		lcd.hwr.STAT &^= 0x44
+		lcd.hwr.STAT &^= 0x04
 	}
-	// Set interrupts on stat register
 	switch {
 	case lcd.hwr.LY == 144:
-		lcd.hwr.STAT |= 0x10
+		if lcd.hwr.STAT&0x10 > 0 {
+			lcd.hwr.IF |= 0x02
+		}
 	case lyRemainder == 0:
-		lcd.hwr.STAT |= 0x20
+		if lcd.hwr.STAT&0x20 > 0 {
+			lcd.hwr.IF |= 0x02
+		}
 	case lyRemainder == 63:
-		lcd.hwr.STAT |= 0x08
+		if lcd.hwr.STAT&0x08 > 0 {
+			lcd.hwr.IF |= 0x02
+		}
 	}
 }
 
