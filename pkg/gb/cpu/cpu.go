@@ -77,11 +77,6 @@ func NewCPU(hwr *mem.HardwareRegisters, debugCPU, debugFlowControl, debugJumps b
 		pc:               0x0100}
 }
 
-func (cpu CPU) String() string {
-	return fmt.Sprintf("{ime:%v a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x pc:%04x}",
-		cpu.ime, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp, cpu.pc)
-}
-
 // Start the CPU again on button press
 func (cpu *CPU) Start() {
 	cpu.stopped = false
