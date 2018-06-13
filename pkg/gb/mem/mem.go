@@ -30,7 +30,9 @@ func (mem *Memory) Read(addr uint16) byte {
 	case addr < 0xa000:
 		return mem.videoRAM[addr-0x8000]
 	case addr < 0xc000:
-		panic(fmt.Sprintf("Read on cartridge RAM is not implemented: 0x%04x", addr))
+		// FIXME
+		// panic(fmt.Sprintf("Read on cartridge RAM is not implemented: 0x%04x", addr))
+		return 0
 	case addr < 0xe000:
 		return mem.internalRAM[addr-0xc000]
 	case addr < 0xfe00:
@@ -68,7 +70,8 @@ func (mem *Memory) Write(addr uint16, value byte) {
 	case addr < 0xa000:
 		mem.videoRAM[addr-0x8000] = value
 	case addr < 0xc000:
-		panic(fmt.Sprintf("Write on cartridge RAM is not implemented: 0x%04x", addr))
+		// FIXME maybe write to file
+		// panic(fmt.Sprintf("Write on cartridge RAM is not implemented: 0x%04x", addr))
 	case addr < 0xe000:
 		mem.internalRAM[addr-0xc000] = value
 	case addr < 0xfe00:
