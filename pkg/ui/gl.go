@@ -18,6 +18,7 @@ type GL struct {
 	texture    uint32
 	input      *UserInput
 	cancelFunc context.CancelFunc
+	width      float32
 	debug      bool
 }
 
@@ -27,12 +28,18 @@ func NewGL(cancelFunc context.CancelFunc, debug bool) UI {
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
 	}
-
+	// define window width
+	var width float32
+	if debug {
+		width = 256
+	} else {
+		width = 160
+	}
 	// create window
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.Resizable, 0)
-	window, err := glfw.CreateWindow(640, 576, "Tetromino", nil, nil)
+	window, err := glfw.CreateWindow(int(width*3), 144*3, "Tetromino", nil, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -56,6 +63,7 @@ func NewGL(cancelFunc context.CancelFunc, debug bool) UI {
 		texture:    createTexture(),
 		input:      &input,
 		cancelFunc: cancelFunc,
+		width:      width,
 		debug:      debug,
 	}
 }
@@ -71,12 +79,12 @@ func (glx *GL) Shutdown() {
 }
 
 // HandleFrame draws a frame to the GL window and returns user input
-func (glx *GL) HandleFrame(lcd [23040]uint8) {
+func (glx *GL) HandleFrame(lcd [256 * 144]uint8) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
 	image := renderFrame(lcd, glx.debug)
 	setTexture(image)
-	drawBuffer(glx.window)
+	drawBuffer(glx.window, glx.width)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	glx.window.SwapBuffers()
 	glx.input.InputRecv = false
@@ -184,9 +192,9 @@ func setTexture(im *image.RGBA) {
 		0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(im.Pix))
 }
 
-func drawBuffer(window *glfw.Window) {
+func drawBuffer(window *glfw.Window, width float32) {
 	w, h := window.GetFramebufferSize()
-	s1 := float32(w) / 160
+	s1 := float32(w) / width
 	s2 := float32(h) / 144
 	f := float32(1 - 0)
 	var x, y float32
@@ -200,9 +208,9 @@ func drawBuffer(window *glfw.Window) {
 	gl.Begin(gl.QUADS)
 	gl.TexCoord2f(0, 1)
 	gl.Vertex2f(-x, -y)
-	gl.TexCoord2f(1, 1)
+	gl.TexCoord2f(width/256.0, 1)
 	gl.Vertex2f(x, -y)
-	gl.TexCoord2f(1, 0)
+	gl.TexCoord2f(width/256.0, 0)
 	gl.Vertex2f(x, y)
 	gl.TexCoord2f(0, 0)
 	gl.Vertex2f(-x, y)
@@ -251,11 +259,11 @@ func renderPixel(im *image.RGBA, x, y int, pixel uint8, debug bool) {
 	}
 }
 
-func renderFrame(data [23040]uint8, debug bool) *image.RGBA {
-	im := image.NewRGBA(image.Rect(0, 0, 160, 144))
+func renderFrame(data [256 * 144]uint8, debug bool) *image.RGBA {
+	im := image.NewRGBA(image.Rect(0, 0, 256, 144))
 	for y := 0; y < 144; y++ {
-		for x := 0; x < 160; x++ {
-			pixel := data[y*160+x]
+		for x := 0; x < 256; x++ {
+			pixel := data[y*256+x]
 			renderPixel(im, x, y, pixel, debug)
 		}
 	}

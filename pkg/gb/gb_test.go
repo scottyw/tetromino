@@ -41,7 +41,7 @@ func runBlarggTest(t *testing.T, filename string) {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}()
-	gameboy.Run(ctx)
+	gameboy.Run(ctx, 0)
 	<-ctx.Done()
 	result := sbWriter.String()
 	if !strings.Contains(result, "Passed") {

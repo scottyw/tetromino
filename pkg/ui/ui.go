@@ -9,7 +9,7 @@ type UserInput struct {
 
 // UI  abstracts over the user interface
 type UI interface {
-	HandleFrame([23040]uint8)
+	HandleFrame([256 * 144]uint8)
 	UserInput() *UserInput
 	Shutdown()
 }

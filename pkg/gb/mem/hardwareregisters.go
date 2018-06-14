@@ -112,6 +112,7 @@ func NewHardwareRegisters(input *ui.UserInput, sbWriter io.Writer) *HardwareRegi
 		sbWriter = ioutil.Discard
 	}
 	return &HardwareRegisters{
+		LCDC:     0x91,
 		input:    input,
 		sbWriter: sbWriter,
 	}

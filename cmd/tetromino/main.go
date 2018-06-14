@@ -17,6 +17,7 @@ func main() {
 	// Command line flags
 	romFilename := flag.String("f", "", "ROM filename")
 	outputSerial := flag.Bool("output-serial-data", false, "When true, data sent to the serial port will be written to console")
+	speed := flag.Float64("speed", 1000, "The speed at which to run as a percentage e.g. 100 for normal speed, 200 for double speed")
 	debugCPU := flag.Bool("debug-cpu", false, "When true, CPU debugging is enabled")
 	debugFlowControl := flag.Bool("debug-flow", false, "When true, flow control debugging is enabled")
 	debugJumps := flag.Bool("debug-jumps", false, "When true, jump debugging is enabled")
@@ -44,6 +45,7 @@ func main() {
 		RomFilename:      *romFilename,
 		SBWriter:         sbWriter,
 		DebugCPU:         *debugCPU,
+		DebugLCD:         *debugLCD,
 		DebugFlowControl: *debugFlowControl,
 		DebugJumps:       *debugJumps,
 	}
@@ -54,8 +56,8 @@ func main() {
 	ui := ui.NewGL(cancelFunc, *debugLCD)
 	gameboy := gb.NewGameboy(ui, opts)
 	if *enableTiming {
-		gameboy.Time(ctx)
+		gameboy.Time(ctx, 100 / *speed)
 	} else {
-		gameboy.Run(ctx)
+		gameboy.Run(ctx, 100 / *speed)
 	}
 }

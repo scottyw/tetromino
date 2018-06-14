@@ -22,7 +22,7 @@ func (n *Nop) UserInput() *UserInput {
 }
 
 // HandleFrame ...
-func (n *Nop) HandleFrame(lcd [23040]uint8) {
+func (n *Nop) HandleFrame(lcd [256 * 144]uint8) {
 	// Do nothing
 }
 
