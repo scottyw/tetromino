@@ -4,8 +4,6 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
-
-	"github.com/scottyw/tetromino/pkg/ui"
 )
 
 // Register constants
@@ -98,7 +96,8 @@ type HardwareRegisters struct {
 
 	// JOYP
 	joypReadDirection bool
-	input             *ui.UserInput
+	DirectionInput    uint8
+	ButtonInput       uint8
 
 	// Misc
 	divTick   uint32
@@ -107,14 +106,15 @@ type HardwareRegisters struct {
 }
 
 // NewHardwareRegisters creates a new representation of the hardware registers
-func NewHardwareRegisters(input *ui.UserInput, sbWriter io.Writer) *HardwareRegisters {
+func NewHardwareRegisters(sbWriter io.Writer) *HardwareRegisters {
 	if sbWriter == nil {
 		sbWriter = ioutil.Discard
 	}
 	return &HardwareRegisters{
-		LCDC:     0x91,
-		input:    input,
-		sbWriter: sbWriter,
+		LCDC:           0x91,
+		sbWriter:       sbWriter,
+		DirectionInput: 0x0f,
+		ButtonInput:    0x0f,
 	}
 }
 
@@ -276,9 +276,9 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 
 func (r *HardwareRegisters) joypRead() uint8 {
 	if r.joypReadDirection {
-		return r.input.DirectionInput
+		return r.DirectionInput
 	}
-	return r.input.ButtonInput
+	return r.ButtonInput
 }
 
 func (r *HardwareRegisters) joypWrite(value uint8) {

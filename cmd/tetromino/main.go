@@ -43,6 +43,7 @@ func main() {
 	}
 	opts := gb.Options{
 		RomFilename:      *romFilename,
+		Speed:            100 / *speed,
 		SBWriter:         sbWriter,
 		DebugCPU:         *debugCPU,
 		DebugLCD:         *debugLCD,
@@ -53,11 +54,11 @@ func main() {
 	// Start running the Gameboy with a GL UI
 	ctx, cancelFunc := context.WithCancel(context.Background())
 	defer cancelFunc()
-	ui := ui.NewGL(cancelFunc, *debugLCD)
-	gameboy := gb.NewGameboy(ui, opts)
+	gameboy := gb.NewGameboy(opts)
+	gui := ui.NewGL(&gameboy)
 	if *enableTiming {
-		gameboy.Time(ctx, 100 / *speed)
+		gameboy.Time(ctx, gui)
 	} else {
-		gameboy.Run(ctx, 100 / *speed)
+		gameboy.Run(ctx, gui)
 	}
 }

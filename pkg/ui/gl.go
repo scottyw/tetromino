@@ -1,11 +1,11 @@
 package ui
 
 import (
-	"context"
 	"fmt"
 	"image"
 	"image/color"
 	"log"
+	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -14,23 +14,21 @@ import (
 
 // GL maintains state for the GL UI implementation
 type GL struct {
-	window     *glfw.Window
-	texture    uint32
-	input      *UserInput
-	cancelFunc context.CancelFunc
-	width      float32
-	debug      bool
+	emu     Emulator
+	window  *glfw.Window
+	texture uint32
+	width   float32
 }
 
 // NewGL implements a user interface in GL
-func NewGL(cancelFunc context.CancelFunc, debug bool) UI {
+func NewGL(emu Emulator) *GL {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
 		log.Fatalln(err)
 	}
 	// define window width
 	var width float32
-	if debug {
+	if emu.Debug() {
 		width = 256
 	} else {
 		width = 160
@@ -53,114 +51,62 @@ func NewGL(cancelFunc context.CancelFunc, debug bool) UI {
 		log.Fatalln(err)
 	}
 	gl.Enable(gl.TEXTURE_2D)
-	input := UserInput{
-		DirectionInput: 0x0f,
-		ButtonInput:    0x0f,
-	}
-	window.SetKeyCallback(onKeyFunc(&input))
+	window.SetKeyCallback(onKeyFunc(emu))
 	return &GL{
-		window:     window,
-		texture:    createTexture(),
-		input:      &input,
-		cancelFunc: cancelFunc,
-		width:      width,
-		debug:      debug,
+		emu:     emu,
+		window:  window,
+		texture: createTexture(),
+		width:   width,
 	}
 }
 
-// UserInput returns a data structure containing user input
-func (glx *GL) UserInput() *UserInput {
-	return glx.input
-}
-
-// Shutdown the GL framework
-func (glx *GL) Shutdown() {
-	glfw.Terminate()
-}
-
-// HandleFrame draws a frame to the GL window and returns user input
-func (glx *GL) HandleFrame(lcd [256 * 144]uint8) {
+// DrawFrame draws a frame to the GL window and returns user input
+func (glx *GL) DrawFrame(lcd [256 * 144]uint8) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
-	image := renderFrame(lcd, glx.debug)
+	image := renderFrame(lcd)
 	setTexture(image)
 	drawBuffer(glx.window, glx.width)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	glx.window.SwapBuffers()
-	glx.input.InputRecv = false
 	glfw.PollEvents()
 	if glx.window.ShouldClose() {
-		glx.cancelFunc()
+		glfw.Terminate()
+		// Keep it simple
+		os.Exit(0)
 	}
 }
 
-func onKeyFunc(input *UserInput) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(emu Emulator) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+		if action != glfw.Press && action != glfw.Release {
+			return
+		}
 		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
 		// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
-		if key == glfw.KeyS {
-			if action == glfw.Press {
-				input.ButtonInput &^= 0x8
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.ButtonInput |= 0x8
-			}
-		}
 		if key == glfw.KeyA {
-			if action == glfw.Press {
-				input.ButtonInput &^= 0x4
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.ButtonInput |= 0x4
-			}
+			emu.ButtonAction(Start, action == glfw.Press)
 		}
-		if key == glfw.KeyX {
-			if action == glfw.Press {
-				input.ButtonInput &^= 0x2
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.ButtonInput |= 0x2
-			}
+		if key == glfw.KeyS {
+			emu.ButtonAction(Select, action == glfw.Press)
 		}
 		if key == glfw.KeyZ {
-			if action == glfw.Press {
-				input.ButtonInput &^= 0x1
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.ButtonInput |= 0x1
-			}
+			emu.ButtonAction(B, action == glfw.Press)
 		}
-		if key == glfw.KeyDown {
-			if action == glfw.Press {
-				input.DirectionInput &^= 0x8
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.DirectionInput |= 0x8
-			}
-		} else if key == glfw.KeyUp {
-			if action == glfw.Press {
-				input.DirectionInput &^= 0x4
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.DirectionInput |= 0x4
-			}
+		if key == glfw.KeyX {
+			emu.ButtonAction(A, action == glfw.Press)
+		}
+		if key == glfw.KeyUp {
+			emu.ButtonAction(Up, action == glfw.Press)
+		} else if key == glfw.KeyDown {
+			emu.ButtonAction(Down, action == glfw.Press)
 		}
 		if key == glfw.KeyLeft {
-			if action == glfw.Press {
-				input.DirectionInput &^= 0x2
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.DirectionInput |= 0x2
-			}
+			emu.ButtonAction(Left, action == glfw.Press)
 		} else if key == glfw.KeyRight {
-			if action == glfw.Press {
-				input.DirectionInput &^= 0x1
-				input.InputRecv = true
-			} else if action == glfw.Release {
-				input.DirectionInput |= 0x1
-			}
+			emu.ButtonAction(Right, action == glfw.Press)
 		}
 	}
 }
@@ -217,10 +163,7 @@ func drawBuffer(window *glfw.Window, width float32) {
 	gl.End()
 }
 
-func renderPixel(im *image.RGBA, x, y int, pixel uint8, debug bool) {
-	if !debug {
-		pixel = pixel % 0x10 // Remove colour offset
-	}
+func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
 	switch pixel {
 	case 0x00:
 		im.SetRGBA(x, y, color.RGBA{0xff, 0xff, 0xff, 0xff})
@@ -259,12 +202,12 @@ func renderPixel(im *image.RGBA, x, y int, pixel uint8, debug bool) {
 	}
 }
 
-func renderFrame(data [256 * 144]uint8, debug bool) *image.RGBA {
+func renderFrame(data [256 * 144]uint8) *image.RGBA {
 	im := image.NewRGBA(image.Rect(0, 0, 256, 144))
 	for y := 0; y < 144; y++ {
 		for x := 0; x < 256; x++ {
 			pixel := data[y*256+x]
-			renderPixel(im, x, y, pixel, debug)
+			renderPixel(im, x, y, pixel)
 		}
 	}
 	return im

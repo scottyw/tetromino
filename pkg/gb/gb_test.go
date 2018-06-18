@@ -7,8 +7,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/scottyw/tetromino/pkg/ui"
 )
 
 var (
@@ -25,7 +23,7 @@ func runBlarggTest(t *testing.T, filename string) {
 	}
 	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
 	defer cancelFunc()
-	gameboy := NewGameboy(ui.NewNop(), opts)
+	gameboy := NewGameboy(opts)
 	go func() {
 		for {
 			result := sbWriter.String()
@@ -41,7 +39,7 @@ func runBlarggTest(t *testing.T, filename string) {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}()
-	gameboy.Run(ctx, 0)
+	gameboy.Run(ctx, nil)
 	<-ctx.Done()
 	result := sbWriter.String()
 	if !strings.Contains(result, "Passed") {
