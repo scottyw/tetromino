@@ -434,10 +434,10 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 		msb := mem.Read(cpu.sp)
 		cpu.sp++
 		retAddr := uint16(msb)<<8 | uint16(lsb)
-		cpu.pc = retAddr
 		if cpu.debugFlowControl {
-			fmt.Printf("==== RET %04x --> %04x\n", retAddr, cpu.pc)
+			fmt.Printf("==== RET %04x <-- %04x\n", retAddr, cpu.pc)
 		}
+		cpu.pc = retAddr
 	case "NZ":
 		if !cpu.zf() {
 			if cpu.debugFlowControl {
