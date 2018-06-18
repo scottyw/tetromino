@@ -50,8 +50,8 @@ func (gb *Gameboy) runFrame(speed float64) {
 	// There are 4 clock cycles to a "machine cycle" giving 1048576 machine cycles per second
 	// Each loop iteration below represents one machine cycle (i.e. 4 clock cycles)
 	// Each LCD frame is 17556 machine cycles
-	for cycle := 0; cycle < 17556; cycle++ {
-		gb.lcd.Tick(cycle, gb.frame > 500)
+	for tick := 0; tick < 17556; tick++ {
+		gb.lcd.Tick(gb.frame > 500)
 		gb.cpu.Tick(gb.mem)
 		gb.hwr.Tick()
 	}

@@ -23,6 +23,7 @@ type LCD struct {
 	videoRAM *[0x2000]byte
 	oam      *[0xa0]byte
 	data     [256 * 144]uint8
+	tick     int
 	debug    bool
 }
 
@@ -37,9 +38,22 @@ func NewLCD(hwr *mem.HardwareRegisters, memory *mem.Memory, debug bool) *LCD {
 }
 
 // Tick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) Tick(cycle int, foo bool) {
-	lcd.hwr.LY = uint8(cycle / 114)
-	x := cycle % 114
+func (lcd *LCD) Tick(foo bool) {
+
+	// Is the LCD enabled?
+	if !lcdDisplayEnable(lcd.hwr) {
+		lcd.hwr.LY = 0
+		lcd.tick = 0
+		return
+	}
+
+	// Where are we on the LCD?
+	lcd.hwr.LY = uint8(lcd.tick / 114)
+	x := lcd.tick % 114
+	lcd.tick++
+	if lcd.tick >= 17556 {
+		lcd.tick = 0
+	}
 
 	// Set mode on STAT register
 	switch {
