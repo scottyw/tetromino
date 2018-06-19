@@ -61,7 +61,7 @@ func NewGL(emu Emulator) *GL {
 }
 
 // DrawFrame draws a frame to the GL window and returns user input
-func (glx *GL) DrawFrame(lcd [256 * 144]uint8) {
+func (glx *GL) DrawFrame(lcd [144][256]uint8) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
 	image := renderFrame(lcd)
@@ -202,11 +202,11 @@ func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
 	}
 }
 
-func renderFrame(data [256 * 144]uint8) *image.RGBA {
+func renderFrame(data [144][256]uint8) *image.RGBA {
 	im := image.NewRGBA(image.Rect(0, 0, 256, 144))
 	for y := 0; y < 144; y++ {
 		for x := 0; x < 256; x++ {
-			pixel := data[y*256+x]
+			pixel := data[y][x]
 			renderPixel(im, x, y, pixel)
 		}
 	}

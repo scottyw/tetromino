@@ -15,7 +15,7 @@ import (
 const frameDuration = float64(16742706)
 
 type gui interface {
-	DrawFrame([256 * 144]uint8)
+	DrawFrame([144][256]uint8)
 }
 
 // Options control emulator behaviour

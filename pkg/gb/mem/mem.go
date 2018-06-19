@@ -6,12 +6,18 @@ import (
 
 // Memory allows read and write access to memory
 type Memory struct {
-	hwr         *HardwareRegisters
-	mbc         mbc
-	videoRAM    [0x2000]byte
-	internalRAM [0x2000]byte
-	oam         [0xa0]byte
-	zeroPage    [0x8f]byte
+	hwr               *HardwareRegisters
+	mbc               mbc
+	VideoRAM          [0x2000]byte
+	internalRAM       [0x2000]byte
+	OAM               [0xa0]byte
+	zeroPage          [0x8f]byte
+	WriteNotification WriteNotification
+}
+
+// WriteNotification provides a mechanism to notify other subsystems about memory writes
+type WriteNotification interface {
+	WriteToVideoRAM(addr uint16)
 }
 
 // NewMemory creates the memory and initializes it with ROM contents and default values
@@ -28,7 +34,7 @@ func (mem *Memory) Read(addr uint16) byte {
 	case addr < 0x8000:
 		return mem.mbc.read(addr)
 	case addr < 0xa000:
-		return mem.videoRAM[addr-0x8000]
+		return mem.VideoRAM[addr-0x8000]
 	case addr < 0xc000:
 		// FIXME
 		// panic(fmt.Sprintf("Read on cartridge RAM is not implemented: 0x%04x", addr))
@@ -38,7 +44,7 @@ func (mem *Memory) Read(addr uint16) byte {
 	case addr < 0xfe00:
 		return mem.internalRAM[addr-0xe000]
 	case addr < 0xfea0:
-		return mem.oam[addr-0xfe00]
+		return mem.OAM[addr-0xfe00]
 	case addr < 0xff00:
 		return 0 // Unusable region
 	case addr < 0xff80:
@@ -52,23 +58,16 @@ func (mem *Memory) Read(addr uint16) byte {
 	}
 }
 
-// VideoRAM for direct access
-func (mem *Memory) VideoRAM() *[0x2000]byte {
-	return &mem.videoRAM
-}
-
-// OAM memory for direct access
-func (mem *Memory) OAM() *[0xa0]byte {
-	return &mem.oam
-}
-
 // Write a byte to the chosen memory location
 func (mem *Memory) Write(addr uint16, value byte) {
 	switch {
 	case addr < 0x8000:
 		mem.mbc.write(addr, value)
 	case addr < 0xa000:
-		mem.videoRAM[addr-0x8000] = value
+		if mem.WriteNotification != nil {
+			mem.WriteNotification.WriteToVideoRAM(addr)
+		}
+		mem.VideoRAM[addr-0x8000] = value
 	case addr < 0xc000:
 		// FIXME maybe write to file
 		// panic(fmt.Sprintf("Write on cartridge RAM is not implemented: 0x%04x", addr))
@@ -77,7 +76,7 @@ func (mem *Memory) Write(addr uint16, value byte) {
 	case addr < 0xfe00:
 		mem.internalRAM[addr-0xe000] = value
 	case addr < 0xfea0:
-		mem.oam[addr-0xfe00] = value
+		mem.OAM[addr-0xfe00] = value
 	case addr < 0xff00:
 		// Unusable region
 	case addr < 0xff80:

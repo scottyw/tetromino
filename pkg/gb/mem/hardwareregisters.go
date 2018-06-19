@@ -294,7 +294,7 @@ func (r *HardwareRegisters) joypWrite(value uint8) {
 func (mem *Memory) dma(addrPrefix uint8) {
 	srcBaseAddr := uint16(addrPrefix) << 8
 	for i := uint16(0x00); i < 0x0a0; i++ {
-		mem.oam[i] = mem.Read(srcBaseAddr + i)
+		mem.OAM[i] = mem.Read(srcBaseAddr + i)
 	}
 }
 
