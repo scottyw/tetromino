@@ -228,6 +228,28 @@ func (lcd *LCD) updateWindow(lcdY uint8) {
 	lcd.updateTiles(lcdY, offsetAddr, &lcd.window, &lcd.previousWindow)
 }
 
+func (lcd *LCD) readSpriteTile(tileNumber uint16, att uint8) *[8][8]uint8 {
+	tile := lcd.tileCache[tileNumber]
+	tile, _ = lcd.readTile(uint16(tileNumber))
+	if spriteXFlip(att) {
+		new := [8][8]uint8{}
+		for y := 0; y < 8; y++ {
+			for x := 0; x < 8; x++ {
+				new[y][x] = tile[y][7-x]
+			}
+		}
+		tile = &new
+	}
+	if spriteYFlip(att) {
+		new := [8][8]uint8{}
+		for y := 0; y < 8; y++ {
+			new[y] = tile[7-y]
+		}
+		tile = &new
+	}
+	return tile
+}
+
 func (lcd *LCD) updateSprites(lcdY uint8) {
 	if lcd.largeSprites() {
 		panic(fmt.Sprintf("Large sprites are not supported"))
@@ -244,7 +266,8 @@ func (lcd *LCD) updateSprites(lcdY uint8) {
 			continue
 		}
 		tileNumber := lcd.oam[spriteAddr+2]
-		tile, _ := lcd.readTile(uint16(tileNumber))
+		attributes := lcd.oam[spriteAddr+3]
+		tile := lcd.readSpriteTile(uint16(tileNumber), attributes)
 		spriteX := startX - 8
 		for tileX := uint8(0); tileX < 8; tileX++ {
 			lcdX := spriteX + tileX
