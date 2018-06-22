@@ -10,43 +10,31 @@ Tetromino is a Game Boy emulator written in Go.
 
 ### Progress so far ...
 
-Tetromino is functional enough to play Tetris but there is still something of a todo list ...
-
-Things that work:
-
-* All instructions are implemented, including flags
-* The fetch-execute architecture is pretty sound
-* V-Blank interrupt implemented
-* LCD is able to display background, window and small sprites
-* The joypad and buttons are connected
-
-Here is a sample of the todo list:
+Tetromino is functional enough to play Tetris and Super Mario Land plus it passes some test roms but there is still something of a todo list ...
 
 * Support for cartridge RAM
-* Implement remaining LCD stuff
-    * Sprite attributes
-    * Large sprite support
-* Implement the rest of the interrupts
-    * Multiple interrupts isn't right at the moment either
-* Full on validation with test ROMs
-    * Use blargg tests or similar to have more confidence that it's all solid
-    * Find the bugs with the current instruction implementations
-* Timer support
+* Large sprite support
+* Sprite palette support
+* Multiple interrupts are not handled correctly
+* Alternative clock cycle counting for JP/JR/RET/CALL is not implemented
+* Validation against test ROMs is present but some tests don't pass (and are disabled)
 * Sound
+
+Tetromino has some fun LCD debugging that colours the display to differentiate sprites from background (from window) and showing how scrolling is implemented. I would like to add features like screenshots, snapshotting LCD or emulator state and maybe rewind.
 
 ### Running
 
-You'll need a ROM. I highly recommend Tetris. The main command line option is "-rom" which lets you specify the ROM filename. Run like this:
+You'll need a ROM. I highly recommend Tetris. The main command line option is "-f" which lets you specify the ROM filename. Run like this:
 
-    go run cmd/tetromino/main.go -rom /roms/tetris.gb
+    go run cmd/tetromino/main.go -f /roms/tetris.gb
 
-Other options exist for enabling debug. List them like this:
+Other options exist including enabling debug. List them like this:
 
     go run cmd/tetromino/main.go -help
 
 ### Common Errors
 
-Tetris is playable but I have tested no other ROMs yet, so you'll likely see trouble there. Even Tetris probably isn't 100%. Still, it's a bit of fun, isn't it?
+Tetromino is not error-free yet. You'll see occasional bugs (e.g. flickering on the LCD) caused by timing issues and missing hardware features. Some games don't work at all ...
 
 ### Dependencies
 
