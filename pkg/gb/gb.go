@@ -4,7 +4,9 @@ import (
 	"context"
 	"fmt"
 	"image"
+	"image/png"
 	"io"
+	"os"
 	"time"
 
 	"github.com/scottyw/tetromino/pkg/gb/cpu"
@@ -183,4 +185,22 @@ func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 // Debug enabled for the UI
 func (gb *Gameboy) Debug() bool {
 	return gb.opts.DebugLCD
+}
+
+// Screenshot writes a screenshot to file
+func (gb *Gameboy) Screenshot() {
+	t := time.Now()
+	filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
+		t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second())
+	fmt.Println("Writing screenshot to", filename)
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+	err = png.Encode(f, gb.lcd.Frame)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

@@ -79,6 +79,7 @@ func onKeyFunc(emu Emulator) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw
 		if action != glfw.Press && action != glfw.Release {
 			return
 		}
+
 		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
@@ -104,6 +105,11 @@ func onKeyFunc(emu Emulator) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw
 			emu.ButtonAction(Left, action == glfw.Press)
 		} else if key == glfw.KeyRight {
 			emu.ButtonAction(Right, action == glfw.Press)
+		}
+
+		// Emulator controls
+		if key == glfw.KeyT && action == glfw.Press {
+			emu.Screenshot()
 		}
 	}
 }
