@@ -81,16 +81,6 @@ func (gb *Gameboy) runFrame(gui gui) {
 	expectedFrameEndTime := gb.start.Add(time.Duration(gb.frame * int(frameDuration*gb.opts.Speed)))
 	sleepDuration := time.Until(expectedFrameEndTime)
 	time.Sleep(sleepDuration)
-
-	// FIXME
-
-	// if ui.UserInput().InputRecv {
-	// 	gb.cpu.Start()
-	// }
-	// FIXME maybe make this a flaggable feature?
-	// if gb.frame > 500 {
-	// 	time.Sleep(1000 * time.Millisecond)
-	// }
 }
 
 // Run the Gameboy

@@ -50,21 +50,17 @@ func (cpu *CPU) addHL(u16 uint16) {
 
 func (cpu *CPU) addSP(i8 int8) {
 	sp := cpu.sp
-	delta := int16(i8)
-	cpu.sp = uint16(int16(cpu.sp) + delta)
-	var hf, cf bool
-	if delta >= 0 {
-		hf = hc16(sp, uint16(delta))
-		cf = c16(sp, uint16(delta))
-	} else {
-		hf = hc16Sub(sp, uint16(-delta))
-		cf = c16Sub(sp, uint16(-delta))
-	}
+	cpu.sp = uint16(int(cpu.sp) + int(i8))
 	// [0 0 H C]
 	cpu.setZf(false)
 	cpu.setNf(false)
-	cpu.setHf(hf)
-	cpu.setCf(cf)
+	if i8 >= 0 {
+		cpu.setHf(int(sp)&0x0f+int(i8)&0x0f > 0x0f)
+		cpu.setCf(int(sp)&0xff+int(i8) > 0xff)
+	} else {
+		cpu.setHf(int(sp)&0x0f >= int(cpu.sp)&0x0f)
+		cpu.setCf(int(sp)&0xff >= int(cpu.sp)&0xff)
+	}
 }
 
 func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
@@ -353,8 +349,8 @@ func (cpu *CPU) ldSPHL() {
 }
 
 func (cpu *CPU) ldA16SP(a16 uint16, mem *mem.Memory) {
-	mem.Write(a16, uint8(cpu.sp>>8))
-	mem.Write(a16+1, uint8(cpu.sp|0x0f))
+	mem.Write(a16, uint8(cpu.sp))
+	mem.Write(a16+1, uint8(cpu.sp>>8))
 }
 
 func (cpu *CPU) ldHLSP(i8 int8) {

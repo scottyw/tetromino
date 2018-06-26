@@ -171,14 +171,6 @@ func c8Sub(a, b uint8) bool {
 	return int(a)-int(b) < 0
 }
 
-func hc16Sub(a, b uint16) bool {
-	return int(a)&0x0fff-int(b)&0x0fff < 0
-}
-
-func c16Sub(a, b uint16) bool {
-	return int(a)-int(b) < 0
-}
-
 func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
 	interrupts := cpu.hwr.IE & cpu.hwr.IF
 	if interrupts > 0 {
