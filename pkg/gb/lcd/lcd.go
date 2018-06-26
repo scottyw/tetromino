@@ -29,8 +29,7 @@ type LCD struct {
 	previousWindow [32][32]uint16
 	bg             [256][256]uint8
 	window         [256][256]uint8
-	fgSprites      [144][160]uint8
-	bgSprites      [144][160]uint8
+	sprites        [144][160]uint8
 	data           [144][256]uint8
 	tick           int
 	debug          bool
@@ -178,34 +177,32 @@ func (lcd *LCD) readTile(tileNumber uint16) (*[8][8]uint8, bool) {
 	return tile, false
 }
 
-func (lcd *LCD) updateTiles(offsetAddr uint16, layer *[256][256]uint8, previousTiles *[32][32]uint16) {
+func (lcd *LCD) updateTiles(lcdY uint8, offsetAddr uint16, layer *[256][256]uint8, previousTiles *[32][32]uint16) {
 	lowTileData := lcd.lowTileDataSelect()
-	for j := uint16(0); j < 32; j++ {
-		for i := uint16(0); i < 32; i++ {
-			var tileNumber uint16
-			tileAddr := 32*j + i
-			tileByte := lcd.readVideoRAM(offsetAddr + tileAddr)
-			if !lowTileData {
-				tileNumber = uint16(256 + int(int8(tileByte)))
-			} else {
-				tileNumber = uint16(tileByte)
-			}
-			tile, cacheHit := lcd.readTile(tileNumber)
-			if !cacheHit || tileNumber != previousTiles[j][i] {
-				bgX := i * 8
-				bgY := j * 8
-				for y := uint16(0); y < 8; y++ {
-					for x := uint16(0); x < 8; x++ {
-						layer[bgY+y][bgX+x] = tile[y][x]
-					}
+	tileY := lcdY / 8
+	for tileX := 0; tileX < 32; tileX++ {
+		var tileNumber uint16
+		tileAddr := 32*uint16(tileY) + uint16(tileX)
+		tileByte := lcd.readVideoRAM(offsetAddr + tileAddr)
+		if !lowTileData {
+			tileNumber = uint16(256 + int(int8(tileByte)))
+		} else {
+			tileNumber = uint16(tileByte)
+		}
+		tile, cacheHit := lcd.readTile(tileNumber)
+		if !cacheHit || tileNumber != previousTiles[tileY][tileX] {
+			lcdX := uint8(tileX * 8)
+			for y := uint8(0); y < 8; y++ {
+				for x := uint8(0); x < 8; x++ {
+					layer[lcdY+y][lcdX+x] = tile[y][x]
 				}
 			}
-			previousTiles[j][i] = tileNumber
 		}
+		previousTiles[tileY][tileX] = tileNumber
 	}
 }
 
-func (lcd *LCD) updateBG() {
+func (lcd *LCD) updateBG(lcdY, scy uint8) {
 	if !lcd.bgDisplayEnable() {
 		return
 	}
@@ -215,10 +212,10 @@ func (lcd *LCD) updateBG() {
 	} else {
 		offsetAddr = 0x9800
 	}
-	lcd.updateTiles(offsetAddr, &lcd.bg, &lcd.previousBg)
+	lcd.updateTiles(lcdY+scy, offsetAddr, &lcd.bg, &lcd.previousBg)
 }
 
-func (lcd *LCD) updateWindow() {
+func (lcd *LCD) updateWindow(lcdY uint8) {
 	if !lcd.windowDisplayEnable() {
 		return
 	}
@@ -228,110 +225,89 @@ func (lcd *LCD) updateWindow() {
 	} else {
 		offsetAddr = 0x9800
 	}
-	lcd.updateTiles(offsetAddr, &lcd.window, &lcd.previousWindow)
+	lcd.updateTiles(lcdY, offsetAddr, &lcd.window, &lcd.previousWindow)
 }
 
-func (lcd *LCD) updateSprites() {
+func (lcd *LCD) updateSprites(lcdY uint8) {
 	if lcd.largeSprites() {
 		panic(fmt.Sprintf("Large sprites are not supported"))
 	}
-	lcd.fgSprites = [144][160]uint8{}
-	lcd.bgSprites = [144][160]uint8{}
+	lcd.sprites[lcdY] = [160]uint8{}
 	for sprite := 0; sprite < 40; sprite++ {
 		spriteAddr := sprite * 4
-		startY := uint16(lcd.oam[spriteAddr])
-		if startY == 0 || startY > 160 {
+		startY := lcd.oam[spriteAddr]
+		if startY == 0 || lcdY < startY-16 || lcdY >= startY-8 {
 			continue
 		}
-		startX := uint16(lcd.oam[spriteAddr+1])
-		if startX == 0 || startX > 168 {
+		startX := lcd.oam[spriteAddr+1]
+		if startX == 0 || startX >= 168 {
 			continue
 		}
 		tileNumber := lcd.oam[spriteAddr+2]
 		tile, _ := lcd.readTile(uint16(tileNumber))
 		spriteX := startX - 8
-		spriteY := startY - 16
-		for y := uint16(0); y < 8; y++ {
-			for x := uint16(0); x < 8; x++ {
-				if spriteX+x >= 0 &&
-					spriteX+x < 160 &&
-					spriteY+y >= 0 &&
-					spriteY+y < 144 {
-					// FIXME background sprites added to bgSprites based on attributes
-					lcd.fgSprites[spriteY+y][spriteX+x] = tile[y][x]
-				}
+		for tileX := uint8(0); tileX < 8; tileX++ {
+			lcdX := spriteX + tileX
+			if lcdX >= 0 && lcdX < 160 {
+				lcd.sprites[lcdY][lcdX] = tile[lcdY-startY+16][tileX]
 			}
 		}
 	}
 }
 
-func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8) uint8 {
-	if x < 160 && y < 144 {
-		pixel := lcd.fgSprites[y][x]
-		if pixel > 0 {
-			return pixel
+func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) uint8 {
+	if lcd.spriteDisplayEnable() {
+		if x < 160 && y < 144 {
+			pixel := lcd.sprites[y][x]
+			if pixel > 0 {
+				if debug {
+					pixel += 0x30
+				}
+				return pixel
+			}
 		}
 	}
 	if lcd.windowDisplayEnable() {
 		// Use WX/WY to shift the visible pixels
 		if x >= wx && y >= wy {
-			return lcd.window[y-wy][x-wx]
+			pixel := lcd.window[y-wy][x-wx]
+			if debug {
+				pixel += 0x20
+			}
+			return pixel
 		}
 	}
 	if lcd.bgDisplayEnable() {
 		// Use SCX/SCY to shift the visible pixels
-		return lcd.bg[y+scy][x+scx]
+		pixel := lcd.bg[y+scy][x+scx]
+		if debug && (x >= 160 || y >= 144) {
+			pixel += 0x10
+		}
+		return pixel
 	}
 	return 0
 }
 
-func (lcd *LCD) renderPixelForDebug(x, y, scx, scy, wx, wy uint8) uint8 {
-	var pixel uint8
-	// Check for a foreground sprite ...
-	if x-scx < 160 && y-scy < 144 {
-		pixel = lcd.fgSprites[y-scy][x-scx]
-		if pixel > 0 {
-			return pixel + 0x30
-		}
-	}
-	if lcd.windowDisplayEnable() {
-		// Use WX/WY to shift the visible pixels
-		if x-scx < 160 && y-scy < 144 {
-			if x >= wx && y >= wy {
-				return lcd.window[y-wy-scy][x-wx-scx] + 0x20
-			}
-		}
-	}
-	if lcd.bgDisplayEnable() {
-		// Check for backround using SCX/SCY to colour pixels to illusrate the offset
-		if x-scx >= 160 || y-scy >= 144 {
-			pixel += 0x10
-		}
-		pixel += lcd.bg[y][x]
-	}
-	return pixel
-}
-
-func (lcd *LCD) renderLine() {
-	y := lcd.hwr.LY
+func (lcd *LCD) renderLine(y, scy uint8) {
 	scx := lcd.hwr.SCX
-	scy := lcd.hwr.SCY
 	wx := lcd.hwr.WX
 	wy := lcd.hwr.WY
 	if lcd.debug {
 		for x := 0; x < 256; x++ {
-			lcd.data[y][x] = lcd.renderPixelForDebug(uint8(x), y, scx, scy, wx, wy)
+			lcd.data[y][x] = lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
 		}
 	} else {
 		for x := 0; x < 160; x++ {
-			lcd.data[y][x] = lcd.renderPixel(uint8(x), y, scx, scy, wx, wy)
+			lcd.data[y][x] = lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
 		}
 	}
 }
 
 func (lcd *LCD) updateLcdLine() {
-	lcd.updateBG()
-	lcd.updateWindow()
-	lcd.updateSprites()
-	lcd.renderLine()
+	y := lcd.hwr.LY
+	scy := lcd.hwr.SCY
+	lcd.updateBG(y, scy)
+	lcd.updateWindow(y)
+	lcd.updateSprites(y)
+	lcd.renderLine(y, scy)
 }
