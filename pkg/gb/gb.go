@@ -47,11 +47,16 @@ type Gameboy struct {
 func NewGameboy(opts Options) Gameboy {
 	hwr := mem.NewHardwareRegisters(opts.SBWriter)
 	cpu := cpu.NewCPU(hwr, opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
-	mem := mem.NewMemory(hwr, opts.RomFilename)
-	lcd := lcd.NewLCD(hwr, mem, opts.DebugLCD)
+	var memory *mem.Memory
+	if opts.RomFilename == "" {
+		memory = mem.NewMemory(hwr, make([]byte, 0x8000))
+	} else {
+		memory = mem.NewMemoryFromFile(hwr, opts.RomFilename)
+	}
+	lcd := lcd.NewLCD(hwr, memory, opts.DebugLCD)
 	start := time.Now()
 	return Gameboy{cpu: cpu,
-		mem:   mem,
+		mem:   memory,
 		hwr:   hwr,
 		lcd:   lcd,
 		start: start,

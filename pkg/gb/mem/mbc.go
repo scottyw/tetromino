@@ -2,7 +2,6 @@ package mem
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 )
 
@@ -73,15 +72,7 @@ func (m *mbc1) write(addr uint16, value uint8) {
 	m.updateBank()
 }
 
-func newMBC(romFilename string) mbc {
-	var rom []byte
-	if romFilename != "" {
-		var err error
-		rom, err = ioutil.ReadFile(romFilename)
-		if err != nil {
-			panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", romFilename, err))
-		}
-	}
+func newMBC(rom []byte) mbc {
 	return &mbc1{
 		rom:  rom,
 		bank: 1,

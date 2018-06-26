@@ -2,6 +2,7 @@ package mem
 
 import (
 	"fmt"
+	"io/ioutil"
 )
 
 // Memory allows read and write access to memory
@@ -20,11 +21,24 @@ type WriteNotification interface {
 	WriteToVideoRAM(addr uint16)
 }
 
-// NewMemory creates the memory and initializes it with ROM contents and default values
-func NewMemory(hwr *HardwareRegisters, romFilename string) *Memory {
+// NewMemoryFromFile loads the specified ROM file and calls NewMemory
+func NewMemoryFromFile(hwr *HardwareRegisters, romFilename string) *Memory {
+	var rom []byte
+	if romFilename == "" {
+		panic(fmt.Sprintf("No ROM file specified"))
+	}
+	rom, err := ioutil.ReadFile(romFilename)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", romFilename, err))
+	}
+	return NewMemory(hwr, rom)
+}
+
+// NewMemory creates the memory struct and initializes it with ROM contents and default values
+func NewMemory(hwr *HardwareRegisters, rom []byte) *Memory {
 	return &Memory{
 		hwr: hwr,
-		mbc: newMBC(romFilename),
+		mbc: newMBC(rom),
 	}
 }
 

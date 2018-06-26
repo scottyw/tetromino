@@ -79,9 +79,9 @@ func TestBlarggCpuInstrs06(t *testing.T) {
 // 	runBlarggTest(t, "cpu_instrs/08-misc instrs.gb")
 // }
 
-// func TestBlarggCpuInstrs09(t *testing.T) {
-// 	runBlarggTest(t, "cpu_instrs/09-op r,r.gb")
-// }
+func TestBlarggCpuInstrs09(t *testing.T) {
+	runBlarggTest(t, "cpu_instrs/09-op r,r.gb")
+}
 
 func TestBlarggCpuInstrs10(t *testing.T) {
 	runBlarggTest(t, "cpu_instrs/10-bit ops.gb")

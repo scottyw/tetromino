@@ -41,11 +41,12 @@ type CPU struct {
 	l uint8
 
 	// State
-	sp      uint16
-	pc      uint16
-	ime     bool
-	halted  bool
-	stopped bool
+	sp       uint16
+	pc       uint16
+	ime      bool
+	halted   bool
+	stopped  bool
+	altCount bool
 
 	// Hardware
 	hwr   *mem.HardwareRegisters
@@ -55,6 +56,7 @@ type CPU struct {
 	debugCPU         bool
 	debugFlowControl bool
 	debugJumps       bool
+	validateFlags    bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -257,7 +259,7 @@ func validateFlags(f1, f2 uint8, im metadata) {
 }
 
 func (cpu *CPU) execute(mem *mem.Memory) int {
-	// f := cpu.f // FIXME flag validation
+	f := cpu.f
 	pc := cpu.pc
 	instruction := mem.Read(cpu.pc)
 	im := instructionMetadata[instruction]
@@ -300,9 +302,12 @@ func (cpu *CPU) execute(mem *mem.Memory) int {
 			}
 		}
 	}
-	// FIXME temporary flag validation
-	// validateFlags(f, cpu.f, im)
-	// FIXME - Most instructions have a single cycle count - handle the conditional ones later.
+	if cpu.validateFlags {
+		validateFlags(f, cpu.f, im)
+	}
+	if len(im.Cycles) > 1 && cpu.altCount {
+		return im.Cycles[1]
+	}
 	return im.Cycles[0]
 }
 

@@ -113,6 +113,8 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 				fmt.Printf("==== CALL NZ ...\n")
 			}
 			cpu.call("", a16, mem)
+		} else {
+			cpu.altCount = true
 		}
 	case "Z":
 		if cpu.zf() {
@@ -120,6 +122,8 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 				fmt.Printf("==== CALL Z ...\n")
 			}
 			cpu.call("", a16, mem)
+		} else {
+			cpu.altCount = true
 		}
 	case "NC":
 		if !cpu.cf() {
@@ -127,6 +131,8 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 				fmt.Printf("==== CALL NC ...\n")
 			}
 			cpu.call("", a16, mem)
+		} else {
+			cpu.altCount = true
 		}
 	case "C":
 		if cpu.cf() {
@@ -134,6 +140,8 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 				fmt.Printf("==== CALL C ...\n")
 			}
 			cpu.call("", a16, mem)
+		} else {
+			cpu.altCount = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for call: %v %v", kind, a16))
@@ -141,8 +149,7 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) ccf() {
-	// [- 0 0 *]
-	cpu.setZf(cpu.a == 0)
+	// [- 0 0 C]
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(!cpu.cf())
@@ -267,6 +274,8 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 				fmt.Printf("==== JP NZ\n")
 			}
 			cpu.jp("", a16)
+		} else {
+			cpu.altCount = true
 		}
 	case "Z":
 		if cpu.zf() {
@@ -274,6 +283,8 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 				fmt.Printf("==== JP Z\n")
 			}
 			cpu.jp("", a16)
+		} else {
+			cpu.altCount = true
 		}
 	case "NC":
 		if !cpu.cf() {
@@ -281,6 +292,8 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 				fmt.Printf("==== JP NC\n")
 			}
 			cpu.jp("", a16)
+		} else {
+			cpu.altCount = true
 		}
 	case "C":
 		if cpu.cf() {
@@ -288,6 +301,8 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 				fmt.Printf("==== JP C\n")
 			}
 			cpu.jp("", a16)
+		} else {
+			cpu.altCount = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for jp: %v %v", kind, a16))
@@ -444,6 +459,8 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 				fmt.Printf("==== RET NZ ...\n")
 			}
 			cpu.ret("", mem)
+		} else {
+			cpu.altCount = true
 		}
 	case "Z":
 		if cpu.zf() {
@@ -451,6 +468,8 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 				fmt.Printf("==== RET Z ...\n")
 			}
 			cpu.ret("", mem)
+		} else {
+			cpu.altCount = true
 		}
 	case "NC":
 		if !cpu.cf() {
@@ -458,6 +477,8 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 				fmt.Printf("==== RET NC ...\n")
 			}
 			cpu.ret("", mem)
+		} else {
+			cpu.altCount = true
 		}
 	case "C":
 		if cpu.cf() {
@@ -465,6 +486,8 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 				fmt.Printf("==== RET C ...\n")
 			}
 			cpu.ret("", mem)
+		} else {
+			cpu.altCount = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for ret"))
@@ -668,7 +691,6 @@ func (cpu *CPU) swapAddr(a16 uint16, mem *mem.Memory) {
 
 func (cpu *CPU) scf() {
 	// [- 0 0 1]
-	cpu.setZf(cpu.a == 0)
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(true)

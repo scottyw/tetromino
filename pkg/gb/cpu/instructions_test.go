@@ -115,9 +115,9 @@ func TestCall(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{pc: 0xabcd, sp: 0x8642}, CPU{pc: 0x1af2, sp: 0x8640}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		test.cpu.call("", 0x1af2, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8640, 0xcd)
 		expected.Write(0x8641, 0xab)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
@@ -158,7 +158,7 @@ func TestPop(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{b: 0xff, c: 0x11, sp: 0x8640}, CPU{b: 0x1a, c: 0xf2, sp: 0x8642}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		actual.Write(0x8640, 0xf2)
 		actual.Write(0x8641, 0x1a)
 		test.cpu.pop(&test.cpu.b, &test.cpu.c, actual)
@@ -170,9 +170,9 @@ func TestPush(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{b: 0x1a, c: 0xf2, sp: 0x8642}, CPU{b: 0x1a, c: 0xf2, sp: 0x8640}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		test.cpu.push(test.cpu.b, test.cpu.c, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8640, 0xf2)
 		expected.Write(0x8641, 0x1a)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
@@ -196,7 +196,7 @@ func TestRet(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642}},
 	} {
-		mem := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		mem := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		mem.Write(0x8640, 0xf2)
 		mem.Write(0x8641, 0x1a)
 		test.cpu.ret("", mem)
@@ -208,7 +208,7 @@ func TestReti(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642, ime: true}},
 	} {
-		mem := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		mem := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		mem.Write(0x8640, 0xf2)
 		mem.Write(0x8641, 0x1a)
 		test.cpu.reti(mem)
@@ -324,9 +324,9 @@ func TestRst(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{pc: 0xabcd, sp: 0x8642}, CPU{pc: 0x0008, sp: 0x8640}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		test.cpu.rst(0x0008, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8640, 0xcd)
 		expected.Write(0x8641, 0xab)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
@@ -363,10 +363,10 @@ func TestSlaAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{f: 0x10}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		actual.Write(0x8642, 0xa9)
 		test.cpu.slaAddr(0x8642, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8642, 0x52)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8642, 0x1)
 	}
@@ -387,10 +387,10 @@ func TestSraAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{}, CPU{f: 0x10}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		actual.Write(0x8642, 0x55)
 		test.cpu.sraAddr(0x8642, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8642, 0x2a)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8642, 0x1)
 	}
@@ -411,10 +411,10 @@ func TestSrlAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{f: 0x10}, CPU{}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		actual.Write(0x8642, 0xa8)
 		test.cpu.srlAddr(0x8642, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8642, 0x54)
 		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8642, 0x1)
 	}
@@ -434,10 +434,10 @@ func TestSwapAddr(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{f: 0x10}, CPU{}},
 	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		actual := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		actual.Write(0x8641, 0xba)
 		test.cpu.swapAddr(0x8641, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), "")
+		expected := mem.NewMemory(mem.NewHardwareRegisters(nil), nil)
 		expected.Write(0x8641, 0xab)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
