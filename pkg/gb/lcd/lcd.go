@@ -3,6 +3,8 @@ package lcd
 import (
 	"encoding/gob"
 	"fmt"
+	"image"
+	"image/color"
 	"os"
 
 	"github.com/scottyw/tetromino/pkg/gb/mem"
@@ -30,7 +32,7 @@ type LCD struct {
 	bg             [256][256]uint8
 	window         [256][256]uint8
 	sprites        [144][160]uint8
-	data           [144][256]uint8
+	Frame          *image.RGBA
 	tick           int
 	debug          bool
 }
@@ -41,6 +43,7 @@ func NewLCD(hwr *mem.HardwareRegisters, memory *mem.Memory, debug bool) *LCD {
 		hwr:      hwr,
 		videoRAM: &memory.VideoRAM,
 		oam:      &memory.OAM,
+		Frame:    image.NewRGBA(image.Rect(0, 0, 256, 144)),
 		debug:    debug,
 	}
 	memory.WriteNotification = &lcd
@@ -141,11 +144,6 @@ func (lcd *LCD) LoadSnapshot(filename string) {
 	defer file.Close()
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(lcd)
-}
-
-// FrameData returns the frame data as a 256x144 array of bytes where each element is a colour value between 0 and 3
-func (lcd *LCD) FrameData() [144][256]uint8 {
-	return lcd.data
 }
 
 func (lcd *LCD) readVideoRAM(memoryAddr uint16) byte {
@@ -311,17 +309,61 @@ func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) uint8 {
 	return 0
 }
 
+// FIXME This function is a vestigial tail from past design decisions and should be refactored away
+func (lcd *LCD) updateFrame(x, y int, pixel uint8) {
+	switch pixel {
+	case 0x00:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xff, 0xff, 0xff, 0xff})
+	case 0x01:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0xaa, 0xaa, 0xff})
+	case 0x02:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x77, 0x77, 0x77, 0xff})
+	case 0x03:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x33, 0x33, 0x33, 0xff})
+	case 0x10:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xff, 0xaa, 0xaa, 0xff})
+	case 0x11:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xdd, 0x77, 0x77, 0xff})
+	case 0x12:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0x33, 0x33, 0xff})
+	case 0x13:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x55, 0x00, 0x00, 0xff})
+	case 0x20:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0xff, 0xaa, 0xff})
+	case 0x21:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x77, 0xdd, 0x77, 0xff})
+	case 0x22:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x33, 0xaa, 0x33, 0xff})
+	case 0x23:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x00, 0x55, 0x00, 0xff})
+	case 0x30:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0xaa, 0xff, 0xff})
+	case 0x31:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x77, 0x77, 0xdd, 0xff})
+	case 0x32:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x33, 0x33, 0xaa, 0xff})
+	case 0x33:
+		lcd.Frame.SetRGBA(x, y, color.RGBA{0x00, 0x00, 0x55, 0xff})
+	default:
+		panic(fmt.Sprintf("Bad pixel: %v", pixel))
+	}
+}
+
 func (lcd *LCD) renderLine(y, scy uint8) {
 	scx := lcd.hwr.SCX
 	wx := lcd.hwr.WX
 	wy := lcd.hwr.WY
 	if lcd.debug {
 		for x := 0; x < 256; x++ {
-			lcd.data[y][x] = lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
+			// FIXME Refactor updateFrame into renderPixel
+			pixel := lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
+			lcd.updateFrame(x, int(y), pixel)
 		}
 	} else {
 		for x := 0; x < 160; x++ {
-			lcd.data[y][x] = lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
+			// FIXME Refactor updateFrame into renderPixel
+			pixel := lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
+			lcd.updateFrame(x, int(y), pixel)
 		}
 	}
 }

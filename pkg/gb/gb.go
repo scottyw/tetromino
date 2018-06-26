@@ -3,6 +3,7 @@ package gb
 import (
 	"context"
 	"fmt"
+	"image"
 	"io"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 const frameDuration = float64(16742706)
 
 type gui interface {
-	DrawFrame([144][256]uint8)
+	DrawFrame(image *image.RGBA)
 }
 
 // Options control emulator behaviour
@@ -67,7 +68,7 @@ func (gb *Gameboy) runFrame(gui gui) {
 		gb.hwr.Tick()
 	}
 	if gui != nil {
-		gui.DrawFrame(gb.lcd.FrameData())
+		gui.DrawFrame(gb.lcd.Frame)
 	}
 	gb.frame++
 	expectedFrameEndTime := gb.start.Add(time.Duration(gb.frame * int(frameDuration*gb.opts.Speed)))

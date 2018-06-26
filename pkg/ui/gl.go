@@ -1,9 +1,7 @@
 package ui
 
 import (
-	"fmt"
 	"image"
-	"image/color"
 	"log"
 	"os"
 	"runtime"
@@ -61,10 +59,9 @@ func NewGL(emu Emulator) *GL {
 }
 
 // DrawFrame draws a frame to the GL window and returns user input
-func (glx *GL) DrawFrame(lcd [144][256]uint8) {
+func (glx *GL) DrawFrame(image *image.RGBA) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
-	image := renderFrame(lcd)
 	setTexture(image)
 	drawBuffer(glx.window, glx.width)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
@@ -161,54 +158,4 @@ func drawBuffer(window *glfw.Window, width float32) {
 	gl.TexCoord2f(0, 0)
 	gl.Vertex2f(-x, y)
 	gl.End()
-}
-
-func renderPixel(im *image.RGBA, x, y int, pixel uint8) {
-	switch pixel {
-	case 0x00:
-		im.SetRGBA(x, y, color.RGBA{0xff, 0xff, 0xff, 0xff})
-	case 0x01:
-		im.SetRGBA(x, y, color.RGBA{0xaa, 0xaa, 0xaa, 0xff})
-	case 0x02:
-		im.SetRGBA(x, y, color.RGBA{0x77, 0x77, 0x77, 0xff})
-	case 0x03:
-		im.SetRGBA(x, y, color.RGBA{0x33, 0x33, 0x33, 0xff})
-	case 0x10:
-		im.SetRGBA(x, y, color.RGBA{0xff, 0xaa, 0xaa, 0xff})
-	case 0x11:
-		im.SetRGBA(x, y, color.RGBA{0xdd, 0x77, 0x77, 0xff})
-	case 0x12:
-		im.SetRGBA(x, y, color.RGBA{0xaa, 0x33, 0x33, 0xff})
-	case 0x13:
-		im.SetRGBA(x, y, color.RGBA{0x55, 0x00, 0x00, 0xff})
-	case 0x20:
-		im.SetRGBA(x, y, color.RGBA{0xaa, 0xff, 0xaa, 0xff})
-	case 0x21:
-		im.SetRGBA(x, y, color.RGBA{0x77, 0xdd, 0x77, 0xff})
-	case 0x22:
-		im.SetRGBA(x, y, color.RGBA{0x33, 0xaa, 0x33, 0xff})
-	case 0x23:
-		im.SetRGBA(x, y, color.RGBA{0x00, 0x55, 0x00, 0xff})
-	case 0x30:
-		im.SetRGBA(x, y, color.RGBA{0xaa, 0xaa, 0xff, 0xff})
-	case 0x31:
-		im.SetRGBA(x, y, color.RGBA{0x77, 0x77, 0xdd, 0xff})
-	case 0x32:
-		im.SetRGBA(x, y, color.RGBA{0x33, 0x33, 0xaa, 0xff})
-	case 0x33:
-		im.SetRGBA(x, y, color.RGBA{0x00, 0x00, 0x55, 0xff})
-	default:
-		panic(fmt.Sprintf("Bad pixel: %v", pixel))
-	}
-}
-
-func renderFrame(data [144][256]uint8) *image.RGBA {
-	im := image.NewRGBA(image.Rect(0, 0, 256, 144))
-	for y := 0; y < 144; y++ {
-		for x := 0; x < 256; x++ {
-			pixel := data[y][x]
-			renderPixel(im, x, y, pixel)
-		}
-	}
-	return im
 }
