@@ -21,9 +21,9 @@ func runBlarggTest(t *testing.T, filename string) {
 		SBWriter:    sbWriter,
 		// DebugCPU:    true,
 	}
-	ctx, cancelFunc := context.WithTimeout(context.Background(), timeout)
-	defer cancelFunc()
-	gameboy := NewGameboy(opts)
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+	gameboy := NewGameboy(opts, cancel)
 	go func() {
 		for {
 			result := sbWriter.String()
@@ -32,7 +32,7 @@ func runBlarggTest(t *testing.T, filename string) {
 				return
 			default:
 				if strings.Contains(result, "Failed") || strings.Contains(result, "Passed") {
-					cancelFunc()
+					cancel()
 				}
 			}
 			// Check every 100ms for a result

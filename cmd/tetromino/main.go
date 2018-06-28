@@ -52,9 +52,9 @@ func main() {
 	}
 
 	// Start running the Gameboy with a GL UI
-	ctx, cancelFunc := context.WithCancel(context.Background())
-	defer cancelFunc()
-	gameboy := gb.NewGameboy(opts)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	gameboy := gb.NewGameboy(opts, cancel)
 	gui := ui.NewGL(&gameboy)
 	if *enableTiming {
 		gameboy.Time(ctx, gui)

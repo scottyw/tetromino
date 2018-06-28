@@ -2,7 +2,6 @@ package mem
 
 import (
 	"fmt"
-	"os"
 )
 
 type mbc interface {
@@ -21,10 +20,6 @@ type mbc1 struct {
 
 func (m *mbc1) accessRom(addr uint16) uint8 {
 	if int(addr) > len(m.rom) {
-		if len(m.rom) == 0 {
-			fmt.Println("No ROM filename specified ...")
-			os.Exit(1)
-		}
 		panic(fmt.Sprintf("Attempt to access address 0x%04x but MBC1 ROM only has length 0x%04x", addr, len(m.rom)))
 	}
 	return m.rom[addr]

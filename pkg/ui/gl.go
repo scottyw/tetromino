@@ -3,7 +3,6 @@ package ui
 import (
 	"image"
 	"log"
-	"os"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
@@ -69,8 +68,7 @@ func (glx *GL) DrawFrame(image *image.RGBA) {
 	glfw.PollEvents()
 	if glx.window.ShouldClose() {
 		glfw.Terminate()
-		// Keep it simple
-		os.Exit(0)
+		glx.emu.Shutdown()
 	}
 }
 

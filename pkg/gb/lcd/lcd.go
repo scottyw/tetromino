@@ -21,6 +21,36 @@ const (
 	bit0 = 1 << iota
 )
 
+var (
+	gray = []color.RGBA{
+		color.RGBA{0xff, 0xff, 0xff, 0xff},
+		color.RGBA{0xaa, 0xaa, 0xaa, 0xff},
+		color.RGBA{0x77, 0x77, 0x77, 0xff},
+		color.RGBA{0x33, 0x33, 0x33, 0xff},
+	}
+
+	red = []color.RGBA{
+		color.RGBA{0xff, 0xaa, 0xaa, 0xff},
+		color.RGBA{0xdd, 0x77, 0x77, 0xff},
+		color.RGBA{0xaa, 0x33, 0x33, 0xff},
+		color.RGBA{0x55, 0x00, 0x00, 0xff},
+	}
+
+	green = []color.RGBA{
+		color.RGBA{0xaa, 0xff, 0xaa, 0xff},
+		color.RGBA{0x77, 0xdd, 0x77, 0xff},
+		color.RGBA{0x33, 0xaa, 0x33, 0xff},
+		color.RGBA{0x00, 0x55, 0x00, 0xff},
+	}
+
+	blue = []color.RGBA{
+		color.RGBA{0xaa, 0xaa, 0xff, 0xff},
+		color.RGBA{0x77, 0x77, 0xdd, 0xff},
+		color.RGBA{0x33, 0x33, 0xaa, 0xff},
+		color.RGBA{0x00, 0x00, 0x55, 0xff},
+	}
+)
+
 // LCD represents the LCD display of the Gameboy
 type LCD struct {
 	hwr            *mem.HardwareRegisters
@@ -276,15 +306,15 @@ func (lcd *LCD) updateSprites(lcdY uint8) {
 	}
 }
 
-func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) uint8 {
+func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA {
 	if lcd.spriteDisplayEnable() {
 		if x < 160 && y < 144 {
 			pixel := lcd.sprites[y][x]
 			if pixel > 0 {
 				if debug {
-					pixel += 0x30
+					return blue[pixel]
 				}
-				return pixel
+				return gray[pixel]
 			}
 		}
 	}
@@ -293,60 +323,20 @@ func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) uint8 {
 		if x >= wx && y >= wy {
 			pixel := lcd.window[y-wy][x-wx]
 			if debug {
-				pixel += 0x20
+				return green[pixel]
 			}
-			return pixel
+			return gray[pixel]
 		}
 	}
 	if lcd.bgDisplayEnable() {
 		// Use SCX/SCY to shift the visible pixels
 		pixel := lcd.bg[y+scy][x+scx]
 		if debug && (x >= 160 || y >= 144) {
-			pixel += 0x10
+			return red[pixel]
 		}
-		return pixel
+		return gray[pixel]
 	}
-	return 0
-}
-
-// FIXME This function is a vestigial tail from past design decisions and should be refactored away
-func (lcd *LCD) updateFrame(x, y int, pixel uint8) {
-	switch pixel {
-	case 0x00:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xff, 0xff, 0xff, 0xff})
-	case 0x01:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0xaa, 0xaa, 0xff})
-	case 0x02:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x77, 0x77, 0x77, 0xff})
-	case 0x03:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x33, 0x33, 0x33, 0xff})
-	case 0x10:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xff, 0xaa, 0xaa, 0xff})
-	case 0x11:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xdd, 0x77, 0x77, 0xff})
-	case 0x12:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0x33, 0x33, 0xff})
-	case 0x13:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x55, 0x00, 0x00, 0xff})
-	case 0x20:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0xff, 0xaa, 0xff})
-	case 0x21:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x77, 0xdd, 0x77, 0xff})
-	case 0x22:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x33, 0xaa, 0x33, 0xff})
-	case 0x23:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x00, 0x55, 0x00, 0xff})
-	case 0x30:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0xaa, 0xaa, 0xff, 0xff})
-	case 0x31:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x77, 0x77, 0xdd, 0xff})
-	case 0x32:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x33, 0x33, 0xaa, 0xff})
-	case 0x33:
-		lcd.Frame.SetRGBA(x, y, color.RGBA{0x00, 0x00, 0x55, 0xff})
-	default:
-		panic(fmt.Sprintf("Bad pixel: %v", pixel))
-	}
+	return gray[0]
 }
 
 func (lcd *LCD) renderLine(y, scy uint8) {
@@ -355,15 +345,13 @@ func (lcd *LCD) renderLine(y, scy uint8) {
 	wy := lcd.hwr.WY
 	if lcd.debug {
 		for x := 0; x < 256; x++ {
-			// FIXME Refactor updateFrame into renderPixel
 			pixel := lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
-			lcd.updateFrame(x, int(y), pixel)
+			lcd.Frame.SetRGBA(x, int(y), pixel)
 		}
 	} else {
 		for x := 0; x < 160; x++ {
-			// FIXME Refactor updateFrame into renderPixel
 			pixel := lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
-			lcd.updateFrame(x, int(y), pixel)
+			lcd.Frame.SetRGBA(x, int(y), pixel)
 		}
 	}
 }

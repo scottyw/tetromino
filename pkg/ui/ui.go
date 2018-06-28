@@ -27,4 +27,5 @@ type Emulator interface {
 	ButtonAction(Button, bool)
 	Screenshot()
 	Debug() bool
+	Shutdown()
 }

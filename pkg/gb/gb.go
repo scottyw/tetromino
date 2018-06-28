@@ -34,17 +34,18 @@ type Options struct {
 
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
-	cpu   *cpu.CPU
-	mem   *mem.Memory
-	hwr   *mem.HardwareRegisters
-	lcd   *lcd.LCD
-	start time.Time
-	opts  Options
-	frame int
+	cpu    *cpu.CPU
+	mem    *mem.Memory
+	hwr    *mem.HardwareRegisters
+	lcd    *lcd.LCD
+	start  time.Time
+	opts   Options
+	cancel func()
+	frame  int
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy(opts Options) Gameboy {
+func NewGameboy(opts Options, cancel func()) Gameboy {
 	hwr := mem.NewHardwareRegisters(opts.SBWriter)
 	cpu := cpu.NewCPU(hwr, opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
 	var memory *mem.Memory
@@ -56,11 +57,12 @@ func NewGameboy(opts Options) Gameboy {
 	lcd := lcd.NewLCD(hwr, memory, opts.DebugLCD)
 	start := time.Now()
 	return Gameboy{cpu: cpu,
-		mem:   memory,
-		hwr:   hwr,
-		lcd:   lcd,
-		start: start,
-		opts:  opts,
+		mem:    memory,
+		hwr:    hwr,
+		lcd:    lcd,
+		start:  start,
+		opts:   opts,
+		cancel: cancel,
 	}
 }
 
@@ -198,4 +200,9 @@ func (gb *Gameboy) Screenshot() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+// Shutdown the emulator
+func (gb *Gameboy) Shutdown() {
+	gb.cancel()
 }
