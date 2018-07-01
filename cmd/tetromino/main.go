@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"flag"
+	"fmt"
 	"io"
 	"log"
 	"os"
@@ -13,6 +14,18 @@ import (
 )
 
 func main() {
+
+	fmt.Println()
+	fmt.Println("Welcome to Tetromino!")
+	fmt.Println()
+	fmt.Println("Arrows keys : Up/Down/Left/Right")
+	fmt.Println("A : Start")
+	fmt.Println("S : Select")
+	fmt.Println("Z : B button")
+	fmt.Println("X : A button")
+	fmt.Println()
+	fmt.Println("T : Take screenshot")
+	fmt.Println()
 
 	// Command line flags
 	romFilename := flag.String("f", "", "ROM filename")
