@@ -16,8 +16,6 @@ Tetromino is functional enough to play Tetris and Super Mario Land plus it passe
 * Large sprite support
 * Sprite palette support
 * Multiple interrupts are not handled correctly
-* Alternative clock cycle counting for JP/JR/RET/CALL is not implemented
-* Validation against test ROMs is present but some tests don't pass (and are disabled)
 * Sound
 
 Tetromino has some fun LCD debugging that colours the display to differentiate sprites from background (from window) and showing how scrolling is implemented. I would like to add features like screenshots, snapshotting LCD or emulator state and maybe rewind.
