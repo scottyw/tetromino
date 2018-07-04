@@ -53,28 +53,32 @@ var (
 
 // LCD represents the LCD display of the Gameboy
 type LCD struct {
-	hwr            *mem.HardwareRegisters
-	videoRAM       *[0x2000]byte
-	oam            *[0xa0]byte
-	tileCache      [384]*[8][8]uint8
-	previousBg     [32][32]uint16
-	previousWindow [32][32]uint16
-	bg             [256][256]uint8
-	window         [256][256]uint8
-	sprites        [144][160]uint8
-	Frame          *image.RGBA
-	tick           int
-	debug          bool
+	hwr              *mem.HardwareRegisters
+	videoRAM         *[0x2000]byte
+	oam              *[0xa0]byte
+	tileCache        [384]*[8][8]uint8
+	previousBg       [32][32]uint16
+	previousWindow   [32][32]uint16
+	bg               [256][256]uint8
+	window           [256][256]uint8
+	sprites          [144][160]uint8
+	RealFrame        *image.RGBA
+	DebugFrame       *image.RGBA
+	DebugOffsetFrame *image.RGBA
+	tick             int
+	debug            bool
 }
 
 // NewLCD returns the configured LCD
 func NewLCD(hwr *mem.HardwareRegisters, memory *mem.Memory, debug bool) *LCD {
 	lcd := LCD{
-		hwr:      hwr,
-		videoRAM: &memory.VideoRAM,
-		oam:      &memory.OAM,
-		Frame:    image.NewRGBA(image.Rect(0, 0, 256, 256)),
-		debug:    debug,
+		hwr:              hwr,
+		videoRAM:         &memory.VideoRAM,
+		oam:              &memory.OAM,
+		RealFrame:        image.NewRGBA(image.Rect(0, 0, 160, 144)),
+		DebugFrame:       image.NewRGBA(image.Rect(0, 0, 256, 256)),
+		DebugOffsetFrame: image.NewRGBA(image.Rect(0, 0, 256, 256)),
+		debug:            debug,
 	}
 	memory.WriteNotification = &lcd
 	return &lcd
@@ -346,16 +350,17 @@ func (lcd *LCD) renderLine(y, scy uint8) {
 	scx := lcd.hwr.SCX
 	wx := lcd.hwr.WX
 	wy := lcd.hwr.WY
-	if lcd.debug {
-		for x := 0; x < 256; x++ {
-			pixel := lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
-			lcd.Frame.SetRGBA(x, int(y), pixel)
-		}
-	} else {
-		for x := 0; x < 160; x++ {
-			pixel := lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
-			lcd.Frame.SetRGBA(x, int(y), pixel)
-		}
+	for x := 0; x < 256; x++ {
+		pixel := lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, true)
+		lcd.DebugFrame.SetRGBA(x, int(y), pixel)
+	}
+	for x := 0; x < 256; x++ {
+		pixel := lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
+		lcd.DebugOffsetFrame.SetRGBA(x, int(y), pixel)
+	}
+	for x := 0; x < 160; x++ {
+		pixel := lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
+		lcd.RealFrame.SetRGBA(x, int(y), pixel)
 	}
 }
 

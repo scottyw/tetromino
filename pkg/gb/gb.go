@@ -88,7 +88,7 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	}
 	gb.lcd.FrameEnd()
 	if gui != nil {
-		gui.DrawFrame(gb.lcd.Frame)
+		gui.DrawFrame(gb.lcd.DebugOffsetFrame)
 	}
 	time.Sleep(time.Until(end))
 	gb.frame++
@@ -195,19 +195,47 @@ func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 // Screenshot writes a screenshot to file
 func (gb *Gameboy) Screenshot() {
 	t := time.Now()
-	filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
+	realfilename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.%9d.png",
 		t.Year(), t.Month(), t.Day(),
-		t.Hour(), t.Minute(), t.Second())
-	fmt.Println("Writing screenshot to", filename)
-	f, err := os.Create(filename)
+		t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
+	debugfilename := fmt.Sprintf("tetromino-debug-%d%02d%02d-%02d%02d%02d.%9d.png",
+		t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
+	debugoffsetfilename := fmt.Sprintf("tetromino-debugoffset-%d%02d%02d-%02d%02d%02d.%9d.png",
+		t.Year(), t.Month(), t.Day(),
+		t.Hour(), t.Minute(), t.Second(), t.Nanosecond())
+	fmt.Println("Writing screenshot to", realfilename)
+
+	f3, err := os.Create(realfilename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f3.Close()
+	err = png.Encode(f3, gb.lcd.RealFrame)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	f2, err := os.Create(debugoffsetfilename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f2.Close()
+	err = png.Encode(f2, gb.lcd.DebugOffsetFrame)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	f, err := os.Create(debugfilename)
 	if err != nil {
 		fmt.Println(err)
 	}
 	defer f.Close()
-	err = png.Encode(f, gb.lcd.Frame)
+	err = png.Encode(f, gb.lcd.DebugFrame)
 	if err != nil {
 		fmt.Println(err)
 	}
+
 }
 
 // Faster makes the emulator run faster
