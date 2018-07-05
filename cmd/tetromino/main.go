@@ -25,12 +25,14 @@ func main() {
 	fmt.Println("X : A button")
 	fmt.Println()
 	fmt.Println("T : Take screenshot")
+	fmt.Println("O : Run slower")
+	fmt.Println("P : Run faster")
 	fmt.Println()
 
 	// Command line flags
 	romFilename := flag.String("f", "", "ROM filename")
 	outputSerial := flag.Bool("output-serial-data", false, "When true, data sent to the serial port will be written to console")
-	speed := flag.Float64("speed", 1000, "The speed at which to run as a percentage e.g. 100 for normal speed, 200 for double speed")
+	speedup := flag.Float64("speedup", 10, "The speed at which to run as a multiplier e.g. 1 for normal speed, 2 for double, 0.5 for half")
 	debugCPU := flag.Bool("debug-cpu", false, "When true, CPU debugging is enabled")
 	debugFlowControl := flag.Bool("debug-flow", false, "When true, flow control debugging is enabled")
 	debugJumps := flag.Bool("debug-jumps", false, "When true, jump debugging is enabled")
@@ -56,7 +58,7 @@ func main() {
 	}
 	opts := gb.Options{
 		RomFilename:      *romFilename,
-		Speed:            100 / *speed,
+		Speedup:          *speedup,
 		SBWriter:         sbWriter,
 		DebugCPU:         *debugCPU,
 		DebugLCD:         *debugLCD,

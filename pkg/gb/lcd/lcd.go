@@ -89,7 +89,7 @@ func (lcd *LCD) WriteToVideoRAM(addr uint16) {
 }
 
 // Tick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) Tick(foo bool) {
+func (lcd *LCD) Tick() {
 
 	// Is the LCD enabled?
 	if !lcd.lcdDisplayEnable() {

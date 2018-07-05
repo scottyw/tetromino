@@ -26,6 +26,8 @@ const (
 type Emulator interface {
 	ButtonAction(Button, bool)
 	Screenshot()
+	Faster()
+	Slower()
 	Debug() bool
 	Shutdown()
 }

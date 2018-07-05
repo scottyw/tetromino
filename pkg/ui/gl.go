@@ -109,6 +109,13 @@ func onKeyFunc(emu Emulator) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw
 		if key == glfw.KeyT && action == glfw.Press {
 			emu.Screenshot()
 		}
+		if key == glfw.KeyP && action == glfw.Press {
+			emu.Faster()
+		}
+		if key == glfw.KeyO && action == glfw.Press {
+			emu.Slower()
+		}
+
 	}
 }
 

@@ -25,7 +25,7 @@ type gui interface {
 type Options struct {
 	RomFilename      string
 	SBWriter         io.Writer
-	Speed            float64
+	Speedup          float64
 	DebugCPU         bool
 	DebugLCD         bool
 	DebugFlowControl bool
@@ -41,6 +41,7 @@ type Gameboy struct {
 	start  time.Time
 	opts   Options
 	cancel func()
+	dur    time.Duration
 	frame  int
 }
 
@@ -63,42 +64,44 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 		start:  start,
 		opts:   opts,
 		cancel: cancel,
+		dur:    time.Duration(int(frameDuration / opts.Speedup)),
 	}
 }
 
-func (gb *Gameboy) runFrame(gui gui) {
+func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// The Game Boy clock runs at 4.194304MHz
 	// There are 4 clock cycles to a "machine cycle" giving 1048576 machine cycles per second
 	// Each loop iteration below represents one machine cycle (i.e. 4 clock cycles)
 	// Each LCD frame is 17556 machine cycles
 	for tick := 0; tick < 17556; tick++ {
-		gb.lcd.Tick(gb.frame > 500)
+		gb.lcd.Tick()
 		gb.cpu.Tick(gb.mem)
 		gb.hwr.Tick()
 	}
 	if gui != nil {
 		gui.DrawFrame(gb.lcd.Frame)
 	}
+	time.Sleep(time.Until(end))
 	gb.frame++
-	expectedFrameEndTime := gb.start.Add(time.Duration(gb.frame * int(frameDuration*gb.opts.Speed)))
-	sleepDuration := time.Until(expectedFrameEndTime)
-	time.Sleep(sleepDuration)
 }
 
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context, gui gui) {
+	end := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			gb.runFrame(gui)
+			end = end.Add(gb.dur)
+			gb.runFrame(gui, end)
 		}
 	}
 }
 
 // Time the Gameboy as it runs
 func (gb *Gameboy) Time(ctx context.Context, gui gui) {
+	end := time.Now()
 	for {
 		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
 		// On a real Gameboy this would take 1 second
@@ -108,11 +111,12 @@ func (gb *Gameboy) Time(ctx context.Context, gui gui) {
 			case <-ctx.Done():
 				return
 			default:
-				gb.runFrame(gui)
+				end = end.Add(gb.dur)
+				gb.runFrame(gui, end)
 			}
 		}
 		t1 := time.Now()
-		fmt.Println("=========>", (t1.Sub(t0)))
+		fmt.Println("=========> ", t1.Sub(t0))
 	}
 }
 
@@ -179,11 +183,6 @@ func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 	}
 }
 
-// Debug enabled for the UI
-func (gb *Gameboy) Debug() bool {
-	return gb.opts.DebugLCD
-}
-
 // Screenshot writes a screenshot to file
 func (gb *Gameboy) Screenshot() {
 	t := time.Now()
@@ -200,6 +199,21 @@ func (gb *Gameboy) Screenshot() {
 	if err != nil {
 		fmt.Println(err)
 	}
+}
+
+// Faster makes the emulator run faster
+func (gb *Gameboy) Faster() {
+	gb.dur /= 2
+}
+
+// Slower makes the emulator run slower
+func (gb *Gameboy) Slower() {
+	gb.dur *= 2
+}
+
+// Debug enabled for the UI
+func (gb *Gameboy) Debug() bool {
+	return gb.opts.DebugLCD
 }
 
 // Shutdown the emulator
