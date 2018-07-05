@@ -73,7 +73,7 @@ func NewLCD(hwr *mem.HardwareRegisters, memory *mem.Memory, debug bool) *LCD {
 		hwr:      hwr,
 		videoRAM: &memory.VideoRAM,
 		oam:      &memory.OAM,
-		Frame:    image.NewRGBA(image.Rect(0, 0, 256, 144)),
+		Frame:    image.NewRGBA(image.Rect(0, 0, 256, 256)),
 		debug:    debug,
 	}
 	memory.WriteNotification = &lcd
@@ -135,7 +135,7 @@ func (lcd *LCD) Tick() {
 			lcd.hwr.IF |= 0x02
 		}
 		// Render LCD line
-		lcd.updateLcdLine()
+		lcd.updateLcdLine(lcd.hwr.LY)
 	}
 
 	// Check coincidence flag
@@ -279,6 +279,9 @@ func (lcd *LCD) readSpriteTile(tileNumber uint16, att uint8) *[8][8]uint8 {
 }
 
 func (lcd *LCD) updateSprites(lcdY uint8) {
+	if lcdY >= 144 {
+		return
+	}
 	if lcd.largeSprites() {
 		panic(fmt.Sprintf("Large sprites are not supported"))
 	}
@@ -356,11 +359,19 @@ func (lcd *LCD) renderLine(y, scy uint8) {
 	}
 }
 
-func (lcd *LCD) updateLcdLine() {
-	y := lcd.hwr.LY
+func (lcd *LCD) updateLcdLine(y uint8) {
 	scy := lcd.hwr.SCY
 	lcd.updateBG(y, scy)
 	lcd.updateWindow(y)
 	lcd.updateSprites(y)
 	lcd.renderLine(y, scy)
+}
+
+// FrameEnd writes any remaining VRAM lines to the GUI for debugging
+func (lcd *LCD) FrameEnd() {
+	if lcd.debug {
+		for y := lcd.hwr.SCY + 144; y < lcd.hwr.SCY || y >= lcd.hwr.SCY+144; y++ {
+			lcd.updateLcdLine(y)
+		}
+	}
 }

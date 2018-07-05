@@ -15,6 +15,7 @@ type GL struct {
 	window  *glfw.Window
 	texture uint32
 	width   float32
+	height  float32
 }
 
 // NewGL implements a user interface in GL
@@ -25,16 +26,19 @@ func NewGL(emu Emulator) *GL {
 	}
 	// define window width
 	var width float32
+	var height float32
 	if emu.Debug() {
 		width = 256
+		height = 256
 	} else {
 		width = 160
+		height = 144
 	}
 	// create window
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.Resizable, 0)
-	window, err := glfw.CreateWindow(int(width*3), 144*3, "Tetromino", nil, nil)
+	window, err := glfw.CreateWindow(int(width*3), int(height*3), "Tetromino", nil, nil)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -54,6 +58,7 @@ func NewGL(emu Emulator) *GL {
 		window:  window,
 		texture: createTexture(),
 		width:   width,
+		height:  height,
 	}
 }
 
@@ -62,7 +67,7 @@ func (glx *GL) DrawFrame(image *image.RGBA) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
 	setTexture(image)
-	drawBuffer(glx.window, glx.width)
+	drawBuffer(glx.window, glx.width, glx.height)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	glx.window.SwapBuffers()
 	glfw.PollEvents()
@@ -146,10 +151,10 @@ func setTexture(im *image.RGBA) {
 		0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(im.Pix))
 }
 
-func drawBuffer(window *glfw.Window, width float32) {
+func drawBuffer(window *glfw.Window, width, height float32) {
 	w, h := window.GetFramebufferSize()
 	s1 := float32(w) / width
-	s2 := float32(h) / 144
+	s2 := float32(h) / height
 	f := float32(1 - 0)
 	var x, y float32
 	if s1 >= s2 {
@@ -160,9 +165,9 @@ func drawBuffer(window *glfw.Window, width float32) {
 		y = f * s1 / s2
 	}
 	gl.Begin(gl.QUADS)
-	gl.TexCoord2f(0, 1)
+	gl.TexCoord2f(0, height/256.0)
 	gl.Vertex2f(-x, -y)
-	gl.TexCoord2f(width/256.0, 1)
+	gl.TexCoord2f(width/256.0, height/256.0)
 	gl.Vertex2f(x, -y)
 	gl.TexCoord2f(width/256.0, 0)
 	gl.Vertex2f(x, y)

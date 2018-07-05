@@ -78,6 +78,7 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 		gb.cpu.Tick(gb.mem)
 		gb.hwr.Tick()
 	}
+	gb.lcd.FrameEnd()
 	if gui != nil {
 		gui.DrawFrame(gb.lcd.Frame)
 	}
