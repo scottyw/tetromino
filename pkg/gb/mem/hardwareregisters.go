@@ -93,11 +93,11 @@ type HardwareRegisters struct {
 	TIMA byte
 	TMA  byte
 	TAC  byte
+	JOYP byte
 
 	// JOYP
-	joypReadDirection bool
-	DirectionInput    uint8
-	ButtonInput       uint8
+	DirectionInput uint8
+	ButtonInput    uint8
 
 	// Misc
 	divTick   uint32
@@ -167,7 +167,7 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 	// case NR51:
 	// case NR52:
 	case JOYP:
-		return mem.hwr.joypRead()
+		return mem.hwr.readJOYP()
 	// case SB:
 	// case SC:
 	case DIV:
@@ -256,7 +256,7 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 	case NR52:
 		// FIXME sound support
 	case JOYP:
-		mem.hwr.joypWrite(value)
+		mem.hwr.JOYP = value
 	case SB:
 		mem.hwr.sbWriter.Write([]byte{value})
 	case SC:
@@ -274,21 +274,20 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 	}
 }
 
-func (r *HardwareRegisters) joypRead() uint8 {
-	if r.joypReadDirection {
-		return r.DirectionInput
-	}
-	return r.ButtonInput
-}
+func (r *HardwareRegisters) readJOYP() uint8 {
 
-func (r *HardwareRegisters) joypWrite(value uint8) {
 	// Bit 5 - P15 Select Button Keys      (0=Select)
 	// Bit 4 - P14 Select Direction Keys   (0=Select)
-	if value&0x20 == 0 {
-		r.joypReadDirection = false
-	} else if value&0x10 == 0 {
-		r.joypReadDirection = true
+
+	if r.JOYP&0x10 == 0 {
+		return r.JOYP&0xf0 | r.DirectionInput&0x0f
 	}
+
+	if r.JOYP&0x20 == 0 {
+		return r.JOYP&0xf0 | r.ButtonInput&0x0f
+	}
+
+	return r.JOYP | 0x0f
 }
 
 func (mem *Memory) dma(addrPrefix uint8) {
