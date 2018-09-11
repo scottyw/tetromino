@@ -57,6 +57,7 @@ type CPU struct {
 	debugFlowControl bool
 	debugJumps       bool
 	validateFlags    bool
+	Mooneye          bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -82,6 +83,11 @@ func NewCPU(hwr *mem.HardwareRegisters, debugCPU, debugFlowControl, debugJumps b
 // Start the CPU again on button press
 func (cpu *CPU) Start() {
 	cpu.stopped = false
+}
+
+// A returns the value of register a
+func (cpu *CPU) A() uint8 {
+	return cpu.a
 }
 
 func (cpu *CPU) bc() uint16 {

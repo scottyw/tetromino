@@ -58,7 +58,11 @@ See [this page](https://github.com/go-gl/glfw) if those instructions don't work 
 
 You can find a huge amount of great information about the Game Boy out there and many people have shared their work for others to build on. Thanks to everyone who has shared their experiences, code and documentation.
 
-These ones have been invaluable for me:
+Incredible test roms from:
+* blargg
+* Gekkio (https://github.com/Gekkio/mooneye-gb)
+
+These resources have been invaluable for me:
 * http://marc.rawer.de/Gameboy/Docs/GBCPUman.pdf
 * http://bgb.bircd.org/pandocs.htm
 * http://cturt.github.io/cinoop.html

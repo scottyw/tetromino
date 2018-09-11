@@ -177,6 +177,9 @@ func (cpu *CPU) dispatchOneByteInstruction(mem *mem.Memory, instruction uint8) {
 		cpu.ld(&cpu.b, cpu.a) // LD B A []
 	case 0x40:
 		cpu.ld(&cpu.b, cpu.b) // LD B B []
+		// Mooneye uses this instruction as a magic breakpoint
+		// to indicate that a test rom has completeed
+		cpu.Mooneye = true
 	case 0x41:
 		cpu.ld(&cpu.b, cpu.c) // LD B C []
 	case 0x42:
