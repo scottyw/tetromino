@@ -1,0 +1,81 @@
+package timer
+
+var counterBitMasks = []uint16{
+	uint16(1) << 9,
+	uint16(1) << 3,
+	uint16(1) << 5,
+	uint16(1) << 7,
+}
+
+// Timer stores the state of the internal timer
+type Timer struct {
+	counter     uint16
+	tac         uint8
+	tima        uint8
+	tma         uint8
+	lastEdgeSet bool
+}
+
+// NewTimer creates an initialized timer
+func NewTimer() *Timer {
+	return &Timer{
+		counter: 0xabcc,
+	}
+}
+
+// Tick updates the timer after a clock tick
+func (t *Timer) Tick() {
+	t.counter += 4
+	t.incrementTima()
+}
+
+func (t *Timer) incrementTima() {
+	enableBitSet := t.tac&0x04 > 0
+	counterBitSet := t.counter&counterBitMasks[t.tac&0x03] > 0
+	edgeSet := enableBitSet && counterBitSet
+	// Is this a falling edge?
+	if t.lastEdgeSet && !edgeSet {
+		t.tima++
+	}
+	t.lastEdgeSet = edgeSet
+}
+
+// Reset the counter to zero, used when a value is written to DIV
+func (t *Timer) Reset() {
+	t.counter = 0
+}
+
+// DIV returns the value of the DIV register
+func (t *Timer) DIV() uint8 {
+	return uint8(t.counter >> 8)
+}
+
+// TAC returns the value of the TAC register
+func (t *Timer) TAC() uint8 {
+	return t.tac
+}
+
+// TIMA returns the value of the TIMA register
+func (t *Timer) TIMA() uint8 {
+	return t.tima
+}
+
+// TMA returns the value of the TMA register
+func (t *Timer) TMA() uint8 {
+	return t.tma
+}
+
+// WriteTAC returns the value of the TAC register
+func (t *Timer) WriteTAC(value uint8) {
+	t.tac = value
+}
+
+// WriteTIMA returns the value of the TIMA register
+func (t *Timer) WriteTIMA(value uint8) {
+	t.tima = value
+}
+
+// WriteTMA returns the value of the TMA register
+func (t *Timer) WriteTMA(value uint8) {
+	t.tma = value
+}
