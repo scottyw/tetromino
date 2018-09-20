@@ -176,3 +176,59 @@ func TestTIMAOnFrequentReset64(t *testing.T) {
 func TestTIMAOnFrequentReset256(t *testing.T) {
 	testTIMAOnFrequentReset(t, 0x07)
 }
+
+func testTIMAOnDisable(t *testing.T, tac uint8, ticksPerIncrement int) {
+	// Disable after less than half the required ticks does not increment
+	timer := NewTimer()
+	timer.WriteTAC(tac)
+	timer.Reset()
+	ticks(timer, ticksPerIncrement*3)
+	assertTima(t, timer, 0x03)
+	ticks(timer, ticksPerIncrement/2-1)
+	assertTima(t, timer, 0x03)
+	timer.WriteTAC(tac & 0x03)
+	ticks(timer, 1)
+	assertTima(t, timer, 0x03)
+	// Disable after more than half the required ticks does increment
+	timer = NewTimer()
+	timer.WriteTAC(tac)
+	timer.Reset()
+	ticks(timer, ticksPerIncrement*3)
+	assertTima(t, timer, 0x03)
+	ticks(timer, ticksPerIncrement/2+1)
+	assertTima(t, timer, 0x03)
+	timer.WriteTAC(tac & 0x03)
+	ticks(timer, 1)
+	assertTima(t, timer, 0x04)
+}
+
+func TestTIMAOnDisable1024(t *testing.T) {
+	testTIMAOnDisable(t, 0x04, 1024/4)
+}
+
+func TestTIMAOnDisable16(t *testing.T) {
+	testTIMAOnDisable(t, 0x05, 16/4)
+}
+
+func TestTIMAOnDisable64(t *testing.T) {
+	testTIMAOnDisable(t, 0x06, 64/4)
+}
+
+func TestTIMAOnDisable256(t *testing.T) {
+	testTIMAOnDisable(t, 0x07, 256/4)
+}
+
+func TestTIMAOnTACChange(t *testing.T) {
+	// Setup
+	timer := NewTimer()
+	timer.WriteTAC(0x06)
+	timer.Reset()
+	ticks(timer, 0x1110/4-8)
+	assertTima(t, timer, 0x43)
+	assertCounter(t, timer, 0x10f0)
+	// Now change TAC and expect a TIMA increment
+	timer.WriteTAC(0x05)
+	ticks(timer, 1)
+	assertTima(t, timer, 0x44)
+	assertCounter(t, timer, 0x10f4)
+}
