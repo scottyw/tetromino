@@ -13,8 +13,7 @@ import (
 	"github.com/scottyw/tetromino/pkg/ui"
 )
 
-func main() {
-
+func showHelp() {
 	fmt.Println()
 	fmt.Println("Welcome to Tetromino!")
 	fmt.Println()
@@ -28,9 +27,13 @@ func main() {
 	fmt.Println("O : Run slower")
 	fmt.Println("P : Run faster")
 	fmt.Println()
+}
+
+func main() {
 
 	// Command line flags
 	romFilename := flag.String("f", "", "ROM filename")
+	help := flag.Bool("h", false, "Show help")
 	outputSerial := flag.Bool("output-serial-data", false, "When true, data sent to the serial port will be written to console")
 	speedup := flag.Float64("speedup", 10, "The speed at which to run as a multiplier e.g. 1 for normal speed, 2 for double, 0.5 for half")
 	debugCPU := flag.Bool("debug-cpu", false, "When true, CPU debugging is enabled")
@@ -40,6 +43,10 @@ func main() {
 	enableTiming := flag.Bool("enable-timing", false, "When true, timing is output every 60 frames")
 	enableProfiling := flag.Bool("enable-profiling", false, "When true, CPU profiling data is written to 'cpuprofile.pprof'")
 	flag.Parse()
+
+	if *help {
+		showHelp()
+	}
 
 	// CPU profiling
 	if *enableProfiling {
