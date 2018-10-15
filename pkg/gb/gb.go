@@ -70,13 +70,12 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 
 func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// The Game Boy clock runs at 4.194304MHz
-	// There are 4 clock cycles to a "machine cycle" giving 1048576 machine cycles per second
-	// Each loop iteration below represents one machine cycle (i.e. 4 clock cycles)
-	// Each LCD frame is 17556 machine cycles
-	for tick := 0; tick < 17556; tick++ {
-		gb.lcd.Tick()
-		gb.cpu.Tick(gb.mem)
+	// Each loop iteration below represents one clock cycles
+	// Each LCD frame is 70224 clock cycles
+	for tick := 0; tick < 70224; tick++ {
 		gb.hwr.Tick()
+		gb.cpu.Tick(gb.mem)
+		gb.lcd.Tick()
 	}
 	gb.lcd.FrameEnd()
 	if gui != nil {

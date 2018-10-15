@@ -17,12 +17,14 @@ type metadata struct {
 	Addr     string   `json:"addr"`
 	Operand1 string   `json:"operand1,omitempty"`
 	Operand2 string   `json:"operand2,omitempty"`
+	Dispatch uint8
+	Prefixed bool
 	Func     func(*CPU, *mem.Memory, string, string, uint8, uint16) map[string]bool
 }
 
 type metadataContainer struct {
-	Unprefixed map[string]metadata `json:"unprefixed"`
-	Cbprefixed map[string]metadata `json:"cbprefixed"`
+	Unprefixed map[string]*metadata `json:"unprefixed"`
+	Cbprefixed map[string]*metadata `json:"cbprefixed"`
 }
 
 func noFlags(flags []string) bool {
@@ -67,19 +69,21 @@ func validateInstructionConsistencyThree(im metadata) {
 	}
 }
 
-func initInstructionArray(instructionMap map[string]metadata, arrayToInit *[256]metadata, unprefixed bool) {
+func initInstructionArray(instructionMap map[string]*metadata, arrayToInit *[256]*metadata, prefixed bool) {
 	for addrStr, instruction := range instructionMap {
+		instruction.Prefixed = prefixed
 		addr, err := strconv.ParseUint(addrStr, 0, 8)
 		if err != nil {
 			panic(err)
 		}
+		instruction.Dispatch = uint8(addr)
 		if noFlags(instruction.Flags) {
 			instruction.Flags = nil
 		}
-		// Divide cycles by 4 because we're counting machine cycles, not clock cycles
-		for i := 0; i < len(instruction.Cycles); i++ {
-			instruction.Cycles[i] /= 4
-		}
+		// // Divide cycles by 4 because we're counting machine cycles, not clock cycles
+		// for i := 0; i < len(instruction.Cycles); i++ {
+		// 	instruction.Cycles[i] /= 4
+		// }
 		(*arrayToInit)[addr] = instruction
 	}
 }
@@ -90,8 +94,8 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	initInstructionArray(metadataContainer.Unprefixed, &instructionMetadata, true)
-	initInstructionArray(metadataContainer.Cbprefixed, &prefixedInstructionMetadata, false)
+	initInstructionArray(metadataContainer.Unprefixed, &instructionMetadata, false)
+	initInstructionArray(metadataContainer.Cbprefixed, &prefixedInstructionMetadata, true)
 }
 
 var metadataJSON = `

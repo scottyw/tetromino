@@ -24,9 +24,9 @@ const (
 
 var bits = [8]uint8{bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7}
 
-var instructionMetadata [256]metadata
+var instructionMetadata [256]*metadata
 
-var prefixedInstructionMetadata [256]metadata
+var prefixedInstructionMetadata [256]*metadata
 
 // CPU stores the internal CPU state
 type CPU struct {
@@ -46,11 +46,13 @@ type CPU struct {
 	ime      bool
 	halted   bool
 	stopped  bool
-	altCount bool
+	altTicks bool
 
 	// Hardware
-	hwr   *mem.HardwareRegisters
-	ticks int
+	hwr     *mem.HardwareRegisters
+	ticks   int
+	mticks  int32
+	pending *metadata
 
 	// Debug
 	debugCPU         bool
@@ -178,11 +180,15 @@ func c8Sub(a, b uint8) bool {
 }
 
 func (cpu *CPU) checkInterrupts(memory *mem.Memory) {
-	interrupts := cpu.hwr.IE & cpu.hwr.IF
+	interrupts := cpu.hwr.IE & cpu.hwr.IF & 0x1f
 	if interrupts > 0 {
-		cpu.halted = false
+		if cpu.halted {
+			cpu.ticks += 4
+			cpu.halted = false
+		}
 		if cpu.ime {
 			cpu.ime = false
+			cpu.ticks += 20
 			switch {
 			case interrupts&bit0 > 0:
 				// 0040 Vertical Blank Interrupt Start Address
@@ -256,67 +262,80 @@ func validateFlags(f1, f2 uint8, im metadata) {
 	validateFlag("C", 3, f1, f2, im)
 }
 
-func (cpu *CPU) execute(mem *mem.Memory) int {
-	f := cpu.f
-	pc := cpu.pc
-	instruction := mem.Read(cpu.pc)
-	im := instructionMetadata[instruction]
-	if im.Addr == "" {
-		panic(fmt.Sprintf("Unknown instruction opcode: %v", instruction))
+func (cpu *CPU) peek(mem *mem.Memory) {
+	instructionByte := mem.Read(cpu.pc)
+	cpu.pending = instructionMetadata[instructionByte]
+	if cpu.pending.Addr == "" {
+		panic(fmt.Sprintf("Unknown instruction opcode: %v", cpu.pending))
 	}
-	if instruction == 0xcb {
-		instruction = mem.Read(cpu.pc + 1)
-		im = prefixedInstructionMetadata[instruction]
+	if instructionByte == 0xcb {
+		instructionByte = mem.Read(cpu.pc + 1)
+		cpu.pending = prefixedInstructionMetadata[instructionByte]
+	}
+}
+
+func (cpu *CPU) execute(mem *mem.Memory) {
+	pc := cpu.pc
+	f := cpu.f
+	var value string
+	if cpu.pending.Prefixed {
 		cpu.pc += 2
-		cpu.dispatchPrefixedInstruction(mem, instruction)
-		if cpu.debugCPU {
-			fmt.Printf("0x%04x: [%02x] %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-				pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-		}
+		cpu.dispatchPrefixedInstruction(mem, cpu.pending.Dispatch)
 	} else {
-		switch im.Length {
+		switch cpu.pending.Length {
 		case 1:
 			cpu.pc++
-			cpu.dispatchOneByteInstruction(mem, instruction)
-			if cpu.debugCPU {
-				fmt.Printf("0x%04x: [%02x] %-12s |      | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-					pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-			}
+			cpu.dispatchOneByteInstruction(mem, cpu.pending.Dispatch)
 		case 2:
 			u8 := mem.Read(cpu.pc + 1)
+			value = fmt.Sprintf("%02x", u8)
 			cpu.pc += 2
-			cpu.dispatchTwoByteInstruction(mem, instruction, u8)
-			if cpu.debugCPU {
-				fmt.Printf("0x%04x: [%02x] %-12s | %02x   | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-					pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u8, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-			}
+			cpu.dispatchTwoByteInstruction(mem, cpu.pending.Dispatch, u8)
 		case 3:
 			u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
+			value = fmt.Sprintf("%04x", u16)
 			cpu.pc += 3
-			cpu.dispatchThreeByteInstruction(mem, instruction, u16)
-			if cpu.debugCPU {
-				fmt.Printf("0x%04x: [%02x] %-12s | %04x | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-					pc, instruction, fmt.Sprintf("%s %s %s", im.Mnemonic, im.Operand1, im.Operand2), u16, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
-			}
+			cpu.dispatchThreeByteInstruction(mem, cpu.pending.Dispatch, u16)
 		}
 	}
 	if cpu.validateFlags {
-		validateFlags(f, cpu.f, im)
+		validateFlags(f, cpu.f, *cpu.pending)
 	}
-	if len(im.Cycles) > 1 && cpu.altCount {
-		return im.Cycles[1]
+	if cpu.debugCPU {
+		fmt.Printf("0x%08x - 0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+			lastTicks, pc, cpu.pending.Dispatch, fmt.Sprintf("%s %s %s", cpu.pending.Mnemonic, cpu.pending.Operand1, cpu.pending.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 	}
-	return im.Cycles[0]
+	if len(cpu.pending.Cycles) > 1 && !cpu.altTicks {
+		// Add on the extra ticks
+		cpu.ticks += cpu.pending.Cycles[0] - cpu.pending.Cycles[1]
+		// Make sure the added ticks don't cause this instruction to be executed twice
+		cpu.pending = nil
+	}
+	cpu.altTicks = false
 }
+
+var lastTicks int32 // FIXME
 
 // Tick runs the CPU for one machine cycle i.e. 4 clock cycles
 func (cpu *CPU) Tick(mem *mem.Memory) {
 	if cpu.ticks == 0 {
 		cpu.checkInterrupts(mem)
-		if !cpu.halted && !cpu.stopped {
-			cpu.ticks = cpu.execute(mem)
+		if cpu.halted || cpu.stopped {
+			return
 		}
-	} else {
-		cpu.ticks--
+		lastTicks = cpu.mticks
+		cpu.peek(mem)
+		if len(cpu.pending.Cycles) > 1 {
+			cpu.ticks += cpu.pending.Cycles[1]
+		} else {
+			cpu.ticks += cpu.pending.Cycles[0]
+		}
 	}
+	if cpu.ticks == 1 {
+		if cpu.pending != nil {
+			cpu.execute(mem)
+		}
+	}
+	cpu.mticks++
+	cpu.ticks--
 }

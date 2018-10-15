@@ -9,7 +9,7 @@ import (
 func TestSanity(t *testing.T) {
 	// Check all unprefixed instructions are fundamentally sound
 	for instruction := 0; instruction < 256; instruction++ {
-		if instruction == 0xcb || instructionMetadata[instruction].Mnemonic == "" {
+		if instruction == 0xcb || instructionMetadata[instruction] == nil {
 			continue
 		}
 		hwr := mem.NewHardwareRegisters(nil)
@@ -18,6 +18,7 @@ func TestSanity(t *testing.T) {
 		rom := make([]byte, 0x0200)
 		memory := mem.NewMemory(hwr, rom)
 		rom[0x100] = uint8(instruction)
+		cpu.peek(memory)
 		cpu.execute(memory)
 	}
 	// Check all prefixed instructions are fundamentally sound
@@ -29,6 +30,7 @@ func TestSanity(t *testing.T) {
 		memory := mem.NewMemory(hwr, rom)
 		rom[0x100] = 0xcb
 		rom[0x101] = uint8(instruction)
+		cpu.peek(memory)
 		cpu.execute(memory)
 	}
 }

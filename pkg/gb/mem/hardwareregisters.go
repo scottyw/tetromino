@@ -125,7 +125,7 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 	case IE:
 		return mem.hwr.IE
 	case IF:
-		return mem.hwr.IF
+		return mem.hwr.IF | 0xe0 // Top 3 bits are always high
 	case LCDC:
 		return mem.hwr.LCDC
 	case STAT:
@@ -308,13 +308,13 @@ func (r *HardwareRegisters) timerIncrementFreq() uint32 {
 	// 11:  16384 Hz   (~16780 Hz SGB)
 	switch r.TAC & 0x03 {
 	case 0:
-		return 256
+		return 1024
 	case 1:
-		return 4
-	case 2:
 		return 16
-	case 3:
+	case 2:
 		return 64
+	case 3:
+		return 256
 	}
 	log.Fatal("Timer frequency error")
 	return 0
@@ -323,7 +323,7 @@ func (r *HardwareRegisters) timerIncrementFreq() uint32 {
 // Tick updates the hardware registers on each clock tick
 func (r *HardwareRegisters) Tick() {
 	r.divTick++
-	if r.divTick >= 64 {
+	if r.divTick >= 256 {
 		r.divTick = 0
 		r.DIV++
 	}

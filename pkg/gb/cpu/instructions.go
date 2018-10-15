@@ -110,7 +110,7 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 			}
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
@@ -119,7 +119,7 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 			}
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
@@ -128,7 +128,7 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 			}
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
@@ -137,7 +137,7 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 			}
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for call: %v %v", kind, a16))
@@ -271,7 +271,7 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 			}
 			cpu.jp("", a16)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
@@ -280,7 +280,7 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 			}
 			cpu.jp("", a16)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
@@ -289,7 +289,7 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 			}
 			cpu.jp("", a16)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
@@ -298,7 +298,7 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 			}
 			cpu.jp("", a16)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for jp: %v %v", kind, a16))
@@ -456,7 +456,7 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 			}
 			cpu.ret("", mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
@@ -465,7 +465,7 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 			}
 			cpu.ret("", mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
@@ -474,7 +474,7 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 			}
 			cpu.ret("", mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
@@ -483,7 +483,7 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 			}
 			cpu.ret("", mem)
 		} else {
-			cpu.altCount = true
+			cpu.altTicks = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for ret"))

@@ -99,10 +99,10 @@ func (lcd *LCD) Tick() {
 	}
 
 	// Where are we on the LCD?
-	lcd.hwr.LY = uint8(lcd.tick / 114)
-	x := lcd.tick % 114
+	lcd.hwr.LY = uint8(lcd.tick / 456)
+	x := lcd.tick % 456
 	lcd.tick++
-	if lcd.tick >= 17556 {
+	if lcd.tick >= 70224 {
 		lcd.tick = 0
 	}
 
