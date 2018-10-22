@@ -179,7 +179,7 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 	case TAC:
 		return mem.hwr.TAC
 	default:
-		return 0
+		return 0xff
 	}
 }
 
