@@ -11,7 +11,6 @@ type Memory struct {
 	mbc               mbc
 	VideoRAM          [0x2000]byte
 	internalRAM       [0x2000]byte
-	cartRAM           [0x2000]byte
 	OAM               [0xa0]byte
 	zeroPage          [0x8f]byte
 	WriteNotification WriteNotification
@@ -51,7 +50,7 @@ func (mem *Memory) Read(addr uint16) byte {
 	case addr < 0xa000:
 		return mem.VideoRAM[addr-0x8000]
 	case addr < 0xc000:
-		return mem.cartRAM[addr-0xa000]
+		return mem.mbc.read(addr)
 	case addr < 0xe000:
 		return mem.internalRAM[addr-0xc000]
 	case addr < 0xfe00:
@@ -82,7 +81,7 @@ func (mem *Memory) Write(addr uint16, value byte) {
 		}
 		mem.VideoRAM[addr-0x8000] = value
 	case addr < 0xc000:
-		mem.cartRAM[addr-0xa000] = value
+		mem.mbc.write(addr, value)
 	case addr < 0xe000:
 		mem.internalRAM[addr-0xc000] = value
 	case addr < 0xfe00:

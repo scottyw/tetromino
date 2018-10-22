@@ -302,8 +302,8 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 		validateFlags(f, cpu.f, *cpu.pending)
 	}
 	if cpu.debugCPU {
-		fmt.Printf("0x%08x - 0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-			lastTicks, pc, cpu.pending.Dispatch, fmt.Sprintf("%s %s %s", cpu.pending.Mnemonic, cpu.pending.Operand1, cpu.pending.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+			pc, cpu.pending.Dispatch, fmt.Sprintf("%s %s %s", cpu.pending.Mnemonic, cpu.pending.Operand1, cpu.pending.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 	}
 	if len(cpu.pending.Cycles) > 1 && !cpu.altTicks {
 		// Add on the extra ticks
