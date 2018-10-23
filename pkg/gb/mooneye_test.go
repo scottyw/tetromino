@@ -164,31 +164,31 @@ func TestMooneye29(t *testing.T) { runMooneyeTest(t, "acceptance/instr/daa.gb") 
 
 // func TestMooneye61(t *testing.T) { runMooneyeTest(t, "acceptance/serial/boot_sclk_align-dmgABCmgb.gb") }
 
-// func TestMooneye62(t *testing.T) { runMooneyeTest(t, "acceptance/timer/div_write.gb") }
+func TestMooneye62(t *testing.T) { runMooneyeTest(t, "acceptance/timer/div_write.gb") }
 
-// func TestMooneye63(t *testing.T) { runMooneyeTest(t, "acceptance/timer/rapid_toggle.gb") }
+func TestMooneye63(t *testing.T) { runMooneyeTest(t, "acceptance/timer/rapid_toggle.gb") }
 
-// func TestMooneye64(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim00.gb") }
+func TestMooneye64(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim00.gb") }
 
-// func TestMooneye65(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim00_div_trigger.gb") }
+func TestMooneye65(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim00_div_trigger.gb") }
 
-// func TestMooneye66(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim01.gb") }
+func TestMooneye66(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim01.gb") }
 
-// func TestMooneye67(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim01_div_trigger.gb") }
+func TestMooneye67(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim01_div_trigger.gb") }
 
-// func TestMooneye68(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim10.gb") }
+func TestMooneye68(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim10.gb") }
 
-// func TestMooneye69(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim10_div_trigger.gb") }
+func TestMooneye69(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim10_div_trigger.gb") }
 
-// func TestMooneye70(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim11.gb") }
+func TestMooneye70(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim11.gb") }
 
-// func TestMooneye71(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim11_div_trigger.gb") }
+func TestMooneye71(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim11_div_trigger.gb") }
 
-// func TestMooneye72(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_reload.gb") }
+func TestMooneye72(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_reload.gb") }
 
-// func TestMooneye73(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_write_reloading.gb") }
+func TestMooneye73(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_write_reloading.gb") }
 
-// func TestMooneye74(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tma_write_reloading.gb") }
+func TestMooneye74(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tma_write_reloading.gb") }
 
 // func TestMooneye75(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/bits_ram_en.gb") }
 

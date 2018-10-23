@@ -12,7 +12,7 @@ func TestSanity(t *testing.T) {
 		if instruction == 0xcb || instructionMetadata[instruction] == nil {
 			continue
 		}
-		hwr := mem.NewHardwareRegisters(nil)
+		hwr := mem.NewHardwareRegisters(nil, nil)
 		cpu := NewCPU(hwr, false, false, false)
 		cpu.validateFlags = true
 		rom := make([]byte, 0x0200)
@@ -23,7 +23,7 @@ func TestSanity(t *testing.T) {
 	}
 	// Check all prefixed instructions are fundamentally sound
 	for instruction := 0; instruction < 256; instruction++ {
-		hwr := mem.NewHardwareRegisters(nil)
+		hwr := mem.NewHardwareRegisters(nil, nil)
 		cpu := NewCPU(hwr, false, false, false)
 		cpu.validateFlags = true
 		rom := make([]byte, 0x0200)

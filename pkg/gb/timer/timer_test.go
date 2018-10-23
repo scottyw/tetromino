@@ -5,10 +5,12 @@ import (
 	"testing"
 )
 
-func ticks(timer *Timer, ticks int) {
-	for i := 0; i < ticks; i++ {
-		timer.Tick()
+func mticks(timer *Timer, mticks int) bool {
+	var interrupt bool
+	for i := 0; i < mticks; i++ {
+		interrupt = interrupt || timer.MTick()
 	}
+	return interrupt
 }
 
 func assertCounter(t *testing.T, timer *Timer, counter uint16) {
@@ -39,25 +41,25 @@ func assertTima(t *testing.T, timer *Timer, tima uint8) {
 	}
 }
 
-func TestTick(t *testing.T) {
+func TestMTick(t *testing.T) {
 	timer := NewTimer()
 	assertCounter(t, timer, 0xabcc)
-	timer.Tick()
+	timer.MTick()
 	assertCounter(t, timer, 0xabd0)
-	timer.Tick()
+	timer.MTick()
 	assertCounter(t, timer, 0xabd4)
 }
 
 func TestDIV(t *testing.T) {
 	timer := NewTimer()
 	assertDiv(t, timer, 0xab)
-	ticks(timer, 12)
+	mticks(timer, 12)
 	assertDiv(t, timer, 0xab)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertDiv(t, timer, 0xac)
-	ticks(timer, 63)
+	mticks(timer, 63)
 	assertDiv(t, timer, 0xac)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertDiv(t, timer, 0xad)
 }
 
@@ -74,27 +76,27 @@ func TestDisabledTAC(t *testing.T) {
 		timer.WriteTAC(tac)
 		assertTac(t, timer, tac)
 		assertTima(t, timer, 0x0000)
-		ticks(timer, 2000)
+		mticks(timer, 2000)
 		assertTima(t, timer, 0x0000)
 	}
 }
 
-func testTIMA(t *testing.T, tac uint8, ticksPerIncrement int) {
+func testTIMA(t *testing.T, tac uint8, mticksPerIncrement int) {
 	timer := NewTimer()
 	timer.WriteTAC(tac)
 	timer.Reset()
 	assertTima(t, timer, 0x00)
-	ticks(timer, ticksPerIncrement-1)
+	mticks(timer, mticksPerIncrement-1)
 	assertTima(t, timer, 0x00)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x01)
-	ticks(timer, ticksPerIncrement-1)
+	mticks(timer, mticksPerIncrement-1)
 	assertTima(t, timer, 0x01)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x02)
-	ticks(timer, ticksPerIncrement-1)
+	mticks(timer, mticksPerIncrement-1)
 	assertTima(t, timer, 0x02)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x03)
 }
 
@@ -114,22 +116,22 @@ func TestTIMA256(t *testing.T) {
 	testTIMA(t, 0x07, 256/4)
 }
 
-func testTIMAOnReset(t *testing.T, tac uint8, ticksPerIncrement int) {
+func testTIMAOnReset(t *testing.T, tac uint8, mticksPerIncrement int) {
 	timer := NewTimer()
 	timer.WriteTAC(tac)
-	// Reset after less than half the required ticks does not increment
+	// Reset after less than half the required mticks does not increment
 	timer.Reset()
 	assertTima(t, timer, 0x00)
-	ticks(timer, ticksPerIncrement/2-1)
+	mticks(timer, mticksPerIncrement/2-1)
 	timer.Reset()
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x00)
-	// Reset after more than half the required ticks does increment
+	// Reset after more than half the required mticks does increment
 	timer.Reset()
 	assertTima(t, timer, 0x00)
-	ticks(timer, ticksPerIncrement/2+1)
+	mticks(timer, mticksPerIncrement/2+1)
 	timer.Reset()
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x01)
 }
 
@@ -156,7 +158,7 @@ func testTIMAOnFrequentReset(t *testing.T, tac uint8) {
 	for i := 0; i < 2000; i++ {
 		assertTima(t, timer, 0x00)
 		timer.Reset()
-		ticks(timer, 1)
+		mticks(timer, 1)
 		assertTima(t, timer, 0x00)
 	}
 }
@@ -177,28 +179,28 @@ func TestTIMAOnFrequentReset256(t *testing.T) {
 	testTIMAOnFrequentReset(t, 0x07)
 }
 
-func testTIMAOnDisable(t *testing.T, tac uint8, ticksPerIncrement int) {
-	// Disable after less than half the required ticks does not increment
+func testTIMAOnDisable(t *testing.T, tac uint8, mticksPerIncrement int) {
+	// Disable after less than half the required mticks does not increment
 	timer := NewTimer()
 	timer.WriteTAC(tac)
 	timer.Reset()
-	ticks(timer, ticksPerIncrement*3)
+	mticks(timer, mticksPerIncrement*3)
 	assertTima(t, timer, 0x03)
-	ticks(timer, ticksPerIncrement/2-1)
+	mticks(timer, mticksPerIncrement/2-1)
 	assertTima(t, timer, 0x03)
 	timer.WriteTAC(tac & 0x03)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x03)
-	// Disable after more than half the required ticks does increment
+	// Disable after more than half the required mticks does increment
 	timer = NewTimer()
 	timer.WriteTAC(tac)
 	timer.Reset()
-	ticks(timer, ticksPerIncrement*3)
+	mticks(timer, mticksPerIncrement*3)
 	assertTima(t, timer, 0x03)
-	ticks(timer, ticksPerIncrement/2+1)
+	mticks(timer, mticksPerIncrement/2+1)
 	assertTima(t, timer, 0x03)
 	timer.WriteTAC(tac & 0x03)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x04)
 }
 
@@ -223,12 +225,103 @@ func TestTIMAOnTACChange(t *testing.T) {
 	timer := NewTimer()
 	timer.WriteTAC(0x06)
 	timer.Reset()
-	ticks(timer, 0x1110/4-8)
+	mticks(timer, 0x1110/4-8)
 	assertTima(t, timer, 0x43)
 	assertCounter(t, timer, 0x10f0)
 	// Now change TAC and expect a TIMA increment
 	timer.WriteTAC(0x05)
-	ticks(timer, 1)
+	mticks(timer, 1)
 	assertTima(t, timer, 0x44)
 	assertCounter(t, timer, 0x10f4)
+}
+
+func TestTIMAReload(t *testing.T) {
+	// Setup
+	timer := NewTimer()
+	timer.WriteTAC(0x05)
+	timer.counter = 0
+	timer.tima = 0xff
+	timer.tma = 0x23
+	// Execute to one tick before rollover
+	interrupt := mticks(timer, 3)
+	assertTima(t, timer, 0xff)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// One more tick should rollover but not set TIMA correctly
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x00)
+	if !interrupt {
+		t.Errorf("Timer interrupt should have occurred")
+	}
+	// Another tick sets TIMA correctly
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x23)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+}
+
+func TestTIMAReloadWithWriteA(t *testing.T) {
+	// Setup
+	timer := NewTimer()
+	timer.WriteTAC(0x05)
+	timer.counter = 0
+	timer.tima = 0xff
+	timer.tma = 0x23
+	// Execute to one tick before rollover
+	interrupt := mticks(timer, 3)
+	assertTima(t, timer, 0xff)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// One more tick should rollover but not set TIMA correctly
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x00)
+	if !interrupt {
+		t.Errorf("Timer interrupt should have occurred")
+	}
+	// Write TIMA during the A cycle
+	timer.WriteTIMA(0x57)
+	// Another tick after the write should retain the written value
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x57)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+}
+
+func TestTIMAReloadWithWriteB(t *testing.T) {
+	// Setup
+	timer := NewTimer()
+	timer.WriteTAC(0x05)
+	timer.counter = 0
+	timer.tima = 0xff
+	timer.tma = 0x23
+	// Execute to one tick before rollover
+	interrupt := mticks(timer, 3)
+	assertTima(t, timer, 0xff)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// One more tick should rollover but not set TIMA correctly
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x00)
+	if !interrupt {
+		t.Errorf("Timer interrupt should have occurred")
+	}
+	// Another tick sets TIMA to match TMA
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x23)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// Write TMA during the B cycle
+	timer.WriteTMA(0x57)
+	// Another tick resets TIMA to match what was written to TMA last cycle
+	interrupt = timer.MTick()
+	assertTima(t, timer, 0x57)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
 }

@@ -88,8 +88,8 @@ func (lcd *LCD) WriteToVideoRAM(addr uint16) {
 	}
 }
 
-// Tick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) Tick() {
+// MTick runs the LCD driver for one machine cycle i.e. 4 clock cycles
+func (lcd *LCD) MTick() {
 
 	// Is the LCD enabled?
 	if !lcd.lcdDisplayEnable() {
@@ -99,10 +99,10 @@ func (lcd *LCD) Tick() {
 	}
 
 	// Where are we on the LCD?
-	lcd.hwr.LY = uint8(lcd.tick / 456)
-	x := lcd.tick % 456
+	lcd.hwr.LY = uint8(lcd.tick / 114)
+	x := lcd.tick % 114
 	lcd.tick++
-	if lcd.tick >= 70224 {
+	if lcd.tick >= 17556 {
 		lcd.tick = 0
 	}
 

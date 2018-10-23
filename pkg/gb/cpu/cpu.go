@@ -316,8 +316,8 @@ func (cpu *CPU) execute(mem *mem.Memory) {
 
 var lastTicks int32 // FIXME
 
-// Tick runs the CPU for one machine cycle i.e. 4 clock cycles
-func (cpu *CPU) Tick(mem *mem.Memory) {
+// CTick runs the CPU for one clock cycle
+func (cpu *CPU) CTick(mem *mem.Memory) {
 	if cpu.ticks == 0 {
 		cpu.checkInterrupts(mem)
 		if cpu.halted || cpu.stopped {

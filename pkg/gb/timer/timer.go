@@ -10,10 +10,12 @@ var counterBitMasks = []uint16{
 // Timer stores the state of the internal timer
 type Timer struct {
 	counter     uint16
+	overflow    uint16
 	tac         uint8
 	tima        uint8
 	tma         uint8
 	lastEdgeSet bool
+	timaWrite   bool
 }
 
 // NewTimer creates an initialized timer
@@ -23,21 +25,28 @@ func NewTimer() *Timer {
 	}
 }
 
-// Tick updates the timer after a clock tick
-func (t *Timer) Tick() {
+// MTick updates the timer after a machine cycle
+func (t *Timer) MTick() bool {
 	t.counter += 4
-	t.incrementTima()
-}
-
-func (t *Timer) incrementTima() {
+	var interrupt bool
+	if !t.timaWrite && t.counter == t.overflow {
+		t.tima = t.tma
+	}
+	t.timaWrite = false
+	// Check for a falling edge
 	enableBitSet := t.tac&0x04 > 0
 	counterBitSet := t.counter&counterBitMasks[t.tac&0x03] > 0
 	edgeSet := enableBitSet && counterBitSet
-	// Is this a falling edge?
 	if t.lastEdgeSet && !edgeSet {
 		t.tima++
+		// Check for overflow
+		if t.tima == 0 {
+			t.overflow = t.counter + 4
+			interrupt = true
+		}
 	}
 	t.lastEdgeSet = edgeSet
+	return interrupt
 }
 
 // Reset the counter to zero, used when a value is written to DIV
@@ -72,10 +81,16 @@ func (t *Timer) WriteTAC(value uint8) {
 
 // WriteTIMA returns the value of the TIMA register
 func (t *Timer) WriteTIMA(value uint8) {
-	t.tima = value
+	if t.counter != t.overflow {
+		t.tima = value
+		t.timaWrite = true
+	}
 }
 
 // WriteTMA returns the value of the TMA register
 func (t *Timer) WriteTMA(value uint8) {
 	t.tma = value
+	if t.counter == t.overflow {
+		t.tima = value
+	}
 }

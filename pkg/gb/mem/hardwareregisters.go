@@ -3,7 +3,8 @@ package mem
 import (
 	"io"
 	"io/ioutil"
-	"log"
+
+	"github.com/scottyw/tetromino/pkg/gb/timer"
 )
 
 // Register constants
@@ -53,28 +54,27 @@ const (
 
 	//
 	// Defaults
-	//
-	// [0x00] = 0x0f
-	// [0x10] = 0x80
-	// [0x11] = 0xbf
-	// [0x12] = 0xf3
-	// [0x14] = 0xbf
-	// [0x16] = 0x3f
-	// [0x19] = 0xbf
-	// [0x1a] = 0x7f
-	// [0x1b] = 0xff
-	// [0x1c] = 0x9f
-	// [0x1e] = 0xbf
-	// [0x20] = 0xff
-	// [0x23] = 0xbf
-	// [0x24] = 0x77
-	// [0x25] = 0xf3
-	// [0x26] = 0xf1
-	// [0x40] = 0x91
-	// [0x47] = 0xfc
-	// [0x48] = 0xff
-	// [0x49] = 0xff
 
+	JOYPDEFAULT = 0x0f
+	NR10DEFAULT = 0x80
+	NR11DEFAULT = 0xbf
+	NR12DEFAULT = 0xf3
+	NR13DEFAULT = 0xbf
+	NR21DEFAULT = 0x3f
+	NR24DEFAULT = 0xbf
+	NR30DEFAULT = 0x7f
+	NR31DEFAULT = 0xff
+	NR32DEFAULT = 0x9f
+	NR34DEFAULT = 0xbf
+	NR41DEFAULT = 0xff
+	NR44DEFAULT = 0xbf
+	NR50DEFAULT = 0x77
+	NR51DEFAULT = 0xf3
+	NR52DEFAULT = 0xf1
+	LCDCDEFAULT = 0x91
+	BGPDEFAULT  = 0xfc
+	OBP0DEFAULT = 0xff
+	OBP1DEFAULT = 0xff
 )
 
 // HardwareRegisters represents hardware registers between 0xff00 and 0xff7f
@@ -89,32 +89,30 @@ type HardwareRegisters struct {
 	STAT byte
 	WX   byte
 	WY   byte
-	DIV  byte
-	TIMA byte
-	TMA  byte
-	TAC  byte
 	JOYP byte
 
 	// JOYP
 	DirectionInput uint8
 	ButtonInput    uint8
 
+	// Timer
+	timer *timer.Timer
+
 	// Misc
-	divTick   uint32
-	timerTick uint32
-	sbWriter  io.Writer
+	sbWriter io.Writer
 }
 
 // NewHardwareRegisters creates a new representation of the hardware registers
-func NewHardwareRegisters(sbWriter io.Writer) *HardwareRegisters {
+func NewHardwareRegisters(timer *timer.Timer, sbWriter io.Writer) *HardwareRegisters {
 	if sbWriter == nil {
 		sbWriter = ioutil.Discard
 	}
 	return &HardwareRegisters{
-		LCDC:           0x91,
+		LCDC:           LCDCDEFAULT,
+		DirectionInput: JOYPDEFAULT,
+		ButtonInput:    JOYPDEFAULT,
+		timer:          timer,
 		sbWriter:       sbWriter,
-		DirectionInput: 0x0f,
-		ButtonInput:    0x0f,
 	}
 }
 
@@ -171,13 +169,13 @@ func (mem *Memory) readHardwareRegisters(addr uint16) uint8 {
 	// case SB:
 	// case SC:
 	case DIV:
-		return mem.hwr.DIV
+		return mem.hwr.timer.DIV()
 	case TIMA:
-		return mem.hwr.TIMA
+		return mem.hwr.timer.TIMA()
 	case TMA:
-		return mem.hwr.TMA
+		return mem.hwr.timer.TMA()
 	case TAC:
-		return mem.hwr.TAC
+		return mem.hwr.timer.TAC()
 	default:
 		return 0xff
 	}
@@ -262,13 +260,13 @@ func (mem *Memory) writeHardwareRegisters(addr uint16, value uint8) {
 	case SC:
 		// FIXME serial bus support
 	case DIV:
-		mem.hwr.DIV = 0
+		mem.hwr.timer.Reset()
 	case TIMA:
-		mem.hwr.TIMA = value
+		mem.hwr.timer.WriteTIMA(value)
 	case TMA:
-		mem.hwr.TMA = value
+		mem.hwr.timer.WriteTMA(value)
 	case TAC:
-		mem.hwr.TAC = value
+		mem.hwr.timer.WriteTAC(value)
 	default:
 		// Do nothing
 	}
@@ -294,49 +292,5 @@ func (mem *Memory) dma(addrPrefix uint8) {
 	srcBaseAddr := uint16(addrPrefix) << 8
 	for i := uint16(0x00); i < 0x0a0; i++ {
 		mem.OAM[i] = mem.Read(srcBaseAddr + i)
-	}
-}
-
-func (r *HardwareRegisters) timerRunning() bool {
-	return r.TAC&0x04 > 0
-}
-
-func (r *HardwareRegisters) timerIncrementFreq() uint32 {
-	// 00:   4096 Hz    (~4194 Hz SGB)
-	// 01: 262144 Hz  (~268400 Hz SGB)
-	// 10:  65536 Hz   (~67110 Hz SGB)
-	// 11:  16384 Hz   (~16780 Hz SGB)
-	switch r.TAC & 0x03 {
-	case 0:
-		return 1024
-	case 1:
-		return 16
-	case 2:
-		return 64
-	case 3:
-		return 256
-	}
-	log.Fatal("Timer frequency error")
-	return 0
-}
-
-// Tick updates the hardware registers on each clock tick
-func (r *HardwareRegisters) Tick() {
-	r.divTick++
-	if r.divTick >= 256 {
-		r.divTick = 0
-		r.DIV++
-	}
-	if r.timerRunning() {
-		r.timerTick++
-		if r.timerTick >= r.timerIncrementFreq() {
-			r.timerTick = 0
-			r.TIMA++
-			if r.TIMA == 0 {
-				// Raise timer interrupt and reset the timer itself
-				r.IF |= 0x04
-				r.TIMA = r.TMA
-			}
-		}
 	}
 }

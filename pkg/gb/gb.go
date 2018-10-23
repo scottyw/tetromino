@@ -12,6 +12,7 @@ import (
 	"github.com/scottyw/tetromino/pkg/gb/cpu"
 	"github.com/scottyw/tetromino/pkg/gb/lcd"
 	"github.com/scottyw/tetromino/pkg/gb/mem"
+	"github.com/scottyw/tetromino/pkg/gb/timer"
 	"github.com/scottyw/tetromino/pkg/ui"
 )
 
@@ -37,6 +38,7 @@ type Gameboy struct {
 	cpu    *cpu.CPU
 	mem    *mem.Memory
 	hwr    *mem.HardwareRegisters
+	timer  *timer.Timer
 	lcd    *lcd.LCD
 	start  time.Time
 	opts   Options
@@ -47,7 +49,8 @@ type Gameboy struct {
 
 // NewGameboy returns a new Gameboy
 func NewGameboy(opts Options, cancel func()) Gameboy {
-	hwr := mem.NewHardwareRegisters(opts.SBWriter)
+	timer := timer.NewTimer()
+	hwr := mem.NewHardwareRegisters(timer, opts.SBWriter)
 	cpu := cpu.NewCPU(hwr, opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
 	var memory *mem.Memory
 	if opts.RomFilename == "" {
@@ -57,9 +60,11 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 	}
 	lcd := lcd.NewLCD(hwr, memory, opts.DebugLCD)
 	start := time.Now()
-	return Gameboy{cpu: cpu,
+	return Gameboy{
+		cpu:    cpu,
 		mem:    memory,
 		hwr:    hwr,
+		timer:  timer,
 		lcd:    lcd,
 		start:  start,
 		opts:   opts,
@@ -70,12 +75,18 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 
 func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// The Game Boy clock runs at 4.194304MHz
-	// Each loop iteration below represents one clock cycles
-	// Each LCD frame is 70224 clock cycles
-	for tick := 0; tick < 70224; tick++ {
-		gb.hwr.Tick()
-		gb.cpu.Tick(gb.mem)
-		gb.lcd.Tick()
+	// Each loop iteration below represents one machine cycle
+	// One machine cycle is 4 clock cycles
+	// Each LCD frame is 17556 machine cycles
+	for mtick := 0; mtick < 17556; mtick++ {
+		timerInterruptRequested := gb.timer.MTick()
+		if timerInterruptRequested {
+			gb.hwr.IF |= 0x04
+		}
+		gb.lcd.MTick()
+		for ctick := 0; ctick < 4; ctick++ {
+			gb.cpu.CTick(gb.mem)
+		}
 	}
 	gb.lcd.FrameEnd()
 	if gui != nil {
