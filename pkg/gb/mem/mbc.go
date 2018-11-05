@@ -86,8 +86,8 @@ func createRAM(cartType, ramSize uint8) [][0x2000]byte {
 
 func chooseUpdateFunc(cartType uint8) func(*mbc) {
 	switch cartType {
-	// 00 - ROM ONLY
 	case 0x00:
+		// 00 - ROM ONLY
 		return func(_ *mbc) {}
 	case 0x01:
 		// 01 - ROM + MBC1
@@ -110,10 +110,21 @@ func chooseUpdateFunc(cartType uint8) func(*mbc) {
 		// 0C - ROM + MMM01 + SRAM
 	case 0x0d:
 		// 0D - ROM + MMM01 + SRAM + BATT
+	case 0x0f:
+		// 0f - ROM + MBC3 + TIMER + BATT
+		return updateMBC3
+	case 0x10:
+		// 10 - ROM + MBC3 + RAM + TIMER + BATT
+		return updateMBC3
+	case 0x11:
+		// 11 - ROM + MBC3
+		return updateMBC3
 	case 0x12:
 		// 12 - ROM + MBC3 + RAM
+		return updateMBC3
 	case 0x13:
 		// 13 - ROM + MBC3 + RAM + BATT
+		return updateMBC3
 	case 0x19:
 		// 19 - ROM + MBC5
 	case 0x1a:
@@ -214,6 +225,26 @@ func updateMBC1(m *mbc) {
 			m.ramBank = int(m.ramRegion & 0x03)
 			m.ramBank = m.ramBank % len(m.ram)
 		}
+	}
+
+}
+
+func updateMBC3(m *mbc) {
+
+	// Check if RAM is enabled
+	m.ramEnabled = m.enabledRegion&0x0f == 0x0a
+
+	// Check ROM bank 1
+	m.romBankX = int((m.romRegion & 0x7f))
+	if m.romBankX == 0 {
+		m.romBankX = 1
+	}
+	m.romBankX = m.romBankX % len(m.rom)
+
+	// Check RAM bank
+	if m.ramEnabled {
+		m.ramBank = int(m.ramRegion & 0x07)
+		m.ramBank = m.ramBank % len(m.ram)
 	}
 
 }
