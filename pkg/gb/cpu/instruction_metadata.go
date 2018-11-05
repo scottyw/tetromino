@@ -4976,7 +4976,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5104,7 +5104,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5232,7 +5232,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5360,7 +5360,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5488,7 +5488,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5616,7 +5616,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5744,7 +5744,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
@@ -5872,7 +5872,7 @@ var metadataJSON = `
 		"mnemonic": "BIT",
 		"length": 2,
 		"cycles": [
-		  16
+		  12
 		],
 		"flags": [
 		  "Z",
