@@ -15,7 +15,7 @@ func TestSanity(t *testing.T) {
 		hwr := mem.NewHardwareRegisters(nil, nil)
 		cpu := NewCPU(hwr, false, false, false)
 		cpu.validateFlags = true
-		rom := make([]byte, 0x0200)
+		rom := make([]byte, 0x8000)
 		memory := mem.NewMemory(hwr, rom)
 		rom[0x100] = uint8(instruction)
 		cpu.peek(memory)
@@ -26,7 +26,7 @@ func TestSanity(t *testing.T) {
 		hwr := mem.NewHardwareRegisters(nil, nil)
 		cpu := NewCPU(hwr, false, false, false)
 		cpu.validateFlags = true
-		rom := make([]byte, 0x0200)
+		rom := make([]byte, 0x8000)
 		memory := mem.NewMemory(hwr, rom)
 		rom[0x100] = 0xcb
 		rom[0x101] = uint8(instruction)

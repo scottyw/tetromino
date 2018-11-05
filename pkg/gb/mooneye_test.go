@@ -190,25 +190,25 @@ func TestMooneye73(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_writ
 
 func TestMooneye74(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tma_write_reloading.gb") }
 
-// func TestMooneye75(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/bits_ram_en.gb") }
+func TestMooneye75(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/bits_ram_en.gb") }
 
 // func TestMooneye76(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/multicart_rom_8Mb.gb") }
 
-// func TestMooneye77(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/ram_256Kb.gb") }
+func TestMooneye77(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/ram_256Kb.gb") }
 
-// func TestMooneye78(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/ram_64Kb.gb") }
+func TestMooneye78(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/ram_64Kb.gb") }
 
-// func TestMooneye79(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_16Mb.gb") }
+func TestMooneye79(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_16Mb.gb") }
 
-// func TestMooneye80(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_1Mb.gb") }
+func TestMooneye80(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_1Mb.gb") }
 
-// func TestMooneye81(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_2Mb.gb") }
+func TestMooneye81(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_2Mb.gb") }
 
-// func TestMooneye82(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_4Mb.gb") }
+func TestMooneye82(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_4Mb.gb") }
 
-// func TestMooneye83(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_512Kb.gb") }
+func TestMooneye83(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_512Kb.gb") }
 
-// func TestMooneye84(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_8Mb.gb") }
+func TestMooneye84(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_8Mb.gb") }
 
 // func TestMooneye85(t *testing.T) { runMooneyeTest(t, "manual-only/sprite_priority.gb") }
 

@@ -8,7 +8,7 @@ import (
 // Memory allows read and write access to memory
 type Memory struct {
 	hwr               *HardwareRegisters
-	mbc               mbc
+	mbc               *mbc
 	VideoRAM          [0x2000]byte
 	internalRAM       [0x2000]byte
 	OAM               [0xa0]byte
