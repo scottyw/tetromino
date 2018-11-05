@@ -10,15 +10,13 @@ Tetromino is a Game Boy emulator written in Go.
 
 ### Progress so far ...
 
-Tetromino is functional enough to play Tetris and Super Mario Land plus it passes some test roms but there is still something of a todo list ...
+Tetromino is pretty functional and passes a few of the blargg and mooneye tests. The CPU, timer and MBC1 implementations are accurate but there is no sound, no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority).
 
-* Support for cartridge RAM
-* Large sprite support
-* Sprite palette support
-* Multiple interrupts are not handled correctly
-* Sound
+Tetromino has some fun LCD debugging that colours the display to differentiate sprites from background (and from window) and showing how scrolling is implemented.
 
-Tetromino has some fun LCD debugging that colours the display to differentiate sprites from background (from window) and showing how scrolling is implemented. I would like to add features like screenshots, snapshotting LCD or emulator state and maybe rewind.
+For help run:
+
+    go run cmd/tetromino/main.go --help
 
 ### Running
 
@@ -29,10 +27,6 @@ You'll need a ROM. I highly recommend Tetris. The main command line option is "-
 Other options exist including enabling debug. List them like this:
 
     go run cmd/tetromino/main.go -help
-
-### Common Errors
-
-Tetromino is not error-free yet. You'll see occasional bugs (e.g. flickering on the LCD) caused by timing issues and missing hardware features. Some games don't work at all ...
 
 ### Dependencies
 
