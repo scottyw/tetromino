@@ -20,6 +20,7 @@ type mbc struct {
 	romBank0   int
 	romBankX   int
 	ramBank    int
+	update     func(*mbc)
 }
 
 func newMBC(rom []byte) *mbc {
@@ -35,6 +36,7 @@ func newMBC(rom []byte) *mbc {
 		ram:      createRAM(cartType, ramSize),
 		romBank0: 0,
 		romBankX: 1,
+		update:   chooseUpdateFunc(cartType),
 	}
 }
 
@@ -82,6 +84,64 @@ func createRAM(cartType, ramSize uint8) [][0x2000]byte {
 	return ram
 }
 
+func chooseUpdateFunc(cartType uint8) func(*mbc) {
+	switch cartType {
+	// 00 - ROM ONLY
+	case 0x00:
+		return func(_ *mbc) {}
+	case 0x01:
+		// 01 - ROM + MBC1
+		return updateMBC1
+	case 0x02:
+		// 02 - ROM + MBC1 + RAM
+		return updateMBC1
+	case 0x03:
+		// 03 - ROM + MBC1 + RAM + BATT
+		return updateMBC1
+	case 0x05:
+		// 05 - ROM + MBC2
+	case 0x06:
+		// 06 - ROM + MBC2 + BATT
+	case 0x08:
+		// 08 - ROM + RAM
+	case 0x09:
+		// 09 - ROM + RAM + BATT + MMM01
+	case 0x0c:
+		// 0C - ROM + MMM01 + SRAM
+	case 0x0d:
+		// 0D - ROM + MMM01 + SRAM + BATT
+	case 0x12:
+		// 12 - ROM + MBC3 + RAM
+	case 0x13:
+		// 13 - ROM + MBC3 + RAM + BATT
+	case 0x19:
+		// 19 - ROM + MBC5
+	case 0x1a:
+		// 1A - ROM + MBC5 + RAM
+	case 0x1b:
+		// 1B - ROM + MBC5 + RAM + BATT
+	case 0x1c:
+		// 1C - ROM + MBC5 + RUMBLE
+	case 0x1d:
+		// 1D - ROM + MBC5 + RUMBLE + SRAM
+	case 0x1e:
+		// 1E - ROM + MBC5 + RUMBLE + SRAM + BATT
+	case 0x20:
+		// 20 - ROM + MBC6 + RAM + BATT
+	case 0x22:
+		// 22 - ROM + MBC7 + RAM + BATT + ACCELEROMETER
+	case 0xfc:
+		// FC - POCKET CAMERA
+	case 0xfd:
+		// FD - Bandai TAMA5
+	case 0xfe:
+		// FE - Hudson on HuC-1
+	case 0xff:
+		// FF - Hudson on HuC-1 + RAM + BATTERY
+	}
+	panic(fmt.Sprintf("mbc does not support cart type 0x%02x", cartType))
+}
+
 func (m *mbc) read(addr uint16) uint8 {
 	switch {
 	case addr < 0x4000:
@@ -122,10 +182,10 @@ func (m *mbc) write(addr uint16, value uint8) {
 	default:
 		panic(fmt.Sprintf("mbc has no write mapping for address 0x%04x", addr))
 	}
-	m.updateMBC1()
+	m.update(m)
 }
 
-func (m *mbc) updateMBC1() {
+func updateMBC1(m *mbc) {
 
 	// Check if RAM is enabled
 	m.ramEnabled = m.enabledRegion&0x0f == 0x0a
