@@ -171,27 +171,26 @@ func (cpu *CPU) cpl() {
 }
 
 func (cpu *CPU) daa() {
-	cf := cpu.cf()
-	if !cpu.nf() {
-		if cpu.cf() || cpu.a > 0x99 {
-			cpu.a += 0x60
-			cf = true
+	if cpu.nf() {
+		if cpu.hf() {
+			cpu.a -= 0x06
 		}
-		if cpu.hf() || (cpu.a&0x0f) > 0x09 {
-			cpu.a += 0x6
-		}
-	} else {
 		if cpu.cf() {
 			cpu.a -= 0x60
 		}
-		if cpu.hf() {
-			cpu.a -= 0x6
+	} else {
+		a := cpu.a
+		if cpu.hf() || cpu.a&0x0f > 0x09 {
+			cpu.a += 0x06
+		}
+		if cpu.cf() || a&0xf0 > 0x90 || cpu.a&0xf0 > 0x90 {
+			cpu.a += 0x60
+			cpu.setCf(true)
 		}
 	}
 	// [Z - 0 C]
 	cpu.setZf(cpu.a == 0)
 	cpu.setHf(false)
-	cpu.setCf(cf)
 }
 
 func (cpu *CPU) dec(r8 *uint8) {
