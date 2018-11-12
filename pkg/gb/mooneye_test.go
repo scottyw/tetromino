@@ -2,18 +2,13 @@ package gb
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 )
 
-var (
-	mooneyeDir = os.Getenv("GOPATH") + "/src/github.com/scottyw/tetromino/test/mooneye-gb_hwtests/"
-)
-
 func runMooneyeTest(t *testing.T, filename string) {
 	opts := Options{
-		RomFilename: mooneyeDir + filename,
+		RomFilename: "testdata/mooneye-gb_hwtests/" + filename,
 		// DebugCPU:    true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)

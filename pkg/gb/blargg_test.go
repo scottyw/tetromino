@@ -3,20 +3,15 @@ package gb
 import (
 	"bytes"
 	"context"
-	"os"
 	"strings"
 	"testing"
 	"time"
 )
 
-var (
-	blarggDir = os.Getenv("GOPATH") + "/src/github.com/scottyw/tetromino/test/blargg/"
-)
-
 func runBlarggTest(t *testing.T, filename string) {
 	sbWriter := &bytes.Buffer{}
 	opts := Options{
-		RomFilename: blarggDir + filename,
+		RomFilename: "testdata/blargg/" + filename,
 		SBWriter:    sbWriter,
 		// DebugCPU:    true,
 	}

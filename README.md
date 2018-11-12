@@ -30,12 +30,11 @@ Other options exist including enabling debug. List them like this:
 
 ### Dependencies
 
-#### Go dependencies
+Tetromino uses Go modules and requires Go 1.11 or later. You may need to enable module support like this:
 
-Install these Go dependencies:
+    export GO111MODULE=on
 
-    github.com/go-gl/gl/v2.1/gl
-    github.com/go-gl/glfw/v3.1/glfw
+When you run Tetromino or the tests, the dependencies will be fetched automatically.
 
 #### GLFW dependencies
 
