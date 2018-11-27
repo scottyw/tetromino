@@ -79,13 +79,11 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// One machine cycle is 4 clock cycles
 	// Each LCD frame is 17556 machine cycles
 	for mtick := 0; mtick < 17556; mtick++ {
-		timerInterruptRequested := gb.timer.MTick()
+		gb.cpu.ExecuteMachineCycle(gb.mem)
+		gb.lcd.EndMachineCycle()
+		timerInterruptRequested := gb.timer.EndMachineCycle()
 		if timerInterruptRequested {
 			gb.hwr.IF |= 0x04
-		}
-		gb.lcd.MTick()
-		for ctick := 0; ctick < 4; ctick++ {
-			gb.cpu.CTick(gb.mem)
 		}
 	}
 	gb.lcd.FrameEnd()

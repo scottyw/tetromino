@@ -25,8 +25,8 @@ func NewTimer() *Timer {
 	}
 }
 
-// MTick updates the timer after a machine cycle
-func (t *Timer) MTick() bool {
+// EndMachineCycle updates the timer after a machine cycle
+func (t *Timer) EndMachineCycle() bool {
 	t.counter += 4
 	var interrupt bool
 	if !t.timaWrite && t.counter == t.overflow {

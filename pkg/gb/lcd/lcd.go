@@ -88,8 +88,8 @@ func (lcd *LCD) WriteToVideoRAM(addr uint16) {
 	}
 }
 
-// MTick runs the LCD driver for one machine cycle i.e. 4 clock cycles
-func (lcd *LCD) MTick() {
+// EndMachineCycle updates the LCD driver after each machine cycle i.e. 4 clock cycles
+func (lcd *LCD) EndMachineCycle() {
 
 	// Is the LCD enabled?
 	if !lcd.lcdDisplayEnable() {

@@ -8,7 +8,7 @@ import (
 func mticks(timer *Timer, mticks int) bool {
 	var interrupt bool
 	for i := 0; i < mticks; i++ {
-		interrupt = interrupt || timer.MTick()
+		interrupt = interrupt || timer.EndMachineCycle()
 	}
 	return interrupt
 }
@@ -41,12 +41,12 @@ func assertTima(t *testing.T, timer *Timer, tima uint8) {
 	}
 }
 
-func TestMTick(t *testing.T) {
+func TestEndMachineCycle(t *testing.T) {
 	timer := NewTimer()
 	assertCounter(t, timer, 0xabcc)
-	timer.MTick()
+	timer.EndMachineCycle()
 	assertCounter(t, timer, 0xabd0)
-	timer.MTick()
+	timer.EndMachineCycle()
 	assertCounter(t, timer, 0xabd4)
 }
 
@@ -249,13 +249,13 @@ func TestTIMAReload(t *testing.T) {
 		t.Errorf("Timer interrupt should not have occurred")
 	}
 	// One more tick should rollover but not set TIMA correctly
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x00)
 	if !interrupt {
 		t.Errorf("Timer interrupt should have occurred")
 	}
 	// Another tick sets TIMA correctly
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x23)
 	if interrupt {
 		t.Errorf("Timer interrupt should not have occurred")
@@ -276,7 +276,7 @@ func TestTIMAReloadWithWriteA(t *testing.T) {
 		t.Errorf("Timer interrupt should not have occurred")
 	}
 	// One more tick should rollover but not set TIMA correctly
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x00)
 	if !interrupt {
 		t.Errorf("Timer interrupt should have occurred")
@@ -284,7 +284,7 @@ func TestTIMAReloadWithWriteA(t *testing.T) {
 	// Write TIMA during the A cycle
 	timer.WriteTIMA(0x57)
 	// Another tick after the write should retain the written value
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x57)
 	if interrupt {
 		t.Errorf("Timer interrupt should not have occurred")
@@ -305,13 +305,13 @@ func TestTIMAReloadWithWriteB(t *testing.T) {
 		t.Errorf("Timer interrupt should not have occurred")
 	}
 	// One more tick should rollover but not set TIMA correctly
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x00)
 	if !interrupt {
 		t.Errorf("Timer interrupt should have occurred")
 	}
 	// Another tick sets TIMA to match TMA
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x23)
 	if interrupt {
 		t.Errorf("Timer interrupt should not have occurred")
@@ -319,7 +319,7 @@ func TestTIMAReloadWithWriteB(t *testing.T) {
 	// Write TMA during the B cycle
 	timer.WriteTMA(0x57)
 	// Another tick resets TIMA to match what was written to TMA last cycle
-	interrupt = timer.MTick()
+	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x57)
 	if interrupt {
 		t.Errorf("Timer interrupt should not have occurred")
