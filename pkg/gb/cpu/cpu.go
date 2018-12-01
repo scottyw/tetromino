@@ -152,21 +152,30 @@ func (cpu *CPU) peek(m *mem.Memory) *[]func(*CPU, *mem.Memory) {
 	for i := range steps {
 		steps[i] = (*CPU).nopStep
 	}
-	steps[md.MachineCycles-1] = monolithStep(md)
+	if md.AltMachineCycles == 0 {
+		steps[md.MachineCycles-1] = monolithStep(md)
+	} else {
+		steps[md.AltMachineCycles-1] = monolithStep(md)
+	}
 	return &steps
 }
 
+// FIXME used to debug timing but should be removed
+var ticks uint32
+var lastTicks uint32
+
 // ExecuteMachineCycle runs the CPU for one machine cycle
 func (cpu *CPU) ExecuteMachineCycle(m *mem.Memory) {
-	if cpu.stepIndex == len(*cpu.steps) {
+	// FIXME this check relies on altTicks being set on exactly the right step which works at the moment but probably isn't dependable as instructions migrate
+	if cpu.stepIndex == len(*cpu.steps) || cpu.altTicks {
+		lastTicks = ticks
+		cpu.altTicks = false
 		var steps *[]func(*CPU, *mem.Memory)
 		if !cpu.handlingInterrupt {
 			steps = cpu.checkInterrupts(m)
-
 			if cpu.halted || cpu.stopped {
 				return
 			}
-
 			if steps != nil {
 				cpu.handlingInterrupt = true
 			}
@@ -182,4 +191,5 @@ func (cpu *CPU) ExecuteMachineCycle(m *mem.Memory) {
 	step := (*cpu.steps)[cpu.stepIndex]
 	step(cpu, m)
 	cpu.stepIndex++
+	ticks += 4
 }

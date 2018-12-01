@@ -10,17 +10,18 @@ import (
 )
 
 type metadata struct {
-	Mnemonic      string   `json:"mnemonic"`
-	Length        uint16   `json:"length"`
-	Cycles        []int    `json:"cycles"`
-	Flags         []string `json:"flags"`
-	Addr          string   `json:"addr"`
-	Operand1      string   `json:"operand1,omitempty"`
-	Operand2      string   `json:"operand2,omitempty"`
-	Dispatch      uint8
-	Prefixed      bool
-	MachineCycles int
-	Func          func(*CPU, *mem.Memory, string, string, uint8, uint16) map[string]bool
+	Mnemonic         string   `json:"mnemonic"`
+	Length           uint16   `json:"length"`
+	Cycles           []int    `json:"cycles"`
+	Flags            []string `json:"flags"`
+	Addr             string   `json:"addr"`
+	Operand1         string   `json:"operand1,omitempty"`
+	Operand2         string   `json:"operand2,omitempty"`
+	Dispatch         uint8
+	Prefixed         bool
+	MachineCycles    int
+	AltMachineCycles int
+	Func             func(*CPU, *mem.Memory, string, string, uint8, uint16) map[string]bool
 }
 
 type metadataContainer struct {
@@ -84,7 +85,7 @@ func initInstructionArray(instructionMap map[string]*metadata, arrayToInit *[256
 		// Divide cycles by 4 because we're counting machine cycles, not clock cycles
 		instruction.MachineCycles = instruction.Cycles[0] / 4
 		if len(instruction.Cycles) > 1 {
-			// FIXME do something with alt cycle counts
+			instruction.AltMachineCycles = instruction.Cycles[1] / 4
 		}
 		(*arrayToInit)[addr] = instruction
 	}
