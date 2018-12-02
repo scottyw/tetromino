@@ -250,12 +250,14 @@ func TestTIMAReload(t *testing.T) {
 	}
 	// One more tick should rollover but not set TIMA correctly
 	interrupt = timer.EndMachineCycle()
+	// Cycle A starts
 	assertTima(t, timer, 0x00)
 	if !interrupt {
 		t.Errorf("Timer interrupt should have occurred")
 	}
-	// Another tick sets TIMA correctly
+	// Cycle A ends and another tick sets TIMA correctly
 	interrupt = timer.EndMachineCycle()
+	// Cycle B starts
 	assertTima(t, timer, 0x23)
 	if interrupt {
 		t.Errorf("Timer interrupt should not have occurred")
@@ -277,13 +279,14 @@ func TestTIMAReloadWithWriteA(t *testing.T) {
 	}
 	// One more tick should rollover but not set TIMA correctly
 	interrupt = timer.EndMachineCycle()
+	// Cycle A starts
 	assertTima(t, timer, 0x00)
 	if !interrupt {
 		t.Errorf("Timer interrupt should have occurred")
 	}
-	// Write TIMA during the A cycle
+	// Write TIMA during cycle A
 	timer.WriteTIMA(0x57)
-	// Another tick after the write should retain the written value
+	// Cycle A ends and another tick after the write should retain the written value
 	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x57)
 	if interrupt {
@@ -306,19 +309,58 @@ func TestTIMAReloadWithWriteB(t *testing.T) {
 	}
 	// One more tick should rollover but not set TIMA correctly
 	interrupt = timer.EndMachineCycle()
+	// Cycle A starts
 	assertTima(t, timer, 0x00)
 	if !interrupt {
 		t.Errorf("Timer interrupt should have occurred")
 	}
-	// Another tick sets TIMA to match TMA
+	// Cycle A ends and another tick sets TIMA correctly
+	interrupt = timer.EndMachineCycle()
+	// Cycle B starts
+	assertTima(t, timer, 0x23)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// Write TIMA during cycle B
+	timer.WriteTIMA(0x57)
+	// Cycle B ends and the write has been ignored
 	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x23)
 	if interrupt {
 		t.Errorf("Timer interrupt should not have occurred")
 	}
-	// Write TMA during the B cycle
+}
+
+func TestTIMAReloadWithTMAWrite(t *testing.T) {
+	// Setup
+	timer := NewTimer()
+	timer.WriteTAC(0x05)
+	timer.counter = 0
+	timer.tima = 0xff
+	timer.tma = 0x23
+	// Execute to one tick before rollover
+	interrupt := mticks(timer, 3)
+	assertTima(t, timer, 0xff)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// One more tick should rollover but not set TIMA correctly
+	interrupt = timer.EndMachineCycle()
+	// Cycle A starts
+	assertTima(t, timer, 0x00)
+	if !interrupt {
+		t.Errorf("Timer interrupt should have occurred")
+	}
+	// Cycle A ends and another tick sets TIMA correctly
+	interrupt = timer.EndMachineCycle()
+	// Cycle B starts
+	assertTima(t, timer, 0x23)
+	if interrupt {
+		t.Errorf("Timer interrupt should not have occurred")
+	}
+	// Write TMA during cycle B
 	timer.WriteTMA(0x57)
-	// Another tick resets TIMA to match what was written to TMA last cycle
+	// Cycle B ends and TIMA has been updated
 	interrupt = timer.EndMachineCycle()
 	assertTima(t, timer, 0x57)
 	if interrupt {

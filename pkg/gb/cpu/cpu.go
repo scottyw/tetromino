@@ -52,6 +52,7 @@ type CPU struct {
 	hwr               *mem.HardwareRegisters
 	steps             *[]func(*CPU, *mem.Memory)
 	stepIndex         int
+	altStepIndex      int
 	handlingInterrupt bool
 
 	// Debug
@@ -154,8 +155,10 @@ func (cpu *CPU) peek(m *mem.Memory) *[]func(*CPU, *mem.Memory) {
 	}
 	if md.AltMachineCycles == 0 {
 		steps[md.MachineCycles-1] = monolithStep(md)
+		cpu.altStepIndex = 0
 	} else {
 		steps[md.AltMachineCycles-1] = monolithStep(md)
+		cpu.altStepIndex = md.AltMachineCycles
 	}
 	return &steps
 }
@@ -166,8 +169,8 @@ var lastTicks uint32
 
 // ExecuteMachineCycle runs the CPU for one machine cycle
 func (cpu *CPU) ExecuteMachineCycle(m *mem.Memory) {
-	// FIXME this check relies on altTicks being set on exactly the right step which works at the moment but probably isn't dependable as instructions migrate
-	if cpu.stepIndex == len(*cpu.steps) || cpu.altTicks {
+	if cpu.stepIndex == len(*cpu.steps) ||
+		(cpu.altTicks && cpu.stepIndex == cpu.altStepIndex) {
 		lastTicks = ticks
 		cpu.altTicks = false
 		var steps *[]func(*CPU, *mem.Memory)
