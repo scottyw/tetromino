@@ -145,6 +145,18 @@ func (cpu *CPU) peek(m *mem.Memory) *[]func(*CPU, *mem.Memory) {
 		instructionByte = m.Read(cpu.pc + 1)
 		md = prefixedInstructionMetadata[instructionByte]
 	}
+	if cpu.debugCPU {
+		var value string
+		if !md.Prefixed && md.Length == 2 {
+			u8 := m.Read(cpu.pc + 1)
+			value = fmt.Sprintf("%02x", u8)
+		} else if !md.Prefixed && md.Length == 3 {
+			u16 := uint16(m.Read(cpu.pc+1)) | uint16(m.Read(cpu.pc+2))<<8
+			value = fmt.Sprintf("%04x", u16)
+		}
+		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+			cpu.pc, md.Dispatch, fmt.Sprintf("%s %s %s", md.Mnemonic, md.Operand1, md.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+	}
 	// The step lists should be statically defined some place
 	// For now we manufacture a list of the right length and fill it with nops
 	// The last step is a single monolithic "do everything" step

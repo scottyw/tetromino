@@ -13,9 +13,7 @@ import "github.com/scottyw/tetromino/pkg/gb/mem"
 
 func monolithStep(md *metadata) func(*CPU, *mem.Memory) {
 	return func(cpu *CPU, mem *mem.Memory) {
-		pc := cpu.pc
 		f := cpu.f
-		var value string
 		if md.Prefixed {
 			cpu.pc += 2
 			cpu.dispatchPrefixedInstruction(mem, md.Dispatch)
@@ -26,22 +24,16 @@ func monolithStep(md *metadata) func(*CPU, *mem.Memory) {
 				cpu.dispatchOneByteInstruction(mem, md.Dispatch)
 			case 2:
 				u8 := mem.Read(cpu.pc + 1)
-				value = fmt.Sprintf("%02x", u8)
 				cpu.pc += 2
 				cpu.dispatchTwoByteInstruction(mem, md.Dispatch, u8)
 			case 3:
 				u16 := uint16(mem.Read(cpu.pc+1)) | uint16(mem.Read(cpu.pc+2))<<8
-				value = fmt.Sprintf("%04x", u16)
 				cpu.pc += 3
 				cpu.dispatchThreeByteInstruction(mem, md.Dispatch, u16)
 			}
 		}
 		if cpu.validateFlags {
 			validateFlags(f, cpu.f, *md)
-		}
-		if cpu.debugCPU {
-			fmt.Printf("0x%08x: 0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-				lastTicks, pc, md.Dispatch, fmt.Sprintf("%s %s %s", md.Mnemonic, md.Operand1, md.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 		}
 	}
 }

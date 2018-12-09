@@ -37,6 +37,7 @@ func main() {
 	outputSerial := flag.Bool("output-serial-data", false, "When true, data sent to the serial port will be written to console")
 	speedup := flag.Float64("speedup", 10, "The speed at which to run as a multiplier e.g. 1 for normal speed, 2 for double, 0.5 for half")
 	debugCPU := flag.Bool("debug-cpu", false, "When true, CPU debugging is enabled")
+	debugTimer := flag.Bool("debug-timer", false, "When true, timer debugging is enabled")
 	debugFlowControl := flag.Bool("debug-flow", false, "When true, flow control debugging is enabled")
 	debugJumps := flag.Bool("debug-jumps", false, "When true, jump debugging is enabled")
 	debugLCD := flag.Bool("debug-lcd", false, "When true, LCD colour-based debugging is enabled")
@@ -68,6 +69,7 @@ func main() {
 		Speedup:          *speedup,
 		SBWriter:         sbWriter,
 		DebugCPU:         *debugCPU,
+		DebugTimer:       *debugTimer,
 		DebugLCD:         *debugLCD,
 		DebugFlowControl: *debugFlowControl,
 		DebugJumps:       *debugJumps,

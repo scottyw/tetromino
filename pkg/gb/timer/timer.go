@@ -1,5 +1,7 @@
 package timer
 
+import "fmt"
+
 var counterBitMasks = []uint16{
 	uint16(1) << 9,
 	uint16(1) << 3,
@@ -19,11 +21,13 @@ type Timer struct {
 	overflow    bool
 	endCycleA   uint16
 	endCycleB   uint16
+	debug       bool
 }
 
 // NewTimer creates an initialized timer
-func NewTimer() *Timer {
+func NewTimer(debug bool) *Timer {
 	return &Timer{
+		debug:   debug,
 		counter: 0xabcc,
 	}
 }
@@ -62,6 +66,11 @@ func (t *Timer) EndMachineCycle() bool {
 		}
 	}
 	t.lastEdgeSet = edgeSet
+	if t.debug {
+		fmt.Printf("                          |      | DIV:%04x TIMA:%02x TMA:%02x\n",
+			t.counter, t.tima, t.tma,
+		)
+	}
 	return interrupt
 }
 

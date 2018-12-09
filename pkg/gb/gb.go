@@ -28,6 +28,7 @@ type Options struct {
 	SBWriter         io.Writer
 	Speedup          float64
 	DebugCPU         bool
+	DebugTimer       bool
 	DebugLCD         bool
 	DebugFlowControl bool
 	DebugJumps       bool
@@ -49,7 +50,7 @@ type Gameboy struct {
 
 // NewGameboy returns a new Gameboy
 func NewGameboy(opts Options, cancel func()) Gameboy {
-	timer := timer.NewTimer()
+	timer := timer.NewTimer(opts.DebugTimer)
 	hwr := mem.NewHardwareRegisters(timer, opts.SBWriter)
 	cpu := cpu.NewCPU(hwr, opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
 	var memory *mem.Memory
