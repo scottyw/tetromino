@@ -20,7 +20,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 			case <-ctx.Done():
 				return
 			default:
-				if gameboy.cpu.Mooneye {
+				if gameboy.dispatch.Mooneye {
 					cancel()
 					return
 				}
@@ -30,7 +30,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 	}()
 	gameboy.Run(ctx, nil)
 	<-ctx.Done()
-	if gameboy.cpu.A() != 0 || !gameboy.cpu.Mooneye {
+	if gameboy.dispatch.TestA() != 0 || !gameboy.dispatch.Mooneye {
 		t.Errorf("Test ROM failed: %s", filename)
 	}
 }

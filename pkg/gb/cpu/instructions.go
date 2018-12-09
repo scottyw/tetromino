@@ -329,16 +329,6 @@ func (cpu *CPU) ldA16U8(a16 uint16, u8 uint8, mem *mem.Memory) {
 	mem.Write(a16, u8)
 }
 
-func (cpu *CPU) ldhAA8(u8 uint8, mem *mem.Memory) {
-	address := uint16(0xff00 + uint16(u8))
-	cpu.a = mem.Read(address)
-}
-
-func (cpu *CPU) ldhA8A(u8 uint8, mem *mem.Memory) {
-	address := uint16(0xff00 + uint16(u8))
-	mem.Write(address, cpu.a)
-}
-
 func (cpu *CPU) ldSP(u16 uint16) {
 	cpu.sp = u16
 }
@@ -388,11 +378,6 @@ func (cpu *CPU) ldiA16A(mem *mem.Memory) {
 	cpu.inc16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) nop() {
-	// Do nothing
-	return
-}
-
 func (cpu *CPU) or(u8 uint8) {
 	cpu.a |= u8
 	// [Z 0 0 0]
@@ -417,13 +402,6 @@ func (cpu *CPU) popAF(mem *mem.Memory) {
 	cpu.pop(&cpu.a, &cpu.f, mem)
 	// Lower nibble is always zero no matter what data was written
 	cpu.f &= 0xf0
-}
-
-func (cpu *CPU) push(msb, lsb uint8, mem *mem.Memory) {
-	cpu.sp--
-	mem.Write(cpu.sp, msb)
-	cpu.sp--
-	mem.Write(cpu.sp, lsb)
 }
 
 func (cpu *CPU) res(pos uint8, r8 *uint8) {

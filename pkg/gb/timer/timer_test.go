@@ -42,7 +42,7 @@ func assertTima(t *testing.T, timer *Timer, tima uint8) {
 }
 
 func TestEndMachineCycle(t *testing.T) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	assertCounter(t, timer, 0xabcc)
 	timer.EndMachineCycle()
 	assertCounter(t, timer, 0xabd0)
@@ -51,7 +51,7 @@ func TestEndMachineCycle(t *testing.T) {
 }
 
 func TestDIV(t *testing.T) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	assertDiv(t, timer, 0xab)
 	mticks(timer, 12)
 	assertDiv(t, timer, 0xab)
@@ -64,14 +64,14 @@ func TestDIV(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	assertCounter(t, timer, 0xabcc)
 	timer.Reset()
 	assertCounter(t, timer, 0x0000)
 }
 
 func TestDisabledTAC(t *testing.T) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	for _, tac := range []uint8{0x00, 0x01, 0x02, 0x03} {
 		timer.WriteTAC(tac)
 		assertTac(t, timer, tac)
@@ -82,7 +82,7 @@ func TestDisabledTAC(t *testing.T) {
 }
 
 func testTIMA(t *testing.T, tac uint8, mticksPerIncrement int) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(tac)
 	timer.Reset()
 	assertTima(t, timer, 0x00)
@@ -117,7 +117,7 @@ func TestTIMA256(t *testing.T) {
 }
 
 func testTIMAOnReset(t *testing.T, tac uint8, mticksPerIncrement int) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(tac)
 	// Reset after less than half the required mticks does not increment
 	timer.Reset()
@@ -152,7 +152,7 @@ func TestTIMAOnReset256(t *testing.T) {
 }
 
 func testTIMAOnFrequentReset(t *testing.T, tac uint8) {
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(tac)
 	timer.Reset()
 	for i := 0; i < 2000; i++ {
@@ -181,7 +181,7 @@ func TestTIMAOnFrequentReset256(t *testing.T) {
 
 func testTIMAOnDisable(t *testing.T, tac uint8, mticksPerIncrement int) {
 	// Disable after less than half the required mticks does not increment
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(tac)
 	timer.Reset()
 	mticks(timer, mticksPerIncrement*3)
@@ -192,7 +192,7 @@ func testTIMAOnDisable(t *testing.T, tac uint8, mticksPerIncrement int) {
 	mticks(timer, 1)
 	assertTima(t, timer, 0x03)
 	// Disable after more than half the required mticks does increment
-	timer = NewTimer()
+	timer = NewTimer(false)
 	timer.WriteTAC(tac)
 	timer.Reset()
 	mticks(timer, mticksPerIncrement*3)
@@ -222,7 +222,7 @@ func TestTIMAOnDisable256(t *testing.T) {
 
 func TestTIMAOnTACChange(t *testing.T) {
 	// Setup
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(0x06)
 	timer.Reset()
 	mticks(timer, 0x1110/4-8)
@@ -237,7 +237,7 @@ func TestTIMAOnTACChange(t *testing.T) {
 
 func TestTIMAReload(t *testing.T) {
 	// Setup
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(0x05)
 	timer.counter = 0
 	timer.tima = 0xff
@@ -266,7 +266,7 @@ func TestTIMAReload(t *testing.T) {
 
 func TestTIMAReloadWithWriteA(t *testing.T) {
 	// Setup
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(0x05)
 	timer.counter = 0
 	timer.tima = 0xff
@@ -296,7 +296,7 @@ func TestTIMAReloadWithWriteA(t *testing.T) {
 
 func TestTIMAReloadWithWriteB(t *testing.T) {
 	// Setup
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(0x05)
 	timer.counter = 0
 	timer.tima = 0xff
@@ -333,7 +333,7 @@ func TestTIMAReloadWithWriteB(t *testing.T) {
 
 func TestTIMAReloadWithTMAWrite(t *testing.T) {
 	// Setup
-	timer := NewTimer()
+	timer := NewTimer(false)
 	timer.WriteTAC(0x05)
 	timer.counter = 0
 	timer.tima = 0xff

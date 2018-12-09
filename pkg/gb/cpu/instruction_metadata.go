@@ -11,7 +11,7 @@ import (
 
 type metadata struct {
 	Mnemonic         string   `json:"mnemonic"`
-	Length           uint16   `json:"length"`
+	Length           int      `json:"length"`
 	Cycles           []int    `json:"cycles"`
 	Flags            []string `json:"flags"`
 	Addr             string   `json:"addr"`

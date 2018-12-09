@@ -36,41 +36,40 @@ type Options struct {
 
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
-	cpu    *cpu.CPU
-	mem    *mem.Memory
-	hwr    *mem.HardwareRegisters
-	timer  *timer.Timer
-	lcd    *lcd.LCD
-	start  time.Time
-	opts   Options
-	cancel func()
-	dur    time.Duration
-	frame  int
+	dispatch *cpu.Dispatch
+	hwr      *mem.HardwareRegisters
+	timer    *timer.Timer
+	lcd      *lcd.LCD
+	start    time.Time
+	opts     Options
+	cancel   func()
+	dur      time.Duration
+	frame    int
 }
 
 // NewGameboy returns a new Gameboy
 func NewGameboy(opts Options, cancel func()) Gameboy {
 	timer := timer.NewTimer(opts.DebugTimer)
 	hwr := mem.NewHardwareRegisters(timer, opts.SBWriter)
-	cpu := cpu.NewCPU(hwr, opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
-	var memory *mem.Memory
+	c := cpu.NewCPU(opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
+	var m *mem.Memory
 	if opts.RomFilename == "" {
-		memory = mem.NewMemory(hwr, make([]byte, 0x8000))
+		m = mem.NewMemory(hwr, make([]byte, 0x8000))
 	} else {
-		memory = mem.NewMemoryFromFile(hwr, opts.RomFilename)
+		m = mem.NewMemoryFromFile(hwr, opts.RomFilename)
 	}
-	lcd := lcd.NewLCD(hwr, memory, opts.DebugLCD)
+	dispatch := cpu.NewDispatch(c, m, hwr)
+	lcd := lcd.NewLCD(hwr, m, opts.DebugLCD)
 	start := time.Now()
 	return Gameboy{
-		cpu:    cpu,
-		mem:    memory,
-		hwr:    hwr,
-		timer:  timer,
-		lcd:    lcd,
-		start:  start,
-		opts:   opts,
-		cancel: cancel,
-		dur:    time.Duration(int(frameDuration / opts.Speedup)),
+		dispatch: dispatch,
+		hwr:      hwr,
+		timer:    timer,
+		lcd:      lcd,
+		start:    start,
+		opts:     opts,
+		cancel:   cancel,
+		dur:      time.Duration(int(frameDuration / opts.Speedup)),
 	}
 }
 
@@ -80,7 +79,7 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// One machine cycle is 4 clock cycles
 	// Each LCD frame is 17556 machine cycles
 	for mtick := 0; mtick < 17556; mtick++ {
-		gb.cpu.ExecuteMachineCycle(gb.mem)
+		gb.dispatch.ExecuteMachineCycle()
 		gb.lcd.EndMachineCycle()
 		timerInterruptRequested := gb.timer.EndMachineCycle()
 		if timerInterruptRequested {
@@ -133,7 +132,7 @@ func (gb *Gameboy) Time(ctx context.Context, gui gui) {
 // ButtonAction turns UI key presses into emulator button presses
 func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 	// Start the CPU in case it was stopped waiting for input
-	gb.cpu.Start()
+	gb.dispatch.Start()
 	// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 	// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 	// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)

@@ -67,7 +67,7 @@ func (t *Timer) EndMachineCycle() bool {
 	}
 	t.lastEdgeSet = edgeSet
 	if t.debug {
-		fmt.Printf("                          |      | DIV:%04x TIMA:%02x TMA:%02x\n",
+		fmt.Printf("                          |      | div:%04x  tima:%02x tma:%02x\n",
 			t.counter, t.tima, t.tma,
 		)
 	}

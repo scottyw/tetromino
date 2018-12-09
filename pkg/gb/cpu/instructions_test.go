@@ -166,19 +166,6 @@ func TestPop(t *testing.T) {
 	}
 }
 
-func TestPush(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{b: 0x1a, c: 0xf2, sp: 0x8642}, CPU{b: 0x1a, c: 0xf2, sp: 0x8640}},
-	} {
-		actual := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), nil)
-		test.cpu.push(test.cpu.b, test.cpu.c, actual)
-		expected := mem.NewMemory(mem.NewHardwareRegisters(nil, nil), nil)
-		expected.Write(0x8640, 0xf2)
-		expected.Write(0x8641, 0x1a)
-		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
-	}
-}
-
 func TestRes(t *testing.T) {
 	// Flags: [- - - -]
 	for _, test := range []struct {
