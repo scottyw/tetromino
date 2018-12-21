@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"io"
 	"log"
 	"os"
 	"runtime/pprof"
@@ -13,41 +12,16 @@ import (
 	"github.com/scottyw/tetromino/pkg/ui"
 )
 
-func showHelp() {
-	fmt.Println()
-	fmt.Println("Welcome to Tetromino!")
-	fmt.Println()
-	fmt.Println("Arrows keys : Up/Down/Left/Right")
-	fmt.Println("A : Start")
-	fmt.Println("S : Select")
-	fmt.Println("Z : B button")
-	fmt.Println("X : A button")
-	fmt.Println()
-	fmt.Println("T : Take screenshot")
-	fmt.Println("O : Run slower")
-	fmt.Println("P : Run faster")
-	fmt.Println()
-}
-
 func main() {
 
 	// Command line flags
-	romFilename := flag.String("f", "", "ROM filename")
-	help := flag.Bool("h", false, "Show help")
-	outputSerial := flag.Bool("output-serial-data", false, "When true, data sent to the serial port will be written to console")
-	speedup := flag.Float64("speedup", 10, "The speed at which to run as a multiplier e.g. 1 for normal speed, 2 for double, 0.5 for half")
-	debugCPU := flag.Bool("debug-cpu", false, "When true, CPU debugging is enabled")
-	debugTimer := flag.Bool("debug-timer", false, "When true, timer debugging is enabled")
-	debugFlowControl := flag.Bool("debug-flow", false, "When true, flow control debugging is enabled")
-	debugJumps := flag.Bool("debug-jumps", false, "When true, jump debugging is enabled")
-	debugLCD := flag.Bool("debug-lcd", false, "When true, LCD colour-based debugging is enabled")
-	enableTiming := flag.Bool("enable-timing", false, "When true, timing is output every 60 frames")
-	enableProfiling := flag.Bool("enable-profiling", false, "When true, CPU profiling data is written to 'cpuprofile.pprof'")
+	fast := flag.Bool("fast", true, "When true, Tetromino runs the emulator as fast as possible")
+	debugCPU := flag.Bool("debugcpu", false, "When true, CPU debugging is enabled")
+	debugTimer := flag.Bool("debugtimer", false, "When true, timer debugging is enabled")
+	debugLCD := flag.Bool("debuglcd", false, "When true, colour-based LCD debugging is enabled")
+	enableTiming := flag.Bool("timing", false, "When true, timing is output every 60 frames")
+	enableProfiling := flag.Bool("profiling", false, "When true, CPU profiling data is written to 'cpuprofile.pprof'")
 	flag.Parse()
-
-	if *help {
-		showHelp()
-	}
 
 	// CPU profiling
 	if *enableProfiling {
@@ -59,20 +33,18 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	// Set up options
-	var sbWriter io.Writer
-	if *outputSerial {
-		sbWriter = os.Stdout
+	rom := flag.Arg(0)
+	if rom == "" {
+		fmt.Println("No ROM filename was specified")
+		os.Exit(1)
 	}
+
 	opts := gb.Options{
-		RomFilename:      *romFilename,
-		Speedup:          *speedup,
-		SBWriter:         sbWriter,
-		DebugCPU:         *debugCPU,
-		DebugTimer:       *debugTimer,
-		DebugLCD:         *debugLCD,
-		DebugFlowControl: *debugFlowControl,
-		DebugJumps:       *debugJumps,
+		RomFilename: rom,
+		Fast:        *fast,
+		DebugCPU:    *debugCPU,
+		DebugTimer:  *debugTimer,
+		DebugLCD:    *debugLCD,
 	}
 
 	// Start running the Gameboy with a GL UI

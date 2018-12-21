@@ -45,29 +45,25 @@ type CPU struct {
 	altTicks bool
 
 	// Debug
-	debugCPU         bool
-	debugFlowControl bool
-	debugJumps       bool
-	validateFlags    bool
+	debugCPU      bool
+	validateFlags bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
-func NewCPU(debugCPU, debugFlowControl, debugJumps bool) *CPU {
+func NewCPU(debugCPU bool) *CPU {
 	return &CPU{
-		debugCPU:         debugCPU,
-		debugFlowControl: debugFlowControl,
-		debugJumps:       debugJumps,
-		ime:              true,
-		a:                0x01,
-		f:                0xb0,
-		b:                0x00,
-		c:                0x13,
-		d:                0x00,
-		e:                0xd8,
-		h:                0x01,
-		l:                0x4d,
-		sp:               0xfffe,
-		pc:               0x0100,
+		debugCPU: debugCPU,
+		ime:      true,
+		a:        0x01,
+		f:        0xb0,
+		b:        0x00,
+		c:        0x13,
+		d:        0x00,
+		e:        0xd8,
+		h:        0x01,
+		l:        0x4d,
+		sp:       0xfffe,
+		pc:       0x0100,
 	}
 }
 

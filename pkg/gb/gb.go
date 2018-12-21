@@ -24,14 +24,12 @@ type gui interface {
 
 // Options control emulator behaviour
 type Options struct {
-	RomFilename      string
-	SBWriter         io.Writer
-	Speedup          float64
-	DebugCPU         bool
-	DebugTimer       bool
-	DebugLCD         bool
-	DebugFlowControl bool
-	DebugJumps       bool
+	RomFilename string
+	Fast        bool
+	DebugCPU    bool
+	DebugTimer  bool
+	DebugLCD    bool
+	SBWriter    io.Writer
 }
 
 // Gameboy represents the Gameboy itself
@@ -51,7 +49,7 @@ type Gameboy struct {
 func NewGameboy(opts Options, cancel func()) Gameboy {
 	timer := timer.NewTimer(opts.DebugTimer)
 	hwr := mem.NewHardwareRegisters(timer, opts.SBWriter)
-	c := cpu.NewCPU(opts.DebugCPU, opts.DebugFlowControl, opts.DebugJumps)
+	c := cpu.NewCPU(opts.DebugCPU)
 	var m *mem.Memory
 	if opts.RomFilename == "" {
 		m = mem.NewMemory(hwr, make([]byte, 0x8000))
@@ -61,6 +59,10 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 	dispatch := cpu.NewDispatch(c, m, hwr)
 	lcd := lcd.NewLCD(hwr, m, opts.DebugLCD)
 	start := time.Now()
+	duration := frameDuration
+	if opts.Fast {
+		duration = 0
+	}
 	return Gameboy{
 		dispatch: dispatch,
 		hwr:      hwr,
@@ -69,7 +71,7 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 		start:    start,
 		opts:     opts,
 		cancel:   cancel,
-		dur:      time.Duration(int(frameDuration / opts.Speedup)),
+		dur:      time.Duration(duration),
 	}
 }
 

@@ -4,29 +4,50 @@
 
 Tetromino is a Game Boy emulator written in Go.
 
-### Screenshots
+### Tetris
+![Tetris demo](https://github.com/scottyw/tetromino/blob/master/screenshots/tetris/Large%20GIF%20(480x432).gif)
 
-![Tetris home screen](screenshots/tetris-home.png)&nbsp;&nbsp;![Tetris mid-game](screenshots/tetris-game.png)
+### Super Mario Land
+![Mario demo](https://github.com/scottyw/tetromino/blob/master/screenshots/mario/Large%20GIF%20(480x432).gif)
 
-### Progress so far ...
+### Pokemon Red
+![Pokemon demo](https://github.com/scottyw/tetromino/blob/master/screenshots/pokemon/Large%20GIF%20(480x432).gif)
 
-Tetromino is pretty functional and passes a few of the blargg and mooneye tests. The CPU, timer and MBC1 implementations are accurate but there is no sound, no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority).
+### Debugging the LCD
 
-Tetromino has some fun LCD debugging that colours the display to differentiate sprites from background (and from window) and showing how scrolling is implemented.
+Tetromino has some fun LCD debugging that uses colour to differentiate sprites (in blue) from background (white when on-screen and red when off-screen) to show how scrolling is implemented.
 
-For help run:
-
-    go run cmd/tetromino/main.go --help
+![Debugging Mario](https://github.com/scottyw/tetromino/blob/master/screenshots/mario-debug/Large%20GIF%20(766x434).gif)
 
 ### Running
 
-You'll need a ROM. I highly recommend Tetris. The main command line option is "-f" which lets you specify the ROM filename. Run like this:
+You'll need a ROM file which you can specify like this:
 
-    go run cmd/tetromino/main.go -f /roms/tetris.gb
+    go run cmd/tetromino/main.go /roms/tetris.gb
 
 Other options exist including enabling debug. List them like this:
 
     go run cmd/tetromino/main.go -help
+
+Note that flag parsing follows the Go language rules and so flags must be specified before the ROM filename e.g.
+
+    go run cmd/tetromino/main.go --debuglcd /roms/tetris.gb
+
+### Controls
+
+Arrows keys : Up/Down/Left/Right
+A : Start
+S : Select
+Z : B button
+X : A button
+T : Take screenshot
+
+### Tests
+
+Tetromino is pretty functional and passes the blargg CPU and timing tests, plus some mooneye tests. The CPU, timer and MBC1 implementations are accurate but there is no sound, no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority). Most of the sub-instruction timing isn't accurate either.
+
+![Blargg CPU tests pass](https://github.com/scottyw/tetromino/blob/master/screenshots/blargg-cpu-tests.png)
+![Blargg timing tests pass](https://github.com/scottyw/tetromino/blob/master/screenshots/blargg-timing-tests.png)
 
 ### Dependencies
 

@@ -95,9 +95,6 @@ func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 	switch kind {
 	case "":
-		if cpu.debugFlowControl {
-			fmt.Printf("==== CALL %04x --> %04x\n", cpu.pc, a16)
-		}
 		cpu.sp--
 		mem.Write(cpu.sp, byte(cpu.pc>>8))
 		cpu.sp--
@@ -105,36 +102,24 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 		cpu.pc = a16
 	case "NZ":
 		if !cpu.zf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== CALL NZ ...\n")
-			}
 			cpu.call("", a16, mem)
 		} else {
 			cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== CALL Z ...\n")
-			}
 			cpu.call("", a16, mem)
 		} else {
 			cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== CALL NC ...\n")
-			}
 			cpu.call("", a16, mem)
 		} else {
 			cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== CALL C ...\n")
-			}
 			cpu.call("", a16, mem)
 		} else {
 			cpu.altTicks = true
@@ -259,42 +244,27 @@ func (cpu *CPU) incAddr(a16 uint16, mem *mem.Memory) {
 func (cpu *CPU) jp(kind string, a16 uint16) {
 	switch kind {
 	case "":
-		if cpu.debugJumps {
-			fmt.Printf("==== JP %04x --> %04x\n", cpu.pc, a16)
-		}
 		cpu.pc = a16
 	case "NZ":
 		if !cpu.zf() {
-			if cpu.debugJumps {
-				fmt.Printf("==== JP NZ\n")
-			}
 			cpu.jp("", a16)
 		} else {
 			cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
-			if cpu.debugJumps {
-				fmt.Printf("==== JP Z\n")
-			}
 			cpu.jp("", a16)
 		} else {
 			cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
-			if cpu.debugJumps {
-				fmt.Printf("==== JP NC\n")
-			}
 			cpu.jp("", a16)
 		} else {
 			cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
-			if cpu.debugJumps {
-				fmt.Printf("==== JP C\n")
-			}
 			cpu.jp("", a16)
 		} else {
 			cpu.altTicks = true
@@ -306,9 +276,6 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 
 func (cpu *CPU) jr(kind string, i8 int8) {
 	address := uint16(int16(cpu.pc) + int16(i8))
-	if cpu.debugJumps {
-		fmt.Printf("==== JR %02x\n", i8)
-	}
 	cpu.jp(kind, address)
 }
 
@@ -422,42 +389,27 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 		msb := mem.Read(cpu.sp)
 		cpu.sp++
 		retAddr := uint16(msb)<<8 | uint16(lsb)
-		if cpu.debugFlowControl {
-			fmt.Printf("==== RET %04x <-- %04x\n", retAddr, cpu.pc)
-		}
 		cpu.pc = retAddr
 	case "NZ":
 		if !cpu.zf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== RET NZ ...\n")
-			}
 			cpu.ret("", mem)
 		} else {
 			cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== RET Z ...\n")
-			}
 			cpu.ret("", mem)
 		} else {
 			cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== RET NC ...\n")
-			}
 			cpu.ret("", mem)
 		} else {
 			cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
-			if cpu.debugFlowControl {
-				fmt.Printf("==== RET C ...\n")
-			}
 			cpu.ret("", mem)
 		} else {
 			cpu.altTicks = true
@@ -468,9 +420,6 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 }
 
 func (cpu *CPU) reti(mem *mem.Memory) {
-	if cpu.debugFlowControl {
-		fmt.Printf("==== RETI ...\n")
-	}
 	cpu.ret("", mem)
 	cpu.ei()
 }
@@ -578,9 +527,6 @@ func (cpu *CPU) rrcAddr(a16 uint16, mem *mem.Memory) {
 }
 
 func (cpu *CPU) rst(a16 uint16, mem *mem.Memory) {
-	if cpu.debugFlowControl {
-		fmt.Printf("==== RST %04x ...\n", a16)
-	}
 	cpu.call("", a16, mem)
 }
 
