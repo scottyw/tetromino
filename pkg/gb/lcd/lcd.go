@@ -174,6 +174,10 @@ func (lcd *LCD) LoadSnapshot(filename string) {
 	defer file.Close()
 	decoder := gob.NewDecoder(file)
 	err = decoder.Decode(lcd)
+	if err != nil {
+		fmt.Printf("Failed to decode LCD snapshot: %v\n", err)
+		return
+	}
 }
 
 func (lcd *LCD) readVideoRAM(memoryAddr uint16) byte {
@@ -257,8 +261,7 @@ func (lcd *LCD) updateWindow(lcdY uint8) {
 }
 
 func (lcd *LCD) readSpriteTile(tileNumber uint16, att uint8) *[8][8]uint8 {
-	tile := lcd.tileCache[tileNumber]
-	tile, _ = lcd.readTile(uint16(tileNumber))
+	tile, _ := lcd.readTile(uint16(tileNumber))
 	if spriteXFlip(att) {
 		new := [8][8]uint8{}
 		for y := 0; y < 8; y++ {
