@@ -6,6 +6,7 @@ import (
 	"image"
 	"image/png"
 	"io"
+	"io/ioutil"
 	"os"
 	"time"
 
@@ -35,7 +36,7 @@ type Options struct {
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
 	dispatch *cpu.Dispatch
-	hwr      *mem.HardwareRegisters
+	memory   *mem.Memory
 	timer    *timer.Timer
 	lcd      *lcd.LCD
 	start    time.Time
@@ -47,17 +48,17 @@ type Gameboy struct {
 
 // NewGameboy returns a new Gameboy
 func NewGameboy(opts Options, cancel func()) Gameboy {
-	timer := timer.NewTimer(opts.DebugTimer)
-	hwr := mem.NewHardwareRegisters(timer, opts.SBWriter)
-	c := cpu.NewCPU(opts.DebugCPU)
-	var m *mem.Memory
+	var rom []byte
 	if opts.RomFilename == "" {
-		m = mem.NewMemory(hwr, make([]byte, 0x8000))
+		rom = make([]byte, 0x8000)
 	} else {
-		m = mem.NewMemoryFromFile(hwr, opts.RomFilename)
+		rom = readRomFile(opts.RomFilename)
 	}
-	dispatch := cpu.NewDispatch(c, m, hwr)
-	lcd := lcd.NewLCD(hwr, m, opts.DebugLCD)
+	c := cpu.NewCPU(opts.DebugCPU)
+	timer := timer.NewTimer(opts.DebugTimer)
+	memory := mem.NewMemory(rom, opts.SBWriter, timer)
+	dispatch := cpu.NewDispatch(c, memory)
+	lcd := lcd.NewLCD(memory, opts.DebugLCD)
 	start := time.Now()
 	duration := frameDuration
 	if opts.Fast {
@@ -65,7 +66,7 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 	}
 	return Gameboy{
 		dispatch: dispatch,
-		hwr:      hwr,
+		memory:   memory,
 		timer:    timer,
 		lcd:      lcd,
 		start:    start,
@@ -75,6 +76,18 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 	}
 }
 
+func readRomFile(romFilename string) []byte {
+	var rom []byte
+	if romFilename == "" {
+		panic(fmt.Sprintf("No ROM file specified"))
+	}
+	rom, err := ioutil.ReadFile(romFilename)
+	if err != nil {
+		panic(fmt.Sprintf("Failed to read the ROM file at \"%s\" (%v)", romFilename, err))
+	}
+	return rom
+}
+
 func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// The Game Boy clock runs at 4.194304MHz
 	// Each loop iteration below represents one machine cycle
@@ -82,10 +95,11 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 	// Each LCD frame is 17556 machine cycles
 	for mtick := 0; mtick < 17556; mtick++ {
 		gb.dispatch.ExecuteMachineCycle()
+		gb.memory.ExecuteMachineCycle()
 		gb.lcd.EndMachineCycle()
 		timerInterruptRequested := gb.timer.EndMachineCycle()
 		if timerInterruptRequested {
-			gb.hwr.IF |= 0x04
+			gb.memory.IF |= 0x04
 		}
 	}
 	gb.lcd.FrameEnd()
@@ -141,55 +155,55 @@ func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 	// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
 	if b == ui.Start {
 		if pressed {
-			gb.hwr.ButtonInput &^= 0x8
+			gb.memory.ButtonInput &^= 0x8
 		} else {
-			gb.hwr.ButtonInput |= 0x8
+			gb.memory.ButtonInput |= 0x8
 		}
 	} else if b == ui.Select {
 		if pressed {
-			gb.hwr.ButtonInput &^= 0x4
+			gb.memory.ButtonInput &^= 0x4
 		} else {
-			gb.hwr.ButtonInput |= 0x4
+			gb.memory.ButtonInput |= 0x4
 		}
 	}
 	if b == ui.B {
 		if pressed {
-			gb.hwr.ButtonInput &^= 0x2
+			gb.memory.ButtonInput &^= 0x2
 		} else {
-			gb.hwr.ButtonInput |= 0x2
+			gb.memory.ButtonInput |= 0x2
 		}
 	}
 	if b == ui.A {
 		if pressed {
-			gb.hwr.ButtonInput &^= 0x1
+			gb.memory.ButtonInput &^= 0x1
 		} else {
-			gb.hwr.ButtonInput |= 0x1
+			gb.memory.ButtonInput |= 0x1
 		}
 	}
 	if b == ui.Down {
 		if pressed {
-			gb.hwr.DirectionInput &^= 0x8
+			gb.memory.DirectionInput &^= 0x8
 		} else {
-			gb.hwr.DirectionInput |= 0x8
+			gb.memory.DirectionInput |= 0x8
 		}
 	} else if b == ui.Up {
 		if pressed {
-			gb.hwr.DirectionInput &^= 0x4
+			gb.memory.DirectionInput &^= 0x4
 		} else {
-			gb.hwr.DirectionInput |= 0x4
+			gb.memory.DirectionInput |= 0x4
 		}
 	}
 	if b == ui.Left {
 		if pressed {
-			gb.hwr.DirectionInput &^= 0x2
+			gb.memory.DirectionInput &^= 0x2
 		} else {
-			gb.hwr.DirectionInput |= 0x2
+			gb.memory.DirectionInput |= 0x2
 		}
 	} else if b == ui.Right {
 		if pressed {
-			gb.hwr.DirectionInput &^= 0x1
+			gb.memory.DirectionInput &^= 0x1
 		} else {
-			gb.hwr.DirectionInput |= 0x1
+			gb.memory.DirectionInput |= 0x1
 		}
 	}
 }

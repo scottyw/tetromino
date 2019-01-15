@@ -7,8 +7,7 @@ import (
 // Dispatch determines how CPU instructions are dispatched
 type Dispatch struct {
 	cpu               *CPU
-	mem               *mem.Memory
-	hwr               *mem.HardwareRegisters
+	memory            *mem.Memory
 	normal            [256][]func()
 	prefix            [256][]func()
 	steps             *[]func()
@@ -23,15 +22,14 @@ type Dispatch struct {
 }
 
 // NewDispatch returns a Dispatch instance bringing the CPU and memory together
-func NewDispatch(cpu *CPU, mem *mem.Memory, hwr *mem.HardwareRegisters) *Dispatch {
+func NewDispatch(cpu *CPU, memory *mem.Memory) *Dispatch {
 	initialSteps := []func(){}
 	dispatch := &Dispatch{
-		cpu:   cpu,
-		mem:   mem,
-		hwr:   hwr,
-		steps: &initialSteps,
+		cpu:    cpu,
+		memory: memory,
+		steps:  &initialSteps,
 	}
-	dispatch.initialize(cpu, mem)
+	dispatch.initialize(cpu, memory)
 	return dispatch
 }
 

@@ -53,7 +53,7 @@ var (
 
 // LCD represents the LCD display of the Gameboy
 type LCD struct {
-	hwr            *mem.HardwareRegisters
+	memory         *mem.Memory
 	videoRAM       *[0x2000]byte
 	oam            *[0xa0]byte
 	tileCache      [384]*[8][8]uint8
@@ -68,11 +68,11 @@ type LCD struct {
 }
 
 // NewLCD returns the configured LCD
-func NewLCD(hwr *mem.HardwareRegisters, memory *mem.Memory, debug bool) *LCD {
+func NewLCD(memory *mem.Memory, debug bool) *LCD {
 	lcd := LCD{
-		hwr:      hwr,
 		videoRAM: &memory.VideoRAM,
 		oam:      &memory.OAM,
+		memory:   memory,
 		Frame:    image.NewRGBA(image.Rect(0, 0, 256, 256)),
 		debug:    debug,
 	}
@@ -93,13 +93,13 @@ func (lcd *LCD) EndMachineCycle() {
 
 	// Is the LCD enabled?
 	if !lcd.lcdDisplayEnable() {
-		lcd.hwr.LY = 0
+		lcd.memory.LY = 0
 		lcd.tick = 0
 		return
 	}
 
 	// Where are we on the LCD?
-	lcd.hwr.LY = uint8(lcd.tick / 114)
+	lcd.memory.LY = uint8(lcd.tick / 114)
 	x := lcd.tick % 114
 	lcd.tick++
 	if lcd.tick >= 17556 {
@@ -108,46 +108,46 @@ func (lcd *LCD) EndMachineCycle() {
 
 	// Set mode on STAT register
 	switch {
-	case x == 0 && lcd.hwr.LY == 144:
+	case x == 0 && lcd.memory.LY == 144:
 		// V-Blank period starts
-		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc) | 0x01
+		lcd.memory.STAT = (lcd.memory.STAT & 0xfc) | 0x01
 		// V-Blank interrupt
-		lcd.hwr.IF |= 0x01
+		lcd.memory.IF |= 0x01
 		// Is LCD STAT interrupt enabled?
-		if lcd.hwr.STAT&0x10 > 0 {
-			lcd.hwr.IF |= 0x02
+		if lcd.memory.STAT&0x10 > 0 {
+			lcd.memory.IF |= 0x02
 		}
-	case x == 0 && lcd.hwr.LY < 144:
+	case x == 0 && lcd.memory.LY < 144:
 		// OAM period starts
-		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc) | 0x02
+		lcd.memory.STAT = (lcd.memory.STAT & 0xfc) | 0x02
 		// Is LCD STAT interrupt enabled?
-		if lcd.hwr.STAT&0x20 > 0 {
-			lcd.hwr.IF |= 0x02
+		if lcd.memory.STAT&0x20 > 0 {
+			lcd.memory.IF |= 0x02
 		}
-	case x == 20 && lcd.hwr.LY < 144:
+	case x == 20 && lcd.memory.LY < 144:
 		// LCD data transfer period starts
-		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc) | 0x03
-	case x == 63 && lcd.hwr.LY < 144:
+		lcd.memory.STAT = (lcd.memory.STAT & 0xfc) | 0x03
+	case x == 63 && lcd.memory.LY < 144:
 		// H-Blank period starts
-		lcd.hwr.STAT = (lcd.hwr.STAT & 0xfc)
+		lcd.memory.STAT = (lcd.memory.STAT & 0xfc)
 		// Is LCD STAT interrupt enabled?
-		if lcd.hwr.STAT&0x08 > 0 {
-			lcd.hwr.IF |= 0x02
+		if lcd.memory.STAT&0x08 > 0 {
+			lcd.memory.IF |= 0x02
 		}
 		// Render LCD line
-		lcd.updateLcdLine(lcd.hwr.LY)
+		lcd.updateLcdLine(lcd.memory.LY)
 	}
 
 	// Check coincidence flag
 	if x == 0 {
-		if lcd.hwr.LY == lcd.hwr.LYC {
-			lcd.hwr.STAT |= 0x04
+		if lcd.memory.LY == lcd.memory.LYC {
+			lcd.memory.STAT |= 0x04
 			// Is LCD STAT interrupt enabled?
-			if lcd.hwr.STAT&0x40 > 0 {
-				lcd.hwr.IF |= 0x02
+			if lcd.memory.STAT&0x40 > 0 {
+				lcd.memory.IF |= 0x02
 			}
 		} else {
-			lcd.hwr.STAT &^= 0x04
+			lcd.memory.STAT &^= 0x04
 		}
 	}
 }
@@ -346,9 +346,9 @@ func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA
 }
 
 func (lcd *LCD) renderLine(y, scy uint8) {
-	scx := lcd.hwr.SCX
-	wx := lcd.hwr.WX
-	wy := lcd.hwr.WY
+	scx := lcd.memory.SCX
+	wx := lcd.memory.WX
+	wy := lcd.memory.WY
 	if lcd.debug {
 		for x := 0; x < 256; x++ {
 			pixel := lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
@@ -363,7 +363,7 @@ func (lcd *LCD) renderLine(y, scy uint8) {
 }
 
 func (lcd *LCD) updateLcdLine(y uint8) {
-	scy := lcd.hwr.SCY
+	scy := lcd.memory.SCY
 	lcd.updateBG(y, scy)
 	lcd.updateWindow(y)
 	lcd.updateSprites(y)
@@ -373,7 +373,7 @@ func (lcd *LCD) updateLcdLine(y uint8) {
 // FrameEnd writes any remaining VRAM lines to the GUI for debugging
 func (lcd *LCD) FrameEnd() {
 	if lcd.debug {
-		for y := lcd.hwr.SCY + 144; y < lcd.hwr.SCY || y >= lcd.hwr.SCY+144; y++ {
+		for y := lcd.memory.SCY + 144; y < lcd.memory.SCY || y >= lcd.memory.SCY+144; y++ {
 			lcd.updateLcdLine(y)
 		}
 	}

@@ -6,32 +6,32 @@ import (
 
 func (d *Dispatch) handleInterrupt() func() {
 	cpu := d.cpu
-	memory := d.mem
+	memory := d.memory
 	return func() {
 		if cpu.ime {
-			interrupts := d.hwr.IE & d.hwr.IF & 0x1f
+			interrupts := memory.IE & memory.IF & 0x1f
 			cpu.ime = false
 			switch {
 			case interrupts&bit0 > 0:
 				// 0040 Vertical Blank Interrupt Start Address
 				cpu.rst(0x0040, memory)
-				d.hwr.IF &^= bit0
+				memory.IF &^= bit0
 			case interrupts&bit1 > 0:
 				// 0048 LCDC Status Interrupt Start Address
 				cpu.rst(0x0048, memory)
-				d.hwr.IF &^= bit1
+				memory.IF &^= bit1
 			case interrupts&bit2 > 0:
 				// 0050 Timer OverflowInterrupt Start Address
 				cpu.rst(0x0050, memory)
-				d.hwr.IF &^= bit2
+				memory.IF &^= bit2
 			case interrupts&bit3 > 0:
 				// 0058 Serial Transfer Completion Interrupt Start Address
 				cpu.rst(0x0058, memory)
-				d.hwr.IF &^= bit3
+				memory.IF &^= bit3
 			case interrupts&bit4 > 0:
 				// 0060 High-to-Low of P10-P13 Interrupt Start Address
 				cpu.rst(0x0060, memory)
-				d.hwr.IF &^= bit4
+				memory.IF &^= bit4
 			}
 		}
 	}
@@ -39,8 +39,9 @@ func (d *Dispatch) handleInterrupt() func() {
 
 func (d *Dispatch) checkInterrupts() *[]func() {
 	cpu := d.cpu
+	memory := d.memory
 	var length int
-	interrupts := d.hwr.IE & d.hwr.IF & 0x1f
+	interrupts := memory.IE & memory.IF & 0x1f
 	if interrupts > 0 {
 		if cpu.halted {
 			cpu.halted = false
@@ -64,7 +65,7 @@ func (d *Dispatch) checkInterrupts() *[]func() {
 // Every instruction is implemented as a list of steps that take one machine cycle each
 func (d *Dispatch) peek() *[]func() {
 	cpu := d.cpu
-	memory := d.mem
+	memory := d.memory
 	instructionByte := memory.Read(cpu.pc)
 	// Mooneye uses the 0x40 instruction as a magic breakpoint
 	// to indicate that a test rom has completeed

@@ -105,17 +105,17 @@ func TestMooneye29(t *testing.T) { runMooneyeTest(t, "acceptance/instr/daa.gb") 
 
 // func TestMooneye34(t *testing.T) { runMooneyeTest(t, "acceptance/ld_hl_sp_e_timing.gb") }
 
-// func TestMooneye35(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/basic.gb") }
+func TestMooneye35(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/basic.gb") }
 
 // func TestMooneye36(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/reg_read.gb") }
 
 // func TestMooneye37(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/sources-dmgABCmgbS.gb") }
 
-// func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
+func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
 
 // func TestMooneye39(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_start.gb") }
 
-// func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
+func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
 
 // func TestMooneye41(t *testing.T) { runMooneyeTest(t, "acceptance/pop_timing.gb") }
 
