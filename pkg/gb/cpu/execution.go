@@ -2,6 +2,8 @@ package cpu
 
 import (
 	"fmt"
+
+	"github.com/scottyw/tetromino/pkg/gb/evil"
 )
 
 func (d *Dispatch) handleInterrupt() func() {
@@ -151,4 +153,5 @@ func (d *Dispatch) ExecuteMachineCycle() {
 	step := (*d.steps)[d.stepIndex]
 	step()
 	d.stepIndex++
+	evil.TotalCycles++
 }

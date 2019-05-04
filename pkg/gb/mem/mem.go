@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/scottyw/tetromino/pkg/gb/evil"
 	"github.com/scottyw/tetromino/pkg/gb/timer"
 )
 
@@ -239,7 +240,7 @@ func (m *Memory) Read(addr uint16) byte {
 		// case SB:
 		// case SC:
 	case addr == DIV:
-		return m.timer.DIV()
+		return evil.NextShape(m.VideoRAM)
 	case addr == TIMA:
 		return m.timer.TIMA()
 	case addr == TMA:
