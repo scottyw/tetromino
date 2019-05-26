@@ -456,6 +456,24 @@ func (cpu *CPU) reti() {
 	cpu.ei()
 }
 
+func (cpu *CPU) rlA() { cpu.rl(&cpu.a) }
+
+func (cpu *CPU) rlB() { cpu.rl(&cpu.b) }
+
+func (cpu *CPU) rlC() { cpu.rl(&cpu.c) }
+
+func (cpu *CPU) rlD() { cpu.rl(&cpu.d) }
+
+func (cpu *CPU) rlE() { cpu.rl(&cpu.e) }
+
+func (cpu *CPU) rlH() { cpu.rl(&cpu.h) }
+
+func (cpu *CPU) rlL() { cpu.rl(&cpu.l) }
+
+func (cpu *CPU) rlU() { cpu.rl(&cpu.u8a) }
+
+func (cpu *CPU) rlM() { cpu.rl(&cpu.m8a) }
+
 func (cpu *CPU) rl(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
@@ -469,18 +487,30 @@ func (cpu *CPU) rl(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) rlAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.rl(&value)
-	mem.Write(a16, value)
-}
-
 func (cpu *CPU) rla() {
 	cpu.rl(&cpu.a)
 	cpu.f &^= zFlag
 	// [0 0 0 C]
 	cpu.setZf(false)
 }
+
+func (cpu *CPU) rlcA() { cpu.rlc(&cpu.a) }
+
+func (cpu *CPU) rlcB() { cpu.rlc(&cpu.b) }
+
+func (cpu *CPU) rlcC() { cpu.rlc(&cpu.c) }
+
+func (cpu *CPU) rlcD() { cpu.rlc(&cpu.d) }
+
+func (cpu *CPU) rlcE() { cpu.rlc(&cpu.e) }
+
+func (cpu *CPU) rlcH() { cpu.rlc(&cpu.h) }
+
+func (cpu *CPU) rlcL() { cpu.rlc(&cpu.l) }
+
+func (cpu *CPU) rlcU() { cpu.rlc(&cpu.u8a) }
+
+func (cpu *CPU) rlcM() { cpu.rlc(&cpu.m8a) }
 
 func (cpu *CPU) rlc(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
@@ -502,11 +532,23 @@ func (cpu *CPU) rlca() {
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rlcAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.rlc(&value)
-	mem.Write(a16, value)
-}
+func (cpu *CPU) rrA() { cpu.rr(&cpu.a) }
+
+func (cpu *CPU) rrB() { cpu.rr(&cpu.b) }
+
+func (cpu *CPU) rrC() { cpu.rr(&cpu.c) }
+
+func (cpu *CPU) rrD() { cpu.rr(&cpu.d) }
+
+func (cpu *CPU) rrE() { cpu.rr(&cpu.e) }
+
+func (cpu *CPU) rrH() { cpu.rr(&cpu.h) }
+
+func (cpu *CPU) rrL() { cpu.rr(&cpu.l) }
+
+func (cpu *CPU) rrU() { cpu.rr(&cpu.u8a) }
+
+func (cpu *CPU) rrM() { cpu.rr(&cpu.m8a) }
 
 func (cpu *CPU) rr(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
@@ -527,11 +569,23 @@ func (cpu *CPU) rra() {
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rrAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.rr(&value)
-	mem.Write(a16, value)
-}
+func (cpu *CPU) rrcA() { cpu.rrc(&cpu.a) }
+
+func (cpu *CPU) rrcB() { cpu.rrc(&cpu.b) }
+
+func (cpu *CPU) rrcC() { cpu.rrc(&cpu.c) }
+
+func (cpu *CPU) rrcD() { cpu.rrc(&cpu.d) }
+
+func (cpu *CPU) rrcE() { cpu.rrc(&cpu.e) }
+
+func (cpu *CPU) rrcH() { cpu.rrc(&cpu.h) }
+
+func (cpu *CPU) rrcL() { cpu.rrc(&cpu.l) }
+
+func (cpu *CPU) rrcU() { cpu.rrc(&cpu.u8a) }
+
+func (cpu *CPU) rrcM() { cpu.rrc(&cpu.m8a) }
 
 func (cpu *CPU) rrc(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
@@ -552,12 +606,6 @@ func (cpu *CPU) rrca() {
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rrcAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.rrc(&value)
-	mem.Write(a16, value)
-}
-
 func (cpu *CPU) rst(a16 uint16) func() {
 	return func() {
 		// Store the old PC to write to memory in the next steps
@@ -574,6 +622,24 @@ func (cpu *CPU) set(pos uint8, r8 *uint8) func() {
 	}
 }
 
+func (cpu *CPU) slaA() { cpu.sla(&cpu.a) }
+
+func (cpu *CPU) slaB() { cpu.sla(&cpu.b) }
+
+func (cpu *CPU) slaC() { cpu.sla(&cpu.c) }
+
+func (cpu *CPU) slaD() { cpu.sla(&cpu.d) }
+
+func (cpu *CPU) slaE() { cpu.sla(&cpu.e) }
+
+func (cpu *CPU) slaH() { cpu.sla(&cpu.h) }
+
+func (cpu *CPU) slaL() { cpu.sla(&cpu.l) }
+
+func (cpu *CPU) slaU() { cpu.sla(&cpu.u8a) }
+
+func (cpu *CPU) slaM() { cpu.sla(&cpu.m8a) }
+
 func (cpu *CPU) sla(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
@@ -584,11 +650,23 @@ func (cpu *CPU) sla(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) slaAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.sla(&value)
-	mem.Write(a16, value)
-}
+func (cpu *CPU) sraA() { cpu.sra(&cpu.a) }
+
+func (cpu *CPU) sraB() { cpu.sra(&cpu.b) }
+
+func (cpu *CPU) sraC() { cpu.sra(&cpu.c) }
+
+func (cpu *CPU) sraD() { cpu.sra(&cpu.d) }
+
+func (cpu *CPU) sraE() { cpu.sra(&cpu.e) }
+
+func (cpu *CPU) sraH() { cpu.sra(&cpu.h) }
+
+func (cpu *CPU) sraL() { cpu.sra(&cpu.l) }
+
+func (cpu *CPU) sraU() { cpu.sra(&cpu.u8a) }
+
+func (cpu *CPU) sraM() { cpu.sra(&cpu.m8a) }
 
 func (cpu *CPU) sra(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
@@ -604,11 +682,23 @@ func (cpu *CPU) sra(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) sraAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.sra(&value)
-	mem.Write(a16, value)
-}
+func (cpu *CPU) srlA() { cpu.srl(&cpu.a) }
+
+func (cpu *CPU) srlB() { cpu.srl(&cpu.b) }
+
+func (cpu *CPU) srlC() { cpu.srl(&cpu.c) }
+
+func (cpu *CPU) srlD() { cpu.srl(&cpu.d) }
+
+func (cpu *CPU) srlE() { cpu.srl(&cpu.e) }
+
+func (cpu *CPU) srlH() { cpu.srl(&cpu.h) }
+
+func (cpu *CPU) srlL() { cpu.srl(&cpu.l) }
+
+func (cpu *CPU) srlU() { cpu.srl(&cpu.u8a) }
+
+func (cpu *CPU) srlM() { cpu.srl(&cpu.m8a) }
 
 func (cpu *CPU) srl(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
@@ -620,11 +710,23 @@ func (cpu *CPU) srl(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) srlAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.srl(&value)
-	mem.Write(a16, value)
-}
+func (cpu *CPU) swapA() { cpu.swap(&cpu.a) }
+
+func (cpu *CPU) swapB() { cpu.swap(&cpu.b) }
+
+func (cpu *CPU) swapC() { cpu.swap(&cpu.c) }
+
+func (cpu *CPU) swapD() { cpu.swap(&cpu.d) }
+
+func (cpu *CPU) swapE() { cpu.swap(&cpu.e) }
+
+func (cpu *CPU) swapH() { cpu.swap(&cpu.h) }
+
+func (cpu *CPU) swapL() { cpu.swap(&cpu.l) }
+
+func (cpu *CPU) swapU() { cpu.swap(&cpu.u8a) }
+
+func (cpu *CPU) swapM() { cpu.swap(&cpu.m8a) }
 
 func (cpu *CPU) swap(r8 *uint8) {
 	u8 := *r8
@@ -634,12 +736,6 @@ func (cpu *CPU) swap(r8 *uint8) {
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(false)
-}
-
-func (cpu *CPU) swapAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.swap(&value)
-	mem.Write(a16, value)
 }
 
 func (cpu *CPU) scf() {
@@ -652,6 +748,24 @@ func (cpu *CPU) scf() {
 func (cpu *CPU) stop() {
 	cpu.stopped = true
 }
+
+func (cpu *CPU) sbcA() { cpu.sbc(cpu.a) }
+
+func (cpu *CPU) sbcB() { cpu.sbc(cpu.b) }
+
+func (cpu *CPU) sbcC() { cpu.sbc(cpu.c) }
+
+func (cpu *CPU) sbcD() { cpu.sbc(cpu.d) }
+
+func (cpu *CPU) sbcE() { cpu.sbc(cpu.e) }
+
+func (cpu *CPU) sbcH() { cpu.sbc(cpu.h) }
+
+func (cpu *CPU) sbcL() { cpu.sbc(cpu.l) }
+
+func (cpu *CPU) sbcU() { cpu.sbc(cpu.u8a) }
+
+func (cpu *CPU) sbcM() { cpu.sbc(cpu.m8a) }
 
 func (cpu *CPU) sbc(u8 uint8) {
 	a := cpu.a
@@ -671,9 +785,23 @@ func (cpu *CPU) sbc(u8 uint8) {
 
 }
 
-func (cpu *CPU) sbcAddr(a16 uint16, mem *mem.Memory) {
-	cpu.sbc(mem.Read(a16))
-}
+func (cpu *CPU) subA() { cpu.sub(cpu.a) }
+
+func (cpu *CPU) subB() { cpu.sub(cpu.b) }
+
+func (cpu *CPU) subC() { cpu.sub(cpu.c) }
+
+func (cpu *CPU) subD() { cpu.sub(cpu.d) }
+
+func (cpu *CPU) subE() { cpu.sub(cpu.e) }
+
+func (cpu *CPU) subH() { cpu.sub(cpu.h) }
+
+func (cpu *CPU) subL() { cpu.sub(cpu.l) }
+
+func (cpu *CPU) subU() { cpu.sub(cpu.u8a) }
+
+func (cpu *CPU) subM() { cpu.sub(cpu.m8a) }
 
 func (cpu *CPU) sub(u8 uint8) {
 	a := cpu.a
@@ -685,9 +813,23 @@ func (cpu *CPU) sub(u8 uint8) {
 	cpu.setCf(c8Sub(a, u8))
 }
 
-func (cpu *CPU) subAddr(a16 uint16, mem *mem.Memory) {
-	cpu.sub(mem.Read(a16))
-}
+func (cpu *CPU) xorA() { cpu.xor(cpu.a) }
+
+func (cpu *CPU) xorB() { cpu.xor(cpu.b) }
+
+func (cpu *CPU) xorC() { cpu.xor(cpu.c) }
+
+func (cpu *CPU) xorD() { cpu.xor(cpu.d) }
+
+func (cpu *CPU) xorE() { cpu.xor(cpu.e) }
+
+func (cpu *CPU) xorH() { cpu.xor(cpu.h) }
+
+func (cpu *CPU) xorL() { cpu.xor(cpu.l) }
+
+func (cpu *CPU) xorU() { cpu.xor(cpu.u8a) }
+
+func (cpu *CPU) xorM() { cpu.xor(cpu.m8a) }
 
 func (cpu *CPU) xor(u8 uint8) {
 	cpu.a = cpu.a ^ u8
@@ -696,8 +838,4 @@ func (cpu *CPU) xor(u8 uint8) {
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(false)
-}
-
-func (cpu *CPU) xorAddr(a16 uint16, mem *mem.Memory) {
-	cpu.xor(mem.Read(a16))
 }

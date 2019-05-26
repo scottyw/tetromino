@@ -263,19 +263,6 @@ func TestSla(t *testing.T) {
 	}
 }
 
-func TestSlaAddr(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{f: 0x10}},
-	} {
-		actual := mem.NewMemory(nil, nil, nil)
-		actual.Write(0x8642, 0xa9)
-		test.cpu.slaAddr(0x8642, actual)
-		expected := mem.NewMemory(nil, nil, nil)
-		expected.Write(0x8642, 0x52)
-		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8642, 0x1)
-	}
-}
-
 func TestSra(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{c: 0x55}, CPU{c: 0x2a, f: 0x10}},
@@ -284,19 +271,6 @@ func TestSra(t *testing.T) {
 	} {
 		test.cpu.sra(&test.cpu.c)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
-func TestSraAddr(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{}, CPU{f: 0x10}},
-	} {
-		actual := mem.NewMemory(nil, nil, nil)
-		actual.Write(0x8642, 0x55)
-		test.cpu.sraAddr(0x8642, actual)
-		expected := mem.NewMemory(nil, nil, nil)
-		expected.Write(0x8642, 0x2a)
-		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8642, 0x1)
 	}
 }
 
@@ -311,38 +285,12 @@ func TestSrl(t *testing.T) {
 	}
 }
 
-func TestSrlAddr(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{f: 0x10}, CPU{}},
-	} {
-		actual := mem.NewMemory(nil, nil, nil)
-		actual.Write(0x8642, 0xa8)
-		test.cpu.srlAddr(0x8642, actual)
-		expected := mem.NewMemory(nil, nil, nil)
-		expected.Write(0x8642, 0x54)
-		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8642, 0x1)
-	}
-}
-
 func TestSwap(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{c: 0x15, f: 0x10}, CPU{c: 0x51}},
 		{CPU{c: 0x00}, CPU{c: 0x00, f: 0x80}},
 	} {
 		test.cpu.swap(&test.cpu.c)
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
-func TestSwapAddr(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{f: 0x10}, CPU{}},
-	} {
-		actual := mem.NewMemory(nil, nil, nil)
-		actual.Write(0x8641, 0xba)
-		test.cpu.swapAddr(0x8641, actual)
-		expected := mem.NewMemory(nil, nil, nil)
-		expected.Write(0x8641, 0xab)
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
