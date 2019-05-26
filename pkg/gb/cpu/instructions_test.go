@@ -120,27 +120,6 @@ func TestCpl(t *testing.T) {
 	}
 }
 
-func TestJr(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0x1234}, CPU{pc: 0x1234}},
-	} {
-		test.cpu.jr("", 0)
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0x1234}, CPU{pc: 0x123b}},
-	} {
-		test.cpu.jr("", 7)
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0x1234}, CPU{pc: 0x122d}},
-	} {
-		test.cpu.jr("", -7)
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
 func TestRes(t *testing.T) {
 	// Flags: [- - - -]
 	for _, test := range []struct {

@@ -261,42 +261,17 @@ func (cpu *CPU) incAddr(a16 uint16, mem *mem.Memory) {
 	mem.Write(a16, value)
 }
 
-func (cpu *CPU) jp(kind string, a16 uint16) {
-	switch kind {
-	case "":
-		cpu.pc = a16
-	case "NZ":
-		if !cpu.zf() {
-			cpu.jp("", a16)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "Z":
-		if cpu.zf() {
-			cpu.jp("", a16)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "NC":
-		if !cpu.cf() {
-			cpu.jp("", a16)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "C":
-		if cpu.cf() {
-			cpu.jp("", a16)
-		} else {
-			// cpu.altTicks = true
-		}
-	default:
-		panic(fmt.Sprintf("No implementation for jp: %v %v", kind, a16))
-	}
+func (cpu *CPU) jp() {
+	cpu.pc = cpu.u16()
 }
 
-func (cpu *CPU) jr(kind string, i8 int8) {
-	address := uint16(int16(cpu.pc) + int16(i8))
-	cpu.jp(kind, address)
+func (cpu *CPU) jpHL() {
+	cpu.pc = cpu.hl()
+}
+
+func (cpu *CPU) jr() {
+	i8 := int8(cpu.u8a)
+	cpu.pc = uint16(int16(cpu.pc) + int16(i8))
 }
 
 func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
