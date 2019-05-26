@@ -422,27 +422,36 @@ func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
 
 func (cpu *CPU) ldMA() { cpu.m8a = cpu.a }
 
-func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
-	*r8 = u8
-}
-
-func (cpu *CPU) ld16(msb, lsb *uint8, u16 uint16) {
-	*msb = uint8(u16 >> 8)
-	*lsb = uint8(u16)
-}
-
 func (cpu *CPU) ldAUAddr(mem *mem.Memory) func() {
 	return func() {
 		addr := uint16(0xff00 + uint16(cpu.u8a))
-		cpu.ld(&cpu.a, mem.Read(addr))
+		cpu.a = mem.Read(addr)
 	}
 }
 
 func (cpu *CPU) ldACAddr(mem *mem.Memory) func() {
 	return func() {
 		addr := uint16(0xff00 + uint16(cpu.c))
-		cpu.ld(&cpu.a, mem.Read(addr))
+		cpu.a = mem.Read(addr)
 	}
+}
+
+func (cpu *CPU) ldBCU() {
+	u16 := cpu.u16()
+	cpu.b = uint8(u16 >> 8)
+	cpu.c = uint8(u16)
+}
+
+func (cpu *CPU) ldDEU() {
+	u16 := cpu.u16()
+	cpu.d = uint8(u16 >> 8)
+	cpu.e = uint8(u16)
+}
+
+func (cpu *CPU) ldHLU() {
+	u16 := cpu.u16()
+	cpu.h = uint8(u16 >> 8)
+	cpu.l = uint8(u16)
 }
 
 func (cpu *CPU) ldR8A16(r8 *uint8, a16 uint16, mem *mem.Memory) {
