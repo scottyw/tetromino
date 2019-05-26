@@ -434,39 +434,9 @@ func (cpu *CPU) ldLM() { cpu.l = cpu.m8a }
 
 func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
 
-func (cpu *CPU) ldMA() { cpu.m8a = cpu.a }
-
-func (cpu *CPU) ldMB() { cpu.m8a = cpu.b }
-
-func (cpu *CPU) ldMC() { cpu.m8a = cpu.c }
-
-func (cpu *CPU) ldMD() { cpu.m8a = cpu.d }
-
-func (cpu *CPU) ldME() { cpu.m8a = cpu.e }
-
-func (cpu *CPU) ldMH() { cpu.m8a = cpu.h }
-
-func (cpu *CPU) ldML() { cpu.m8a = cpu.l }
-
-func (cpu *CPU) ldMU() { cpu.m8a = cpu.u8a }
-
-func (cpu *CPU) ldAUAddr8(mem *mem.Memory) func() {
-	return func() {
-		addr := uint16(0xff00 + uint16(cpu.u8a))
-		cpu.a = mem.Read(addr)
-	}
-}
-
 func (cpu *CPU) ldAUAddr16(mem *mem.Memory) func() {
 	return func() {
 		cpu.a = mem.Read(cpu.u16())
-	}
-}
-
-func (cpu *CPU) ldACAddr(mem *mem.Memory) func() {
-	return func() {
-		addr := uint16(0xff00 + uint16(cpu.c))
-		cpu.a = mem.Read(addr)
 	}
 }
 
