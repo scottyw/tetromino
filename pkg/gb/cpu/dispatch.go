@@ -1498,14 +1498,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP BC  [] 1 [12]
 	d.normal[0xc1] = []func(){
 		nop,
-		func() {
-			cpu.c = mem.Read(cpu.sp)
-			cpu.sp++
-		},
-		func() {
-			cpu.b = mem.Read(cpu.sp)
-			cpu.sp++
-		},
+		pop(cpu, mem, &cpu.c),
+		pop(cpu, mem, &cpu.b),
 	}
 
 	// JP NZ a16 [] 3 [16 12]
@@ -1544,14 +1538,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xc5] = []func(){
 		nop,
 		nop,
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.b)
-		},
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.c)
-		},
+		push(cpu, mem, &cpu.b),
+		push(cpu, mem, &cpu.c),
 	}
 
 	// ADD A d8 [Z 0 H C] 2 [8]
@@ -1659,14 +1647,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP DE  [] 1 [12]
 	d.normal[0xd1] = []func(){
 		nop,
-		func() {
-			cpu.e = mem.Read(cpu.sp)
-			cpu.sp++
-		},
-		func() {
-			cpu.d = mem.Read(cpu.sp)
-			cpu.sp++
-		},
+		pop(cpu, mem, &cpu.e),
+		pop(cpu, mem, &cpu.d),
 	}
 
 	// JP NC a16 [] 3 [16 12]
@@ -1695,14 +1677,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xd5] = []func(){
 		nop,
 		nop,
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.d)
-		},
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.e)
-		},
+		push(cpu, mem, &cpu.d),
+		push(cpu, mem, &cpu.e),
 	}
 
 	// SUB d8  [Z 1 H C] 2 [8]
@@ -1798,14 +1774,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP HL  [] 1 [12]
 	d.normal[0xe1] = []func(){
 		nop,
-		func() {
-			cpu.l = mem.Read(cpu.sp)
-			cpu.sp++
-		},
-		func() {
-			cpu.h = mem.Read(cpu.sp)
-			cpu.sp++
-		},
+		pop(cpu, mem, &cpu.l),
+		pop(cpu, mem, &cpu.h),
 	}
 
 	// LD (C) A     1 [8]
@@ -1822,14 +1792,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xe5] = []func(){
 		nop,
 		nop,
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.h)
-		},
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.l)
-		},
+		push(cpu, mem, &cpu.h),
+		push(cpu, mem, &cpu.l),
 	}
 
 	// AND d8  [Z 0 1 0] 2 [8]
@@ -1913,10 +1877,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 			cpu.f = mem.Read(cpu.sp) & 0xf0
 			cpu.sp++
 		},
-		func() {
-			cpu.a = mem.Read(cpu.sp)
-			cpu.sp++
-		},
+		pop(cpu, mem, &cpu.a),
 	}
 
 	// LD A (C)     1 [8]
@@ -1939,14 +1900,8 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xf5] = []func(){
 		nop,
 		nop,
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.a)
-		},
-		func() {
-			cpu.sp--
-			mem.Write(cpu.sp, cpu.f)
-		},
+		push(cpu, mem, &cpu.a),
+		push(cpu, mem, &cpu.f),
 	}
 
 	// OR d8  [Z 0 0 0] 2 [8]

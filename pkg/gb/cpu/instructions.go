@@ -358,6 +358,20 @@ func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
 	cpu.or(mem.Read(a16))
 }
 
+func pop(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
+	return func() {
+		*a8 = mem.Read(cpu.sp)
+		cpu.sp++
+	}
+}
+
+func push(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
+	return func() {
+		cpu.sp--
+		mem.Write(cpu.sp, *a8)
+	}
+}
+
 func (cpu *CPU) res(pos uint8, r8 *uint8) {
 	*r8 &^= bits[pos]
 }
