@@ -136,10 +136,6 @@ func (d *Dispatch) writeU16() {
 	d.write(d.cpu.u16())
 }
 
-func (d *Dispatch) writeU16I() {
-	d.write(d.cpu.u16() + 1)
-}
-
 func (d *Dispatch) write(addr uint16) {
 	cpu := d.cpu
 	m := d.memory
@@ -173,7 +169,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x07] = []func(){cpu.rlca}
 
 	// LD (a16) SP [] 3 [20]
-	d.normal[0x08] = []func(){d.readParamA, d.readParamB, nop, func() { cpu.ldA16SP(cpu.u16(), mem) }, writeMemory}
+	d.normal[0x08] = []func(){d.readParamA, d.readParamB, nop, cpu.writeLowSP(mem), cpu.writeHighSP(mem)}
 
 	// ADD HL BC [- 0 H C] 1 [8]
 	d.normal[0x09] = []func(){nop, cpu.addHLBC}

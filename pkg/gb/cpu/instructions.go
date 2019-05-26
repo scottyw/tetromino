@@ -500,9 +500,9 @@ func (cpu *CPU) ldSPHL() {
 	cpu.sp = cpu.hl()
 }
 
-func (cpu *CPU) ldA16SP(a16 uint16, mem *mem.Memory) {
-	mem.Write(a16, uint8(cpu.sp))
-	mem.Write(a16+1, uint8(cpu.sp>>8))
+func (cpu *CPU) ldMSP() {
+	cpu.m8a = uint8(cpu.sp)
+	cpu.m8b = uint8(cpu.sp >> 8)
 }
 
 func (cpu *CPU) ldHLSP(i8 int8) {
@@ -518,6 +518,18 @@ func (cpu *CPU) ldHLSP(i8 int8) {
 	} else {
 		cpu.setHf(int(cpu.sp)&0x0f >= new&0x0f)
 		cpu.setCf(int(cpu.sp)&0xff >= new&0xff)
+	}
+}
+
+func (cpu *CPU) writeLowSP(mem *mem.Memory) func() {
+	return func() {
+		mem.Write(cpu.u16(), uint8(cpu.sp))
+	}
+}
+
+func (cpu *CPU) writeHighSP(mem *mem.Memory) func() {
+	return func() {
+		mem.Write(cpu.u16()+1, uint8(cpu.sp>>8))
 	}
 }
 
