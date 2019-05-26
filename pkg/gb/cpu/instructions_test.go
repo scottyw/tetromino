@@ -106,7 +106,7 @@ func TestBit(t *testing.T) {
 		{CPU{c: 0x04, f: 0x80}, CPU{c: 0x04, f: 0x20}},
 		{CPU{c: 0xf0, f: 0x50}, CPU{c: 0xf0, f: 0xb0}},
 	} {
-		test.cpu.bit(2, test.cpu.c)
+		test.cpu.bit(2, &test.cpu.c)()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
@@ -162,7 +162,7 @@ func TestRes(t *testing.T) {
 		{CPU{c: 0x0a}, CPU{c: 0x0a}},
 		{CPU{c: 0x0e, f: 0xf0}, CPU{c: 0x0a, f: 0xf0}},
 	} {
-		test.cpu.res(2, &test.cpu.c)
+		test.cpu.res(2, &test.cpu.c)()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }
@@ -318,7 +318,7 @@ func TestSet(t *testing.T) {
 		{5, CPU{l: 0x20}, CPU{l: 0x20}},
 		{2, CPU{l: 0x11}, CPU{l: 0x15}},
 	} {
-		test.cpu.set(test.pos, &test.cpu.l)
+		test.cpu.set(test.pos, &test.cpu.l)()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
 	}
 }

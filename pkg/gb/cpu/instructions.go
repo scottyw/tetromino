@@ -80,16 +80,14 @@ func (cpu *CPU) andAddr(a16 uint16, mem *mem.Memory) {
 	cpu.and(mem.Read(a16))
 }
 
-func (cpu *CPU) bit(pos uint8, u8 uint8) {
-	zero := u8&bits[pos] == 0
-	// [Z 0 1 -]
-	cpu.setZf(zero)
-	cpu.setNf(false)
-	cpu.setHf(true)
-}
-
-func (cpu *CPU) bitAddr(pos uint8, a16 uint16, mem *mem.Memory) {
-	cpu.bit(pos, mem.Read(a16))
+func (cpu *CPU) bit(pos uint8, r8 *uint8) func() {
+	return func() {
+		zero := *r8&bits[pos] == 0
+		// [Z 0 1 -]
+		cpu.setZf(zero)
+		cpu.setNf(false)
+		cpu.setHf(true)
+	}
 }
 
 func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
@@ -372,14 +370,10 @@ func push(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
 	}
 }
 
-func (cpu *CPU) res(pos uint8, r8 *uint8) {
-	*r8 &^= bits[pos]
-}
-
-func (cpu *CPU) resAddr(pos uint8, a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.res(pos, &value)
-	mem.Write(a16, value)
+func (cpu *CPU) res(pos uint8, r8 *uint8) func() {
+	return func() {
+		*r8 &^= bits[pos]
+	}
 }
 
 func (cpu *CPU) ret(kind string, mem *mem.Memory) {
@@ -531,14 +525,10 @@ func (cpu *CPU) rst(a16 uint16, mem *mem.Memory) {
 	cpu.call("", a16, mem)
 }
 
-func (cpu *CPU) set(pos uint8, r8 *uint8) {
-	*r8 |= bits[pos]
-}
-
-func (cpu *CPU) setAddr(pos uint8, a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.set(pos, &value)
-	mem.Write(a16, value)
+func (cpu *CPU) set(pos uint8, r8 *uint8) func() {
+	return func() {
+		*r8 |= bits[pos]
+	}
 }
 
 func (cpu *CPU) sla(r8 *uint8) {

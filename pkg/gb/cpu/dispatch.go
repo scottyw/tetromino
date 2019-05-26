@@ -63,6 +63,14 @@ func writeMemory() {
 	// FIXME this function only exists to heep track of what steps comprise each instruction
 }
 
+func (d *Dispatch) readHL() {
+	d.mem8 = d.memory.Read(d.cpu.hl())
+}
+
+func (d *Dispatch) writeHL() {
+	d.memory.Write(d.cpu.hl(), d.mem8)
+}
+
 func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 
 	// NOP          1 [4]
@@ -2505,1576 +2513,1192 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// BIT 0 B [Z 0 1 -] 2 [8]
 	d.prefix[0x40] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.b)
-		},
+		cpu.bit(0, &cpu.b),
 	}
 
 	// BIT 0 C [Z 0 1 -] 2 [8]
 	d.prefix[0x41] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.c)
-		},
+		cpu.bit(0, &cpu.c),
 	}
 
 	// BIT 0 D [Z 0 1 -] 2 [8]
 	d.prefix[0x42] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.d)
-		},
+		cpu.bit(0, &cpu.d),
 	}
 
 	// BIT 0 E [Z 0 1 -] 2 [8]
 	d.prefix[0x43] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.e)
-		},
+		cpu.bit(0, &cpu.e),
 	}
 
 	// BIT 0 H [Z 0 1 -] 2 [8]
 	d.prefix[0x44] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.h)
-		},
+		cpu.bit(0, &cpu.h),
 	}
 
 	// BIT 0 L [Z 0 1 -] 2 [8]
 	d.prefix[0x45] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.l)
-		},
+		cpu.bit(0, &cpu.l),
 	}
 
 	// BIT 0 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x46] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(0, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(0, &d.mem8),
 	}
 
 	// BIT 0 A [Z 0 1 -] 2 [8]
 	d.prefix[0x47] = []func(){
 		nop,
-		func() {
-			cpu.bit(0, cpu.a)
-		},
+		cpu.bit(0, &cpu.a),
 	}
 
 	// BIT 1 B [Z 0 1 -] 2 [8]
 	d.prefix[0x48] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.b)
-		},
+		cpu.bit(1, &cpu.b),
 	}
 
 	// BIT 1 C [Z 0 1 -] 2 [8]
 	d.prefix[0x49] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.c)
-		},
+		cpu.bit(1, &cpu.c),
 	}
 
 	// BIT 1 D [Z 0 1 -] 2 [8]
 	d.prefix[0x4a] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.d)
-		},
+		cpu.bit(1, &cpu.d),
 	}
 
 	// BIT 1 E [Z 0 1 -] 2 [8]
 	d.prefix[0x4b] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.e)
-		},
+		cpu.bit(1, &cpu.e),
 	}
 
 	// BIT 1 H [Z 0 1 -] 2 [8]
 	d.prefix[0x4c] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.h)
-		},
+		cpu.bit(1, &cpu.h),
 	}
 
 	// BIT 1 L [Z 0 1 -] 2 [8]
 	d.prefix[0x4d] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.l)
-		},
+		cpu.bit(1, &cpu.l),
 	}
 
 	// BIT 1 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x4e] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(1, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(1, &d.mem8),
 	}
 
 	// BIT 1 A [Z 0 1 -] 2 [8]
 	d.prefix[0x4f] = []func(){
 		nop,
-		func() {
-			cpu.bit(1, cpu.a)
-		},
+		cpu.bit(1, &cpu.a),
 	}
 
 	// BIT 2 B [Z 0 1 -] 2 [8]
 	d.prefix[0x50] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.b)
-		},
+		cpu.bit(2, &cpu.b),
 	}
 
 	// BIT 2 C [Z 0 1 -] 2 [8]
 	d.prefix[0x51] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.c)
-		},
+		cpu.bit(2, &cpu.c),
 	}
 
 	// BIT 2 D [Z 0 1 -] 2 [8]
 	d.prefix[0x52] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.d)
-		},
+		cpu.bit(2, &cpu.d),
 	}
 
 	// BIT 2 E [Z 0 1 -] 2 [8]
 	d.prefix[0x53] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.e)
-		},
+		cpu.bit(2, &cpu.e),
 	}
 
 	// BIT 2 H [Z 0 1 -] 2 [8]
 	d.prefix[0x54] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.h)
-		},
+		cpu.bit(2, &cpu.h),
 	}
 
 	// BIT 2 L [Z 0 1 -] 2 [8]
 	d.prefix[0x55] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.l)
-		},
+		cpu.bit(2, &cpu.l),
 	}
 
 	// BIT 2 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x56] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(2, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(2, &d.mem8),
 	}
 
 	// BIT 2 A [Z 0 1 -] 2 [8]
 	d.prefix[0x57] = []func(){
 		nop,
-		func() {
-			cpu.bit(2, cpu.a)
-		},
+		cpu.bit(2, &cpu.a),
 	}
 
 	// BIT 3 B [Z 0 1 -] 2 [8]
 	d.prefix[0x58] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.b)
-		},
+		cpu.bit(3, &cpu.b),
 	}
 
 	// BIT 3 C [Z 0 1 -] 2 [8]
 	d.prefix[0x59] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.c)
-		},
+		cpu.bit(3, &cpu.c),
 	}
 
 	// BIT 3 D [Z 0 1 -] 2 [8]
 	d.prefix[0x5a] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.d)
-		},
+		cpu.bit(3, &cpu.d),
 	}
 
 	// BIT 3 E [Z 0 1 -] 2 [8]
 	d.prefix[0x5b] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.e)
-		},
+		cpu.bit(3, &cpu.e),
 	}
 
 	// BIT 3 H [Z 0 1 -] 2 [8]
 	d.prefix[0x5c] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.h)
-		},
+		cpu.bit(3, &cpu.h),
 	}
 
 	// BIT 3 L [Z 0 1 -] 2 [8]
 	d.prefix[0x5d] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.l)
-		},
+		cpu.bit(3, &cpu.l),
 	}
 
 	// BIT 3 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x5e] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(3, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(3, &d.mem8),
 	}
 
 	// BIT 3 A [Z 0 1 -] 2 [8]
 	d.prefix[0x5f] = []func(){
 		nop,
-		func() {
-			cpu.bit(3, cpu.a)
-		},
+		cpu.bit(3, &cpu.a),
 	}
 
 	// BIT 4 B [Z 0 1 -] 2 [8]
 	d.prefix[0x60] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.b)
-		},
+		cpu.bit(4, &cpu.b),
 	}
 
 	// BIT 4 C [Z 0 1 -] 2 [8]
 	d.prefix[0x61] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.c)
-		},
+		cpu.bit(4, &cpu.c),
 	}
 
 	// BIT 4 D [Z 0 1 -] 2 [8]
 	d.prefix[0x62] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.d)
-		},
+		cpu.bit(4, &cpu.d),
 	}
 
 	// BIT 4 E [Z 0 1 -] 2 [8]
 	d.prefix[0x63] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.e)
-		},
+		cpu.bit(4, &cpu.e),
 	}
 
 	// BIT 4 H [Z 0 1 -] 2 [8]
 	d.prefix[0x64] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.h)
-		},
+		cpu.bit(4, &cpu.h),
 	}
 
 	// BIT 4 L [Z 0 1 -] 2 [8]
 	d.prefix[0x65] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.l)
-		},
+		cpu.bit(4, &cpu.l),
 	}
 
 	// BIT 4 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x66] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(4, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(4, &d.mem8),
 	}
 
 	// BIT 4 A [Z 0 1 -] 2 [8]
 	d.prefix[0x67] = []func(){
 		nop,
-		func() {
-			cpu.bit(4, cpu.a)
-		},
+		cpu.bit(4, &cpu.a),
 	}
 
 	// BIT 5 B [Z 0 1 -] 2 [8]
 	d.prefix[0x68] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.b)
-		},
+		cpu.bit(5, &cpu.b),
 	}
 
 	// BIT 5 C [Z 0 1 -] 2 [8]
 	d.prefix[0x69] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.c)
-		},
+		cpu.bit(5, &cpu.c),
 	}
 
 	// BIT 5 D [Z 0 1 -] 2 [8]
 	d.prefix[0x6a] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.d)
-		},
+		cpu.bit(5, &cpu.d),
 	}
 
 	// BIT 5 E [Z 0 1 -] 2 [8]
 	d.prefix[0x6b] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.e)
-		},
+		cpu.bit(5, &cpu.e),
 	}
 
 	// BIT 5 H [Z 0 1 -] 2 [8]
 	d.prefix[0x6c] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.h)
-		},
+		cpu.bit(5, &cpu.h),
 	}
 
 	// BIT 5 L [Z 0 1 -] 2 [8]
 	d.prefix[0x6d] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.l)
-		},
+		cpu.bit(5, &cpu.l),
 	}
 
 	// BIT 5 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x6e] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(5, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(5, &d.mem8),
 	}
 
 	// BIT 5 A [Z 0 1 -] 2 [8]
 	d.prefix[0x6f] = []func(){
 		nop,
-		func() {
-			cpu.bit(5, cpu.a)
-		},
+		cpu.bit(5, &cpu.a),
 	}
 
 	// BIT 6 B [Z 0 1 -] 2 [8]
 	d.prefix[0x70] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.b)
-		},
+		cpu.bit(6, &cpu.b),
 	}
 
 	// BIT 6 C [Z 0 1 -] 2 [8]
 	d.prefix[0x71] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.c)
-		},
+		cpu.bit(6, &cpu.c),
 	}
 
 	// BIT 6 D [Z 0 1 -] 2 [8]
 	d.prefix[0x72] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.d)
-		},
+		cpu.bit(6, &cpu.d),
 	}
 
 	// BIT 6 E [Z 0 1 -] 2 [8]
 	d.prefix[0x73] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.e)
-		},
+		cpu.bit(6, &cpu.e),
 	}
 
 	// BIT 6 H [Z 0 1 -] 2 [8]
 	d.prefix[0x74] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.h)
-		},
+		cpu.bit(6, &cpu.h),
 	}
 
 	// BIT 6 L [Z 0 1 -] 2 [8]
 	d.prefix[0x75] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.l)
-		},
+		cpu.bit(6, &cpu.l),
 	}
 
 	// BIT 6 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x76] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(6, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(6, &d.mem8),
 	}
 
 	// BIT 6 A [Z 0 1 -] 2 [8]
 	d.prefix[0x77] = []func(){
 		nop,
-		func() {
-			cpu.bit(6, cpu.a)
-		},
+		cpu.bit(6, &cpu.a),
 	}
 
 	// BIT 7 B [Z 0 1 -] 2 [8]
 	d.prefix[0x78] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.b)
-		},
+		cpu.bit(7, &cpu.b),
 	}
 
 	// BIT 7 C [Z 0 1 -] 2 [8]
 	d.prefix[0x79] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.c)
-		},
+		cpu.bit(7, &cpu.c),
 	}
 
 	// BIT 7 D [Z 0 1 -] 2 [8]
 	d.prefix[0x7a] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.d)
-		},
+		cpu.bit(7, &cpu.d),
 	}
 
 	// BIT 7 E [Z 0 1 -] 2 [8]
 	d.prefix[0x7b] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.e)
-		},
+		cpu.bit(7, &cpu.e),
 	}
 
 	// BIT 7 H [Z 0 1 -] 2 [8]
 	d.prefix[0x7c] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.h)
-		},
+		cpu.bit(7, &cpu.h),
 	}
 
 	// BIT 7 L [Z 0 1 -] 2 [8]
 	d.prefix[0x7d] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.l)
-		},
+		cpu.bit(7, &cpu.l),
 	}
 
 	// BIT 7 (HL) [Z 0 1 -] 2 [12]
 	d.prefix[0x7e] = []func(){
 		nop,
-		readMemory,
-		func() {
-			cpu.bitAddr(7, cpu.hl(), mem)
-		},
+		d.readHL,
+		cpu.bit(7, &d.mem8),
 	}
 
 	// BIT 7 A [Z 0 1 -] 2 [8]
 	d.prefix[0x7f] = []func(){
 		nop,
-		func() {
-			cpu.bit(7, cpu.a)
-		},
+		cpu.bit(7, &cpu.a),
 	}
 
 	// RES 0 B [] 2 [8]
 	d.prefix[0x80] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.b)
-		},
+		cpu.res(0, &cpu.b),
 	}
 
 	// RES 0 C [] 2 [8]
 	d.prefix[0x81] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.c)
-		},
+		cpu.res(0, &cpu.c),
 	}
 
 	// RES 0 D [] 2 [8]
 	d.prefix[0x82] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.d)
-		},
+		cpu.res(0, &cpu.d),
 	}
 
 	// RES 0 E [] 2 [8]
 	d.prefix[0x83] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.e)
-		},
+		cpu.res(0, &cpu.e),
 	}
 
 	// RES 0 H [] 2 [8]
 	d.prefix[0x84] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.h)
-		},
+		cpu.res(0, &cpu.h),
 	}
 
 	// RES 0 L [] 2 [8]
 	d.prefix[0x85] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.l)
-		},
+		cpu.res(0, &cpu.l),
 	}
 
 	// RES 0 (HL) [] 2 [16]
 	d.prefix[0x86] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(0, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(0, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 0 A [] 2 [8]
 	d.prefix[0x87] = []func(){
 		nop,
-		func() {
-			cpu.res(0, &cpu.a)
-		},
+		cpu.res(0, &cpu.a),
 	}
 
 	// RES 1 B [] 2 [8]
 	d.prefix[0x88] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.b)
-		},
+		cpu.res(1, &cpu.b),
 	}
 
 	// RES 1 C [] 2 [8]
 	d.prefix[0x89] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.c)
-		},
+		cpu.res(1, &cpu.c),
 	}
 
 	// RES 1 D [] 2 [8]
 	d.prefix[0x8a] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.d)
-		},
+		cpu.res(1, &cpu.d),
 	}
 
 	// RES 1 E [] 2 [8]
 	d.prefix[0x8b] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.e)
-		},
+		cpu.res(1, &cpu.e),
 	}
 
 	// RES 1 H [] 2 [8]
 	d.prefix[0x8c] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.h)
-		},
+		cpu.res(1, &cpu.h),
 	}
 
 	// RES 1 L [] 2 [8]
 	d.prefix[0x8d] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.l)
-		},
+		cpu.res(1, &cpu.l),
 	}
 
 	// RES 1 (HL) [] 2 [16]
 	d.prefix[0x8e] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(1, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(1, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 1 A [] 2 [8]
 	d.prefix[0x8f] = []func(){
 		nop,
-		func() {
-			cpu.res(1, &cpu.a)
-		},
+		cpu.res(1, &cpu.a),
 	}
 
 	// RES 2 B [] 2 [8]
 	d.prefix[0x90] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.b)
-		},
+		cpu.res(2, &cpu.b),
 	}
 
 	// RES 2 C [] 2 [8]
 	d.prefix[0x91] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.c)
-		},
+		cpu.res(2, &cpu.c),
 	}
 
 	// RES 2 D [] 2 [8]
 	d.prefix[0x92] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.d)
-		},
+		cpu.res(2, &cpu.d),
 	}
 
 	// RES 2 E [] 2 [8]
 	d.prefix[0x93] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.e)
-		},
+		cpu.res(2, &cpu.e),
 	}
 
 	// RES 2 H [] 2 [8]
 	d.prefix[0x94] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.h)
-		},
+		cpu.res(2, &cpu.h),
 	}
 
 	// RES 2 L [] 2 [8]
 	d.prefix[0x95] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.l)
-		},
+		cpu.res(2, &cpu.l),
 	}
 
 	// RES 2 (HL) [] 2 [16]
 	d.prefix[0x96] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(2, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(2, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 2 A [] 2 [8]
 	d.prefix[0x97] = []func(){
 		nop,
-		func() {
-			cpu.res(2, &cpu.a)
-		},
+		cpu.res(2, &cpu.a),
 	}
 
 	// RES 3 B [] 2 [8]
 	d.prefix[0x98] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.b)
-		},
+		cpu.res(3, &cpu.b),
 	}
 
 	// RES 3 C [] 2 [8]
 	d.prefix[0x99] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.c)
-		},
+		cpu.res(3, &cpu.c),
 	}
 
 	// RES 3 D [] 2 [8]
 	d.prefix[0x9a] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.d)
-		},
+		cpu.res(3, &cpu.d),
 	}
 
 	// RES 3 E [] 2 [8]
 	d.prefix[0x9b] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.e)
-		},
+		cpu.res(3, &cpu.e),
 	}
 
 	// RES 3 H [] 2 [8]
 	d.prefix[0x9c] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.h)
-		},
+		cpu.res(3, &cpu.h),
 	}
 
 	// RES 3 L [] 2 [8]
 	d.prefix[0x9d] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.l)
-		},
+		cpu.res(3, &cpu.l),
 	}
 
 	// RES 3 (HL) [] 2 [16]
 	d.prefix[0x9e] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(3, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(3, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 3 A [] 2 [8]
 	d.prefix[0x9f] = []func(){
 		nop,
-		func() {
-			cpu.res(3, &cpu.a)
-		},
+		cpu.res(3, &cpu.a),
 	}
 
 	// RES 4 B [] 2 [8]
 	d.prefix[0xa0] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.b)
-		},
+		cpu.res(4, &cpu.b),
 	}
 
 	// RES 4 C [] 2 [8]
 	d.prefix[0xa1] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.c)
-		},
+		cpu.res(4, &cpu.c),
 	}
 
 	// RES 4 D [] 2 [8]
 	d.prefix[0xa2] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.d)
-		},
+		cpu.res(4, &cpu.d),
 	}
 
 	// RES 4 E [] 2 [8]
 	d.prefix[0xa3] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.e)
-		},
+		cpu.res(4, &cpu.e),
 	}
 
 	// RES 4 H [] 2 [8]
 	d.prefix[0xa4] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.h)
-		},
+		cpu.res(4, &cpu.h),
 	}
 
 	// RES 4 L [] 2 [8]
 	d.prefix[0xa5] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.l)
-		},
+		cpu.res(4, &cpu.l),
 	}
 
 	// RES 4 (HL) [] 2 [16]
 	d.prefix[0xa6] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(4, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(4, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 4 A [] 2 [8]
 	d.prefix[0xa7] = []func(){
 		nop,
-		func() {
-			cpu.res(4, &cpu.a)
-		},
+		cpu.res(4, &cpu.a),
 	}
 
 	// RES 5 B [] 2 [8]
 	d.prefix[0xa8] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.b)
-		},
+		cpu.res(5, &cpu.b),
 	}
 
 	// RES 5 C [] 2 [8]
 	d.prefix[0xa9] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.c)
-		},
+		cpu.res(5, &cpu.c),
 	}
 
 	// RES 5 D [] 2 [8]
 	d.prefix[0xaa] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.d)
-		},
+		cpu.res(5, &cpu.d),
 	}
 
 	// RES 5 E [] 2 [8]
 	d.prefix[0xab] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.e)
-		},
+		cpu.res(5, &cpu.e),
 	}
 
 	// RES 5 H [] 2 [8]
 	d.prefix[0xac] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.h)
-		},
+		cpu.res(5, &cpu.h),
 	}
 
 	// RES 5 L [] 2 [8]
 	d.prefix[0xad] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.l)
-		},
+		cpu.res(5, &cpu.l),
 	}
 
 	// RES 5 (HL) [] 2 [16]
 	d.prefix[0xae] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(5, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(5, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 5 A [] 2 [8]
 	d.prefix[0xaf] = []func(){
 		nop,
-		func() {
-			cpu.res(5, &cpu.a)
-		},
+		cpu.res(5, &cpu.a),
 	}
 
 	// RES 6 B [] 2 [8]
 	d.prefix[0xb0] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.b)
-		},
+		cpu.res(6, &cpu.b),
 	}
 
 	// RES 6 C [] 2 [8]
 	d.prefix[0xb1] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.c)
-		},
+		cpu.res(6, &cpu.c),
 	}
 
 	// RES 6 D [] 2 [8]
 	d.prefix[0xb2] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.d)
-		},
+		cpu.res(6, &cpu.d),
 	}
 
 	// RES 6 E [] 2 [8]
 	d.prefix[0xb3] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.e)
-		},
+		cpu.res(6, &cpu.e),
 	}
 
 	// RES 6 H [] 2 [8]
 	d.prefix[0xb4] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.h)
-		},
+		cpu.res(6, &cpu.h),
 	}
 
 	// RES 6 L [] 2 [8]
 	d.prefix[0xb5] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.l)
-		},
+		cpu.res(6, &cpu.l),
 	}
 
 	// RES 6 (HL) [] 2 [16]
 	d.prefix[0xb6] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(6, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(6, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 6 A [] 2 [8]
 	d.prefix[0xb7] = []func(){
 		nop,
-		func() {
-			cpu.res(6, &cpu.a)
-		},
+		cpu.res(6, &cpu.a),
 	}
 
 	// RES 7 B [] 2 [8]
 	d.prefix[0xb8] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.b)
-		},
+		cpu.res(7, &cpu.b),
 	}
 
 	// RES 7 C [] 2 [8]
 	d.prefix[0xb9] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.c)
-		},
+		cpu.res(7, &cpu.c),
 	}
 
 	// RES 7 D [] 2 [8]
 	d.prefix[0xba] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.d)
-		},
+		cpu.res(7, &cpu.d),
 	}
 
 	// RES 7 E [] 2 [8]
 	d.prefix[0xbb] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.e)
-		},
+		cpu.res(7, &cpu.e),
 	}
 
 	// RES 7 H [] 2 [8]
 	d.prefix[0xbc] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.h)
-		},
+		cpu.res(7, &cpu.h),
 	}
 
 	// RES 7 L [] 2 [8]
 	d.prefix[0xbd] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.l)
-		},
+		cpu.res(7, &cpu.l),
 	}
 
 	// RES 7 (HL) [] 2 [16]
 	d.prefix[0xbe] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.resAddr(7, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.res(7, &d.mem8),
+		d.writeHL,
 	}
 
 	// RES 7 A [] 2 [8]
 	d.prefix[0xbf] = []func(){
 		nop,
-		func() {
-			cpu.res(7, &cpu.a)
-		},
+		cpu.res(7, &cpu.a),
 	}
 
 	// SET 0 B [] 2 [8]
 	d.prefix[0xc0] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.b)
-		},
+		cpu.set(0, &cpu.b),
 	}
 
 	// SET 0 C [] 2 [8]
 	d.prefix[0xc1] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.c)
-		},
+		cpu.set(0, &cpu.c),
 	}
 
 	// SET 0 D [] 2 [8]
 	d.prefix[0xc2] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.d)
-		},
+		cpu.set(0, &cpu.d),
 	}
 
 	// SET 0 E [] 2 [8]
 	d.prefix[0xc3] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.e)
-		},
+		cpu.set(0, &cpu.e),
 	}
 
 	// SET 0 H [] 2 [8]
 	d.prefix[0xc4] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.h)
-		},
+		cpu.set(0, &cpu.h),
 	}
 
 	// SET 0 L [] 2 [8]
 	d.prefix[0xc5] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.l)
-		},
+		cpu.set(0, &cpu.l),
 	}
 
 	// SET 0 (HL) [] 2 [16]
 	d.prefix[0xc6] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(0, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(0, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 0 A [] 2 [8]
 	d.prefix[0xc7] = []func(){
 		nop,
-		func() {
-			cpu.set(0, &cpu.a)
-		},
+		cpu.set(0, &cpu.a),
 	}
 
 	// SET 1 B [] 2 [8]
 	d.prefix[0xc8] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.b)
-		},
+		cpu.set(1, &cpu.b),
 	}
 
 	// SET 1 C [] 2 [8]
 	d.prefix[0xc9] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.c)
-		},
+		cpu.set(1, &cpu.c),
 	}
 
 	// SET 1 D [] 2 [8]
 	d.prefix[0xca] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.d)
-		},
+		cpu.set(1, &cpu.d),
 	}
 
 	// SET 1 E [] 2 [8]
 	d.prefix[0xcb] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.e)
-		},
+		cpu.set(1, &cpu.e),
 	}
 
 	// SET 1 H [] 2 [8]
 	d.prefix[0xcc] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.h)
-		},
+		cpu.set(1, &cpu.h),
 	}
 
 	// SET 1 L [] 2 [8]
 	d.prefix[0xcd] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.l)
-		},
+		cpu.set(1, &cpu.l),
 	}
 
 	// SET 1 (HL) [] 2 [16]
 	d.prefix[0xce] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(1, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(1, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 1 A [] 2 [8]
 	d.prefix[0xcf] = []func(){
 		nop,
-		func() {
-			cpu.set(1, &cpu.a)
-		},
+		cpu.set(1, &cpu.a),
 	}
 
 	// SET 2 B [] 2 [8]
 	d.prefix[0xd0] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.b)
-		},
+		cpu.set(2, &cpu.b),
 	}
 
 	// SET 2 C [] 2 [8]
 	d.prefix[0xd1] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.c)
-		},
+		cpu.set(2, &cpu.c),
 	}
 
 	// SET 2 D [] 2 [8]
 	d.prefix[0xd2] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.d)
-		},
+		cpu.set(2, &cpu.d),
 	}
 
 	// SET 2 E [] 2 [8]
 	d.prefix[0xd3] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.e)
-		},
+		cpu.set(2, &cpu.e),
 	}
 
 	// SET 2 H [] 2 [8]
 	d.prefix[0xd4] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.h)
-		},
+		cpu.set(2, &cpu.h),
 	}
 
 	// SET 2 L [] 2 [8]
 	d.prefix[0xd5] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.l)
-		},
+		cpu.set(2, &cpu.l),
 	}
 
 	// SET 2 (HL) [] 2 [16]
 	d.prefix[0xd6] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(2, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(2, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 2 A [] 2 [8]
 	d.prefix[0xd7] = []func(){
 		nop,
-		func() {
-			cpu.set(2, &cpu.a)
-		},
+		cpu.set(2, &cpu.a),
 	}
 
 	// SET 3 B [] 2 [8]
 	d.prefix[0xd8] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.b)
-		},
+		cpu.set(3, &cpu.b),
 	}
 
 	// SET 3 C [] 2 [8]
 	d.prefix[0xd9] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.c)
-		},
+		cpu.set(3, &cpu.c),
 	}
 
 	// SET 3 D [] 2 [8]
 	d.prefix[0xda] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.d)
-		},
+		cpu.set(3, &cpu.d),
 	}
 
 	// SET 3 E [] 2 [8]
 	d.prefix[0xdb] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.e)
-		},
+		cpu.set(3, &cpu.e),
 	}
 
 	// SET 3 H [] 2 [8]
 	d.prefix[0xdc] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.h)
-		},
+		cpu.set(3, &cpu.h),
 	}
 
 	// SET 3 L [] 2 [8]
 	d.prefix[0xdd] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.l)
-		},
+		cpu.set(3, &cpu.l),
 	}
 
 	// SET 3 (HL) [] 2 [16]
 	d.prefix[0xde] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(3, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(3, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 3 A [] 2 [8]
 	d.prefix[0xdf] = []func(){
 		nop,
-		func() {
-			cpu.set(3, &cpu.a)
-		},
+		cpu.set(3, &cpu.a),
 	}
 
 	// SET 4 B [] 2 [8]
 	d.prefix[0xe0] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.b)
-		},
+		cpu.set(4, &cpu.b),
 	}
 
 	// SET 4 C [] 2 [8]
 	d.prefix[0xe1] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.c)
-		},
+		cpu.set(4, &cpu.c),
 	}
 
 	// SET 4 D [] 2 [8]
 	d.prefix[0xe2] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.d)
-		},
+		cpu.set(4, &cpu.d),
 	}
 
 	// SET 4 E [] 2 [8]
 	d.prefix[0xe3] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.e)
-		},
+		cpu.set(4, &cpu.e),
 	}
 
 	// SET 4 H [] 2 [8]
 	d.prefix[0xe4] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.h)
-		},
+		cpu.set(4, &cpu.h),
 	}
 
 	// SET 4 L [] 2 [8]
 	d.prefix[0xe5] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.l)
-		},
+		cpu.set(4, &cpu.l),
 	}
 
 	// SET 4 (HL) [] 2 [16]
 	d.prefix[0xe6] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(4, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(4, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 4 A [] 2 [8]
 	d.prefix[0xe7] = []func(){
 		nop,
-		func() {
-			cpu.set(4, &cpu.a)
-		},
+		cpu.set(4, &cpu.a),
 	}
 
 	// SET 5 B [] 2 [8]
 	d.prefix[0xe8] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.b)
-		},
+		cpu.set(5, &cpu.b),
 	}
 
 	// SET 5 C [] 2 [8]
 	d.prefix[0xe9] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.c)
-		},
+		cpu.set(5, &cpu.c),
 	}
 
 	// SET 5 D [] 2 [8]
 	d.prefix[0xea] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.d)
-		},
+		cpu.set(5, &cpu.d),
 	}
 
 	// SET 5 E [] 2 [8]
 	d.prefix[0xeb] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.e)
-		},
+		cpu.set(5, &cpu.e),
 	}
 
 	// SET 5 H [] 2 [8]
 	d.prefix[0xec] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.h)
-		},
+		cpu.set(5, &cpu.h),
 	}
 
 	// SET 5 L [] 2 [8]
 	d.prefix[0xed] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.l)
-		},
+		cpu.set(5, &cpu.l),
 	}
 
 	// SET 5 (HL) [] 2 [16]
 	d.prefix[0xee] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(5, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(5, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 5 A [] 2 [8]
 	d.prefix[0xef] = []func(){
 		nop,
-		func() {
-			cpu.set(5, &cpu.a)
-		},
+		cpu.set(5, &cpu.a),
 	}
 
 	// SET 6 B [] 2 [8]
 	d.prefix[0xf0] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.b)
-		},
+		cpu.set(6, &cpu.b),
 	}
 
 	// SET 6 C [] 2 [8]
 	d.prefix[0xf1] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.c)
-		},
+		cpu.set(6, &cpu.c),
 	}
 
 	// SET 6 D [] 2 [8]
 	d.prefix[0xf2] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.d)
-		},
+		cpu.set(6, &cpu.d),
 	}
 
 	// SET 6 E [] 2 [8]
 	d.prefix[0xf3] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.e)
-		},
+		cpu.set(6, &cpu.e),
 	}
 
 	// SET 6 H [] 2 [8]
 	d.prefix[0xf4] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.h)
-		},
+		cpu.set(6, &cpu.h),
 	}
 
 	// SET 6 L [] 2 [8]
 	d.prefix[0xf5] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.l)
-		},
+		cpu.set(6, &cpu.l),
 	}
 
 	// SET 6 (HL) [] 2 [16]
 	d.prefix[0xf6] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(6, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(6, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 6 A [] 2 [8]
 	d.prefix[0xf7] = []func(){
 		nop,
-		func() {
-			cpu.set(6, &cpu.a)
-		},
+		cpu.set(6, &cpu.a),
 	}
 
 	// SET 7 B [] 2 [8]
 	d.prefix[0xf8] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.b)
-		},
+		cpu.set(7, &cpu.b),
 	}
 
 	// SET 7 C [] 2 [8]
 	d.prefix[0xf9] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.c)
-		},
+		cpu.set(7, &cpu.c),
 	}
 
 	// SET 7 D [] 2 [8]
 	d.prefix[0xfa] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.d)
-		},
+		cpu.set(7, &cpu.d),
 	}
 
 	// SET 7 E [] 2 [8]
 	d.prefix[0xfb] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.e)
-		},
+		cpu.set(7, &cpu.e),
 	}
 
 	// SET 7 H [] 2 [8]
 	d.prefix[0xfc] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.h)
-		},
+		cpu.set(7, &cpu.h),
 	}
 
 	// SET 7 L [] 2 [8]
 	d.prefix[0xfd] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.l)
-		},
+		cpu.set(7, &cpu.l),
 	}
 
 	// SET 7 (HL) [] 2 [16]
 	d.prefix[0xfe] = []func(){
 		nop,
-		nop,
-		func() {
-			cpu.setAddr(7, cpu.hl(), mem)
-		},
-		writeMemory,
+		d.readHL,
+		cpu.set(7, &d.mem8),
+		d.writeHL,
 	}
 
 	// SET 7 A [] 2 [8]
 	d.prefix[0xff] = []func(){
 		nop,
-		func() {
-			cpu.set(7, &cpu.a)
-		},
+		cpu.set(7, &cpu.a),
 	}
 }
