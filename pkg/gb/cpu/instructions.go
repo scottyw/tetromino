@@ -326,6 +326,104 @@ func (cpu *CPU) jr() {
 	cpu.pc = uint16(int16(cpu.pc) + int16(i8))
 }
 
+func (cpu *CPU) ldAB() { cpu.a = cpu.b }
+
+func (cpu *CPU) ldAC() { cpu.a = cpu.c }
+
+func (cpu *CPU) ldAD() { cpu.a = cpu.d }
+
+func (cpu *CPU) ldAE() { cpu.a = cpu.e }
+
+func (cpu *CPU) ldAH() { cpu.a = cpu.h }
+
+func (cpu *CPU) ldAL() { cpu.a = cpu.l }
+
+func (cpu *CPU) ldAU() { cpu.a = cpu.u8a }
+
+func (cpu *CPU) ldBA() { cpu.b = cpu.a }
+
+func (cpu *CPU) ldBC() { cpu.b = cpu.c }
+
+func (cpu *CPU) ldBD() { cpu.b = cpu.d }
+
+func (cpu *CPU) ldBE() { cpu.b = cpu.e }
+
+func (cpu *CPU) ldBH() { cpu.b = cpu.h }
+
+func (cpu *CPU) ldBL() { cpu.b = cpu.l }
+
+func (cpu *CPU) ldBU() { cpu.b = cpu.u8a }
+
+func (cpu *CPU) ldCA() { cpu.c = cpu.a }
+
+func (cpu *CPU) ldCB() { cpu.c = cpu.b }
+
+func (cpu *CPU) ldCD() { cpu.c = cpu.d }
+
+func (cpu *CPU) ldCE() { cpu.c = cpu.e }
+
+func (cpu *CPU) ldCH() { cpu.c = cpu.h }
+
+func (cpu *CPU) ldCL() { cpu.c = cpu.l }
+
+func (cpu *CPU) ldCU() { cpu.c = cpu.u8a }
+
+func (cpu *CPU) ldDA() { cpu.d = cpu.a }
+
+func (cpu *CPU) ldDB() { cpu.d = cpu.b }
+
+func (cpu *CPU) ldDC() { cpu.d = cpu.c }
+
+func (cpu *CPU) ldDE() { cpu.d = cpu.e }
+
+func (cpu *CPU) ldDH() { cpu.d = cpu.h }
+
+func (cpu *CPU) ldDL() { cpu.d = cpu.l }
+
+func (cpu *CPU) ldDU() { cpu.d = cpu.u8a }
+
+func (cpu *CPU) ldEA() { cpu.e = cpu.a }
+
+func (cpu *CPU) ldEB() { cpu.e = cpu.b }
+
+func (cpu *CPU) ldEC() { cpu.e = cpu.c }
+
+func (cpu *CPU) ldED() { cpu.e = cpu.d }
+
+func (cpu *CPU) ldEH() { cpu.e = cpu.h }
+
+func (cpu *CPU) ldEL() { cpu.e = cpu.l }
+
+func (cpu *CPU) ldEU() { cpu.e = cpu.u8a }
+
+func (cpu *CPU) ldHA() { cpu.h = cpu.a }
+
+func (cpu *CPU) ldHB() { cpu.h = cpu.b }
+
+func (cpu *CPU) ldHC() { cpu.h = cpu.c }
+
+func (cpu *CPU) ldHD() { cpu.h = cpu.d }
+
+func (cpu *CPU) ldHE() { cpu.h = cpu.e }
+
+func (cpu *CPU) ldHL() { cpu.h = cpu.l }
+
+func (cpu *CPU) ldHU() { cpu.h = cpu.u8a }
+
+func (cpu *CPU) ldLA() { cpu.l = cpu.a }
+
+func (cpu *CPU) ldLB() { cpu.l = cpu.b }
+
+func (cpu *CPU) ldLC() { cpu.l = cpu.c }
+
+func (cpu *CPU) ldLD() { cpu.l = cpu.d }
+
+func (cpu *CPU) ldLE() { cpu.l = cpu.e }
+
+func (cpu *CPU) ldLH() { cpu.l = cpu.h }
+
+func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
+
 func (cpu *CPU) ld(r8 *uint8, u8 uint8) {
 	*r8 = u8
 }

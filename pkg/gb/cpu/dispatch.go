@@ -103,7 +103,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x05] = []func(){cpu.decB}
 
 	// LD B d8 [] 2 [8]
-	d.normal[0x06] = []func(){d.readParamA, func() { cpu.ld(&cpu.b, cpu.u8a) }}
+	d.normal[0x06] = []func(){d.readParamA, cpu.ldBU}
 
 	// RLCA   [0 0 0 C] 1 [4]
 	d.normal[0x07] = []func(){cpu.rlca}
@@ -127,7 +127,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x0d] = []func(){cpu.decC}
 
 	// LD C d8 [] 2 [8]
-	d.normal[0x0e] = []func(){d.readParamA, func() { cpu.ld(&cpu.c, cpu.u8a) }}
+	d.normal[0x0e] = []func(){d.readParamA, cpu.ldCU}
 
 	// RRCA   [0 0 0 C] 1 [4]
 	d.normal[0x0f] = []func(){cpu.rrca}
@@ -151,7 +151,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x15] = []func(){cpu.decD}
 
 	// LD D d8 [] 2 [8]
-	d.normal[0x16] = []func(){d.readParamA, func() { cpu.ld(&cpu.d, cpu.u8a) }}
+	d.normal[0x16] = []func(){d.readParamA, cpu.ldDU}
 
 	// RLA   [0 0 0 C] 1 [4]
 	d.normal[0x17] = []func(){cpu.rla}
@@ -175,7 +175,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x1d] = []func(){cpu.decE}
 
 	// LD E d8 [] 2 [8]
-	d.normal[0x1e] = []func(){d.readParamA, func() { cpu.ld(&cpu.e, cpu.u8a) }}
+	d.normal[0x1e] = []func(){d.readParamA, cpu.ldEU}
 
 	// RRA   [0 0 0 C] 1 [4]
 	d.normal[0x1f] = []func(){cpu.rra}
@@ -199,7 +199,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x25] = []func(){cpu.decH}
 
 	// LD H d8 [] 2 [8]
-	d.normal[0x26] = []func(){d.readParamA, func() { cpu.ld(&cpu.h, cpu.u8a) }}
+	d.normal[0x26] = []func(){d.readParamA, cpu.ldHU}
 
 	// DAA   [Z - 0 C] 1 [4]
 	d.normal[0x27] = []func(){cpu.daa}
@@ -223,7 +223,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x2d] = []func(){cpu.decL}
 
 	// LD L d8 [] 2 [8]
-	d.normal[0x2e] = []func(){d.readParamA, func() { cpu.ld(&cpu.l, cpu.u8a) }}
+	d.normal[0x2e] = []func(){d.readParamA, cpu.ldLU}
 
 	// CPL   [- 1 1 -] 1 [4]
 	d.normal[0x2f] = []func(){cpu.cpl}
@@ -271,154 +271,154 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x3d] = []func(){cpu.decA}
 
 	// LD A d8 [] 2 [8]
-	d.normal[0x3e] = []func(){d.readParamA, func() { cpu.ld(&cpu.a, cpu.u8a) }}
+	d.normal[0x3e] = []func(){d.readParamA, cpu.ldAU}
 
 	// CCF   [- 0 0 C] 1 [4]
 	d.normal[0x3f] = []func(){cpu.ccf}
 
 	// LD B B [] 1 [4]
-	d.normal[0x40] = []func(){func() { cpu.ld(&cpu.b, cpu.b) }}
+	d.normal[0x40] = []func(){nop}
 
 	// LD B C [] 1 [4]
-	d.normal[0x41] = []func(){func() { cpu.ld(&cpu.b, cpu.c) }}
+	d.normal[0x41] = []func(){cpu.ldBC}
 
 	// LD B D [] 1 [4]
-	d.normal[0x42] = []func(){func() { cpu.ld(&cpu.b, cpu.d) }}
+	d.normal[0x42] = []func(){cpu.ldBD}
 
 	// LD B E [] 1 [4]
-	d.normal[0x43] = []func(){func() { cpu.ld(&cpu.b, cpu.e) }}
+	d.normal[0x43] = []func(){cpu.ldBE}
 
 	// LD B H [] 1 [4]
-	d.normal[0x44] = []func(){func() { cpu.ld(&cpu.b, cpu.h) }}
+	d.normal[0x44] = []func(){cpu.ldBH}
 
 	// LD B L [] 1 [4]
-	d.normal[0x45] = []func(){func() { cpu.ld(&cpu.b, cpu.l) }}
+	d.normal[0x45] = []func(){cpu.ldBL}
 
 	// LD B (HL) [] 1 [8]
 	d.normal[0x46] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.b, cpu.hl(), mem) }}
 
 	// LD B A [] 1 [4]
-	d.normal[0x47] = []func(){func() { cpu.ld(&cpu.b, cpu.a) }}
+	d.normal[0x47] = []func(){cpu.ldBA}
 
 	// LD C B [] 1 [4]
-	d.normal[0x48] = []func(){func() { cpu.ld(&cpu.c, cpu.b) }}
+	d.normal[0x48] = []func(){cpu.ldCB}
 
 	// LD C C [] 1 [4]
-	d.normal[0x49] = []func(){func() { cpu.ld(&cpu.c, cpu.c) }}
+	d.normal[0x49] = []func(){nop}
 
 	// LD C D [] 1 [4]
-	d.normal[0x4a] = []func(){func() { cpu.ld(&cpu.c, cpu.d) }}
+	d.normal[0x4a] = []func(){cpu.ldCD}
 
 	// LD C E [] 1 [4]
-	d.normal[0x4b] = []func(){func() { cpu.ld(&cpu.c, cpu.e) }}
+	d.normal[0x4b] = []func(){cpu.ldCE}
 
 	// LD C H [] 1 [4]
-	d.normal[0x4c] = []func(){func() { cpu.ld(&cpu.c, cpu.h) }}
+	d.normal[0x4c] = []func(){cpu.ldCH}
 
 	// LD C L [] 1 [4]
-	d.normal[0x4d] = []func(){func() { cpu.ld(&cpu.c, cpu.l) }}
+	d.normal[0x4d] = []func(){cpu.ldCL}
 
 	// LD C (HL) [] 1 [8]
 	d.normal[0x4e] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.c, cpu.hl(), mem) }}
 
 	// LD C A [] 1 [4]
-	d.normal[0x4f] = []func(){func() { cpu.ld(&cpu.c, cpu.a) }}
+	d.normal[0x4f] = []func(){cpu.ldCA}
 
 	// LD D B [] 1 [4]
-	d.normal[0x50] = []func(){func() { cpu.ld(&cpu.d, cpu.b) }}
+	d.normal[0x50] = []func(){cpu.ldDB}
 
 	// LD D C [] 1 [4]
-	d.normal[0x51] = []func(){func() { cpu.ld(&cpu.d, cpu.c) }}
+	d.normal[0x51] = []func(){cpu.ldDC}
 
 	// LD D D [] 1 [4]
-	d.normal[0x52] = []func(){func() { cpu.ld(&cpu.d, cpu.d) }}
+	d.normal[0x52] = []func(){nop}
 
 	// LD D E [] 1 [4]
-	d.normal[0x53] = []func(){func() { cpu.ld(&cpu.d, cpu.e) }}
+	d.normal[0x53] = []func(){cpu.ldDE}
 
 	// LD D H [] 1 [4]
-	d.normal[0x54] = []func(){func() { cpu.ld(&cpu.d, cpu.h) }}
+	d.normal[0x54] = []func(){cpu.ldDH}
 
 	// LD D L [] 1 [4]
-	d.normal[0x55] = []func(){func() { cpu.ld(&cpu.d, cpu.l) }}
+	d.normal[0x55] = []func(){cpu.ldDL}
 
 	// LD D (HL) [] 1 [8]
 	d.normal[0x56] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.d, cpu.hl(), mem) }}
 
 	// LD D A [] 1 [4]
-	d.normal[0x57] = []func(){func() { cpu.ld(&cpu.d, cpu.a) }}
+	d.normal[0x57] = []func(){cpu.ldDA}
 
 	// LD E B [] 1 [4]
-	d.normal[0x58] = []func(){func() { cpu.ld(&cpu.e, cpu.b) }}
+	d.normal[0x58] = []func(){cpu.ldEB}
 
 	// LD E C [] 1 [4]
-	d.normal[0x59] = []func(){func() { cpu.ld(&cpu.e, cpu.c) }}
+	d.normal[0x59] = []func(){cpu.ldEC}
 
 	// LD E D [] 1 [4]
-	d.normal[0x5a] = []func(){func() { cpu.ld(&cpu.e, cpu.d) }}
+	d.normal[0x5a] = []func(){cpu.ldED}
 
 	// LD E E [] 1 [4]
-	d.normal[0x5b] = []func(){func() { cpu.ld(&cpu.e, cpu.e) }}
+	d.normal[0x5b] = []func(){nop}
 
 	// LD E H [] 1 [4]
-	d.normal[0x5c] = []func(){func() { cpu.ld(&cpu.e, cpu.h) }}
+	d.normal[0x5c] = []func(){cpu.ldEH}
 
 	// LD E L [] 1 [4]
-	d.normal[0x5d] = []func(){func() { cpu.ld(&cpu.e, cpu.l) }}
+	d.normal[0x5d] = []func(){cpu.ldEL}
 
 	// LD E (HL) [] 1 [8]
 	d.normal[0x5e] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.e, cpu.hl(), mem) }}
 
 	// LD E A [] 1 [4]
-	d.normal[0x5f] = []func(){func() { cpu.ld(&cpu.e, cpu.a) }}
+	d.normal[0x5f] = []func(){cpu.ldEA}
 
 	// LD H B [] 1 [4]
-	d.normal[0x60] = []func(){func() { cpu.ld(&cpu.h, cpu.b) }}
+	d.normal[0x60] = []func(){cpu.ldHB}
 
 	// LD H C [] 1 [4]
-	d.normal[0x61] = []func(){func() { cpu.ld(&cpu.h, cpu.c) }}
+	d.normal[0x61] = []func(){cpu.ldHC}
 
 	// LD H D [] 1 [4]
-	d.normal[0x62] = []func(){func() { cpu.ld(&cpu.h, cpu.d) }}
+	d.normal[0x62] = []func(){cpu.ldHD}
 
 	// LD H E [] 1 [4]
-	d.normal[0x63] = []func(){func() { cpu.ld(&cpu.h, cpu.e) }}
+	d.normal[0x63] = []func(){cpu.ldHE}
 
 	// LD H H [] 1 [4]
-	d.normal[0x64] = []func(){func() { cpu.ld(&cpu.h, cpu.h) }}
+	d.normal[0x64] = []func(){nop}
 
 	// LD H L [] 1 [4]
-	d.normal[0x65] = []func(){func() { cpu.ld(&cpu.h, cpu.l) }}
+	d.normal[0x65] = []func(){cpu.ldHL}
 
 	// LD H (HL) [] 1 [8]
 	d.normal[0x66] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.h, cpu.hl(), mem) }}
 
 	// LD H A [] 1 [4]
-	d.normal[0x67] = []func(){func() { cpu.ld(&cpu.h, cpu.a) }}
+	d.normal[0x67] = []func(){cpu.ldHA}
 
 	// LD L B [] 1 [4]
-	d.normal[0x68] = []func(){func() { cpu.ld(&cpu.l, cpu.b) }}
+	d.normal[0x68] = []func(){cpu.ldLB}
 
 	// LD L C [] 1 [4]
-	d.normal[0x69] = []func(){func() { cpu.ld(&cpu.l, cpu.c) }}
+	d.normal[0x69] = []func(){cpu.ldLC}
 
 	// LD L D [] 1 [4]
-	d.normal[0x6a] = []func(){func() { cpu.ld(&cpu.l, cpu.d) }}
+	d.normal[0x6a] = []func(){cpu.ldLD}
 
 	// LD L E [] 1 [4]
-	d.normal[0x6b] = []func(){func() { cpu.ld(&cpu.l, cpu.e) }}
+	d.normal[0x6b] = []func(){cpu.ldLE}
 
 	// LD L H [] 1 [4]
-	d.normal[0x6c] = []func(){func() { cpu.ld(&cpu.l, cpu.h) }}
+	d.normal[0x6c] = []func(){cpu.ldLH}
 
 	// LD L L [] 1 [4]
-	d.normal[0x6d] = []func(){func() { cpu.ld(&cpu.l, cpu.l) }}
+	d.normal[0x6d] = []func(){nop}
 
 	// LD L (HL) [] 1 [8]
 	d.normal[0x6e] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.l, cpu.hl(), mem) }}
 
 	// LD L A [] 1 [4]
-	d.normal[0x6f] = []func(){func() { cpu.ld(&cpu.l, cpu.a) }}
+	d.normal[0x6f] = []func(){cpu.ldLA}
 
 	// LD (HL) B [] 1 [8]
 	d.normal[0x70] = []func(){func() { cpu.ldA16U8(cpu.hl(), cpu.b, mem) }, writeMemory}
@@ -445,28 +445,28 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x77] = []func(){func() { cpu.ldA16U8(cpu.hl(), cpu.a, mem) }, writeMemory}
 
 	// LD A B [] 1 [4]
-	d.normal[0x78] = []func(){func() { cpu.ld(&cpu.a, cpu.b) }}
+	d.normal[0x78] = []func(){cpu.ldAB}
 
 	// LD A C [] 1 [4]
-	d.normal[0x79] = []func(){func() { cpu.ld(&cpu.a, cpu.c) }}
+	d.normal[0x79] = []func(){cpu.ldAC}
 
 	// LD A D [] 1 [4]
-	d.normal[0x7a] = []func(){func() { cpu.ld(&cpu.a, cpu.d) }}
+	d.normal[0x7a] = []func(){cpu.ldAD}
 
 	// LD A E [] 1 [4]
-	d.normal[0x7b] = []func(){func() { cpu.ld(&cpu.a, cpu.e) }}
+	d.normal[0x7b] = []func(){cpu.ldAE}
 
 	// LD A H [] 1 [4]
-	d.normal[0x7c] = []func(){func() { cpu.ld(&cpu.a, cpu.h) }}
+	d.normal[0x7c] = []func(){cpu.ldAH}
 
 	// LD A L [] 1 [4]
-	d.normal[0x7d] = []func(){func() { cpu.ld(&cpu.a, cpu.l) }}
+	d.normal[0x7d] = []func(){cpu.ldAL}
 
 	// LD A (HL) [] 1 [8]
 	d.normal[0x7e] = []func(){readMemory, func() { cpu.ldR8A16(&cpu.a, cpu.hl(), mem) }}
 
 	// LD A A [] 1 [4]
-	d.normal[0x7f] = []func(){func() { cpu.ld(&cpu.a, cpu.a) }}
+	d.normal[0x7f] = []func(){nop}
 
 	// ADD A B [Z 0 H C] 1 [4]
 	d.normal[0x80] = []func(){cpu.addB}
