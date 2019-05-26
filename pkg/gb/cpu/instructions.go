@@ -358,19 +358,6 @@ func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
 	cpu.or(mem.Read(a16))
 }
 
-func (cpu *CPU) pop(msb, lsb *uint8, mem *mem.Memory) {
-	*lsb = mem.Read(cpu.sp)
-	cpu.sp++
-	*msb = mem.Read(cpu.sp)
-	cpu.sp++
-}
-
-func (cpu *CPU) popAF(mem *mem.Memory) {
-	cpu.pop(&cpu.a, &cpu.f, mem)
-	// Lower nibble is always zero no matter what data was written
-	cpu.f &= 0xf0
-}
-
 func (cpu *CPU) res(pos uint8, r8 *uint8) {
 	*r8 &^= bits[pos]
 }

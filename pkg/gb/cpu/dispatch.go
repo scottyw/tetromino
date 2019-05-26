@@ -1498,9 +1498,13 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP BC  [] 1 [12]
 	d.normal[0xc1] = []func(){
 		nop,
-		nop,
 		func() {
-			cpu.pop(&cpu.b, &cpu.c, mem)
+			cpu.c = mem.Read(cpu.sp)
+			cpu.sp++
+		},
+		func() {
+			cpu.b = mem.Read(cpu.sp)
+			cpu.sp++
 		},
 	}
 
@@ -1655,9 +1659,13 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP DE  [] 1 [12]
 	d.normal[0xd1] = []func(){
 		nop,
-		nop,
 		func() {
-			cpu.pop(&cpu.d, &cpu.e, mem)
+			cpu.e = mem.Read(cpu.sp)
+			cpu.sp++
+		},
+		func() {
+			cpu.d = mem.Read(cpu.sp)
+			cpu.sp++
 		},
 	}
 
@@ -1790,9 +1798,13 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP HL  [] 1 [12]
 	d.normal[0xe1] = []func(){
 		nop,
-		nop,
 		func() {
-			cpu.pop(&cpu.h, &cpu.l, mem)
+			cpu.l = mem.Read(cpu.sp)
+			cpu.sp++
+		},
+		func() {
+			cpu.h = mem.Read(cpu.sp)
+			cpu.sp++
 		},
 	}
 
@@ -1896,9 +1908,14 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP AF  [Z N H C] 1 [12]
 	d.normal[0xf1] = []func(){
 		nop,
-		nop,
 		func() {
-			cpu.popAF(mem)
+			// Lower nibble is always zero no matter what data was written
+			cpu.f = mem.Read(cpu.sp) & 0xf0
+			cpu.sp++
+		},
+		func() {
+			cpu.a = mem.Read(cpu.sp)
+			cpu.sp++
 		},
 	}
 
