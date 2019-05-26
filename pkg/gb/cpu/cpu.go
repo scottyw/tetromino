@@ -43,6 +43,9 @@ type CPU struct {
 
 	// Context
 	altTicks bool
+	u8       uint8  // 8-bit instruction argument
+	u16      uint16 // 16-bit instruction argument
+	m8       uint8  // Cached copy of 8-bit value memory for instructions that operate over memory
 
 	// Debug
 	debugCPU      bool

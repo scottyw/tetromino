@@ -6,6 +6,24 @@ import (
 	"github.com/scottyw/tetromino/pkg/gb/mem"
 )
 
+func (cpu *CPU) adcA() { cpu.adc(cpu.a) }
+
+func (cpu *CPU) adcB() { cpu.adc(cpu.b) }
+
+func (cpu *CPU) adcC() { cpu.adc(cpu.c) }
+
+func (cpu *CPU) adcD() { cpu.adc(cpu.d) }
+
+func (cpu *CPU) adcE() { cpu.adc(cpu.e) }
+
+func (cpu *CPU) adcH() { cpu.adc(cpu.h) }
+
+func (cpu *CPU) adcL() { cpu.adc(cpu.l) }
+
+func (cpu *CPU) adcU8() { cpu.adc(cpu.u8) }
+
+func (cpu *CPU) adcM8() { cpu.adc(cpu.m8) }
+
 func (cpu *CPU) adc(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
@@ -21,10 +39,6 @@ func (cpu *CPU) adc(u8 uint8) {
 	cpu.setNf(false)
 	cpu.setHf(hf)
 	cpu.setCf(cf)
-}
-
-func (cpu *CPU) adcAddr(a16 uint16, mem *mem.Memory) {
-	cpu.adc(mem.Read(a16))
 }
 
 func (cpu *CPU) add(u8 uint8) {

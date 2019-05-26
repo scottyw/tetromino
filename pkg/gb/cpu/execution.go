@@ -87,20 +87,20 @@ func (d *Dispatch) peek() *[]func() {
 		cpu.pc += 2
 		steps = &d.prefix[md.Dispatch]
 	} else {
+		// Reset any context from previous instructions
+		cpu.u8 = 0
+		cpu.u16 = 0
+		cpu.m8 = 0
 		switch md.Length {
 		case 1:
-			d.u8 = 0
-			d.u16 = 0
 			cpu.pc++
 		case 2:
-			d.u8 = memory.Read(cpu.pc + 1)
-			d.u16 = 0
-			value = fmt.Sprintf("%02x", d.u8)
+			cpu.u8 = memory.Read(cpu.pc + 1)
+			value = fmt.Sprintf("%02x", cpu.u8)
 			cpu.pc += 2
 		case 3:
-			d.u8 = 0
-			d.u16 = uint16(memory.Read(cpu.pc+1)) | uint16(memory.Read(cpu.pc+2))<<8
-			value = fmt.Sprintf("%04x", d.u16)
+			cpu.u16 = uint16(memory.Read(cpu.pc+1)) | uint16(memory.Read(cpu.pc+2))<<8
+			value = fmt.Sprintf("%04x", cpu.u16)
 			cpu.pc += 3
 		}
 		steps = &d.normal[md.Dispatch]
