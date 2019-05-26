@@ -1175,61 +1175,28 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// AND B  [Z 0 1 0] 1 [4]
-	d.normal[0xa0] = []func(){
-		func() {
-			cpu.and(cpu.b)
-		},
-	}
+	d.normal[0xa0] = []func(){cpu.andB}
 
 	// AND C  [Z 0 1 0] 1 [4]
-	d.normal[0xa1] = []func(){
-		func() {
-			cpu.and(cpu.c)
-		},
-	}
+	d.normal[0xa1] = []func(){cpu.andC}
 
 	// AND D  [Z 0 1 0] 1 [4]
-	d.normal[0xa2] = []func(){
-		func() {
-			cpu.and(cpu.d)
-		},
-	}
+	d.normal[0xa2] = []func(){cpu.andD}
 
 	// AND E  [Z 0 1 0] 1 [4]
-	d.normal[0xa3] = []func(){
-		func() {
-			cpu.and(cpu.e)
-		},
-	}
+	d.normal[0xa3] = []func(){cpu.andE}
 
 	// AND H  [Z 0 1 0] 1 [4]
-	d.normal[0xa4] = []func(){
-		func() {
-			cpu.and(cpu.h)
-		},
-	}
+	d.normal[0xa4] = []func(){cpu.andH}
 
 	// AND L  [Z 0 1 0] 1 [4]
-	d.normal[0xa5] = []func(){
-		func() {
-			cpu.and(cpu.l)
-		},
-	}
+	d.normal[0xa5] = []func(){cpu.andL}
 
 	// AND (HL)  [Z 0 1 0] 1 [8]
-	d.normal[0xa6] = []func(){
-		readMemory,
-		func() {
-			cpu.andAddr(cpu.hl(), mem)
-		},
-	}
+	d.normal[0xa6] = []func(){d.readHL, cpu.andM8}
 
 	// AND A  [Z 0 1 0] 1 [4]
-	d.normal[0xa7] = []func(){
-		func() {
-			cpu.and(cpu.a)
-		},
-	}
+	d.normal[0xa7] = []func(){cpu.andA}
 
 	// XOR B  [Z 0 0 0] 1 [4]
 	d.normal[0xa8] = []func(){
@@ -1414,11 +1381,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// POP BC  [] 1 [12]
-	d.normal[0xc1] = []func(){
-		nop,
-		pop(cpu, mem, &cpu.c),
-		pop(cpu, mem, &cpu.b),
-	}
+	d.normal[0xc1] = []func(){nop, cpu.pop(mem, &cpu.c), cpu.pop(mem, &cpu.b)}
 
 	// JP NZ a16 [] 3 [16 12]
 	d.normal[0xc2] = []func(){
@@ -1453,12 +1416,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// PUSH BC      1 [16]
-	d.normal[0xc5] = []func(){
-		nop,
-		nop,
-		push(cpu, mem, &cpu.b),
-		push(cpu, mem, &cpu.c),
-	}
+	d.normal[0xc5] = []func(){nop, nop, cpu.push(mem, &cpu.b), cpu.push(mem, &cpu.c)}
 
 	// ADD A d8 [Z 0 H C] 2 [8]
 	d.normal[0xc6] = []func(){readParam, cpu.addU8}
@@ -1553,11 +1511,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// POP DE  [] 1 [12]
-	d.normal[0xd1] = []func(){
-		nop,
-		pop(cpu, mem, &cpu.e),
-		pop(cpu, mem, &cpu.d),
-	}
+	d.normal[0xd1] = []func(){nop, cpu.pop(mem, &cpu.e), cpu.pop(mem, &cpu.d)}
 
 	// JP NC a16 [] 3 [16 12]
 	d.normal[0xd2] = []func(){
@@ -1582,12 +1536,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// PUSH DE      1 [16]
-	d.normal[0xd5] = []func(){
-		nop,
-		nop,
-		push(cpu, mem, &cpu.d),
-		push(cpu, mem, &cpu.e),
-	}
+	d.normal[0xd5] = []func(){nop, nop, cpu.push(mem, &cpu.d), cpu.push(mem, &cpu.e)}
 
 	// SUB d8  [Z 1 H C] 2 [8]
 	d.normal[0xd6] = []func(){
@@ -1680,11 +1629,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// POP HL  [] 1 [12]
-	d.normal[0xe1] = []func(){
-		nop,
-		pop(cpu, mem, &cpu.l),
-		pop(cpu, mem, &cpu.h),
-	}
+	d.normal[0xe1] = []func(){nop, cpu.pop(mem, &cpu.l), cpu.pop(mem, &cpu.h)}
 
 	// LD (C) A     1 [8]
 	d.normal[0xe2] = []func(){
@@ -1697,20 +1642,10 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// PUSH HL      1 [16]
-	d.normal[0xe5] = []func(){
-		nop,
-		nop,
-		push(cpu, mem, &cpu.h),
-		push(cpu, mem, &cpu.l),
-	}
+	d.normal[0xe5] = []func(){nop, nop, cpu.push(mem, &cpu.h), cpu.push(mem, &cpu.l)}
 
 	// AND d8  [Z 0 1 0] 2 [8]
-	d.normal[0xe6] = []func(){
-		readParam,
-		func() {
-			cpu.and(cpu.u8)
-		},
-	}
+	d.normal[0xe6] = []func(){readParam, cpu.andU8}
 
 	// RST 20H  [] 1 [16]
 	d.normal[0xe7] = []func(){
@@ -1771,11 +1706,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// POP AF  [Z N H C] 1 [12]
-	d.normal[0xf1] = []func(){
-		nop,
-		popF(cpu, mem),
-		pop(cpu, mem, &cpu.a),
-	}
+	d.normal[0xf1] = []func(){nop, cpu.popF(mem), cpu.pop(mem, &cpu.a)}
 
 	// LD A (C)     1 [8]
 	d.normal[0xf2] = []func(){
@@ -1794,12 +1725,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// PUSH AF      1 [16]
-	d.normal[0xf5] = []func(){
-		nop,
-		nop,
-		push(cpu, mem, &cpu.a),
-		push(cpu, mem, &cpu.f),
-	}
+	d.normal[0xf5] = []func(){nop, nop, cpu.push(mem, &cpu.a), cpu.push(mem, &cpu.f)}
 
 	// OR d8  [Z 0 0 0] 2 [8]
 	d.normal[0xf6] = []func(){

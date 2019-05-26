@@ -104,6 +104,24 @@ func (cpu *CPU) addSP() {
 	}
 }
 
+func (cpu *CPU) andA() { cpu.and(cpu.a) }
+
+func (cpu *CPU) andB() { cpu.and(cpu.b) }
+
+func (cpu *CPU) andC() { cpu.and(cpu.c) }
+
+func (cpu *CPU) andD() { cpu.and(cpu.d) }
+
+func (cpu *CPU) andE() { cpu.and(cpu.e) }
+
+func (cpu *CPU) andH() { cpu.and(cpu.h) }
+
+func (cpu *CPU) andL() { cpu.and(cpu.l) }
+
+func (cpu *CPU) andU8() { cpu.and(cpu.u8) }
+
+func (cpu *CPU) andM8() { cpu.and(cpu.m8) }
+
 func (cpu *CPU) and(u8 uint8) {
 	cpu.a &= u8
 	// [Z 0 1 0]
@@ -111,10 +129,6 @@ func (cpu *CPU) and(u8 uint8) {
 	cpu.setNf(false)
 	cpu.setHf(true)
 	cpu.setCf(false)
-}
-
-func (cpu *CPU) andAddr(a16 uint16, mem *mem.Memory) {
-	cpu.and(mem.Read(a16))
 }
 
 func (cpu *CPU) bit(pos uint8, r8 *uint8) func() {
@@ -393,14 +407,14 @@ func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
 	cpu.or(mem.Read(a16))
 }
 
-func pop(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
+func (cpu *CPU) pop(mem *mem.Memory, r8 *uint8) func() {
 	return func() {
-		*a8 = mem.Read(cpu.sp)
+		*r8 = mem.Read(cpu.sp)
 		cpu.sp++
 	}
 }
 
-func popF(cpu *CPU, mem *mem.Memory) func() {
+func (cpu *CPU) popF(mem *mem.Memory) func() {
 	return func() {
 		// Lower nibble is always zero no matter what data was written
 		cpu.f = mem.Read(cpu.sp) & 0xf0
@@ -408,10 +422,10 @@ func popF(cpu *CPU, mem *mem.Memory) func() {
 	}
 }
 
-func push(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
+func (cpu *CPU) push(mem *mem.Memory, r8 *uint8) func() {
 	return func() {
 		cpu.sp--
-		mem.Write(cpu.sp, *a8)
+		mem.Write(cpu.sp, *r8)
 	}
 }
 
