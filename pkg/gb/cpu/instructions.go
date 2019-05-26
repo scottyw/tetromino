@@ -350,6 +350,8 @@ func (cpu *CPU) ldBH() { cpu.b = cpu.h }
 
 func (cpu *CPU) ldBL() { cpu.b = cpu.l }
 
+func (cpu *CPU) ldBM() { cpu.b = cpu.m8a }
+
 func (cpu *CPU) ldBU() { cpu.b = cpu.u8a }
 
 func (cpu *CPU) ldCA() { cpu.c = cpu.a }
@@ -363,6 +365,8 @@ func (cpu *CPU) ldCE() { cpu.c = cpu.e }
 func (cpu *CPU) ldCH() { cpu.c = cpu.h }
 
 func (cpu *CPU) ldCL() { cpu.c = cpu.l }
+
+func (cpu *CPU) ldCM() { cpu.c = cpu.m8a }
 
 func (cpu *CPU) ldCU() { cpu.c = cpu.u8a }
 
@@ -378,6 +382,8 @@ func (cpu *CPU) ldDH() { cpu.d = cpu.h }
 
 func (cpu *CPU) ldDL() { cpu.d = cpu.l }
 
+func (cpu *CPU) ldDM() { cpu.d = cpu.m8a }
+
 func (cpu *CPU) ldDU() { cpu.d = cpu.u8a }
 
 func (cpu *CPU) ldEA() { cpu.e = cpu.a }
@@ -391,6 +397,8 @@ func (cpu *CPU) ldED() { cpu.e = cpu.d }
 func (cpu *CPU) ldEH() { cpu.e = cpu.h }
 
 func (cpu *CPU) ldEL() { cpu.e = cpu.l }
+
+func (cpu *CPU) ldEM() { cpu.e = cpu.m8a }
 
 func (cpu *CPU) ldEU() { cpu.e = cpu.u8a }
 
@@ -406,6 +414,8 @@ func (cpu *CPU) ldHE() { cpu.h = cpu.e }
 
 func (cpu *CPU) ldHL() { cpu.h = cpu.l }
 
+func (cpu *CPU) ldHM() { cpu.h = cpu.m8a }
+
 func (cpu *CPU) ldHU() { cpu.h = cpu.u8a }
 
 func (cpu *CPU) ldLA() { cpu.l = cpu.a }
@@ -419,6 +429,8 @@ func (cpu *CPU) ldLD() { cpu.l = cpu.d }
 func (cpu *CPU) ldLE() { cpu.l = cpu.e }
 
 func (cpu *CPU) ldLH() { cpu.l = cpu.h }
+
+func (cpu *CPU) ldLM() { cpu.l = cpu.m8a }
 
 func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
 

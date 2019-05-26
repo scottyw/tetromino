@@ -111,11 +111,11 @@ func TestMooneye35(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/basic.g
 
 // func TestMooneye37(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/sources-dmgABCmgbS.gb") }
 
-func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
+// func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
 
 // func TestMooneye39(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_start.gb") }
 
-func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
+// func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
 
 // func TestMooneye41(t *testing.T) { runMooneyeTest(t, "acceptance/pop_timing.gb") }
 
