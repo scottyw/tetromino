@@ -154,16 +154,30 @@ func (cpu *CPU) ccf() {
 	cpu.setCf(!cpu.cf())
 }
 
+func (cpu *CPU) cpA() { cpu.cp(cpu.a) }
+
+func (cpu *CPU) cpB() { cpu.cp(cpu.b) }
+
+func (cpu *CPU) cpC() { cpu.cp(cpu.c) }
+
+func (cpu *CPU) cpD() { cpu.cp(cpu.d) }
+
+func (cpu *CPU) cpE() { cpu.cp(cpu.e) }
+
+func (cpu *CPU) cpH() { cpu.cp(cpu.h) }
+
+func (cpu *CPU) cpL() { cpu.cp(cpu.l) }
+
+func (cpu *CPU) cpU() { cpu.cp(cpu.u8a) }
+
+func (cpu *CPU) cpM() { cpu.cp(cpu.m8a) }
+
 func (cpu *CPU) cp(u8 uint8) {
 	// [Z 1 H C]
 	cpu.setZf(cpu.a == u8)
 	cpu.setNf(true)
 	cpu.setHf(hc8Sub(cpu.a, u8))
 	cpu.setCf(c8Sub(cpu.a, u8))
-}
-
-func (cpu *CPU) cpAddr(a16 uint16, mem *mem.Memory) {
-	cpu.cp(mem.Read(a16))
 }
 
 func (cpu *CPU) cpl() {

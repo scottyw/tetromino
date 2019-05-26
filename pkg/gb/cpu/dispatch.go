@@ -365,11 +365,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// DAA   [Z - 0 C] 1 [4]
-	d.normal[0x27] = []func(){
-		func() {
-			cpu.daa()
-		},
-	}
+	d.normal[0x27] = []func(){cpu.daa}
 
 	// JR Z r8 [] 2 [12 8]
 	d.normal[0x28] = []func(){nop, d.readParamA, cpu.jr}
@@ -416,11 +412,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// CPL   [- 1 1 -] 1 [4]
-	d.normal[0x2f] = []func(){
-		func() {
-			cpu.cpl()
-		},
-	}
+	d.normal[0x2f] = []func(){cpu.cpl}
 
 	// JR NC r8 [] 2 [12 8]
 	d.normal[0x30] = []func(){nop, d.readParamA, cpu.jr}
@@ -529,11 +521,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// CCF   [- 0 0 C] 1 [4]
-	d.normal[0x3f] = []func(){
-		func() {
-			cpu.ccf()
-		},
-	}
+	d.normal[0x3f] = []func(){cpu.ccf}
 
 	// LD B B [] 1 [4]
 	d.normal[0x40] = []func(){
@@ -1298,61 +1286,28 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// CP B  [Z 1 H C] 1 [4]
-	d.normal[0xb8] = []func(){
-		func() {
-			cpu.cp(cpu.b)
-		},
-	}
+	d.normal[0xb8] = []func(){cpu.cpB}
 
 	// CP C  [Z 1 H C] 1 [4]
-	d.normal[0xb9] = []func(){
-		func() {
-			cpu.cp(cpu.c)
-		},
-	}
+	d.normal[0xb9] = []func(){cpu.cpC}
 
 	// CP D  [Z 1 H C] 1 [4]
-	d.normal[0xba] = []func(){
-		func() {
-			cpu.cp(cpu.d)
-		},
-	}
+	d.normal[0xba] = []func(){cpu.cpD}
 
 	// CP E  [Z 1 H C] 1 [4]
-	d.normal[0xbb] = []func(){
-		func() {
-			cpu.cp(cpu.e)
-		},
-	}
+	d.normal[0xbb] = []func(){cpu.cpE}
 
 	// CP H  [Z 1 H C] 1 [4]
-	d.normal[0xbc] = []func(){
-		func() {
-			cpu.cp(cpu.h)
-		},
-	}
+	d.normal[0xbc] = []func(){cpu.cpH}
 
 	// CP L  [Z 1 H C] 1 [4]
-	d.normal[0xbd] = []func(){
-		func() {
-			cpu.cp(cpu.l)
-		},
-	}
+	d.normal[0xbd] = []func(){cpu.cpL}
 
 	// CP (HL)  [Z 1 H C] 1 [8]
-	d.normal[0xbe] = []func(){
-		readMemory,
-		func() {
-			cpu.cpAddr(cpu.hl(), mem)
-		},
-	}
+	d.normal[0xbe] = []func(){d.readHL, cpu.cpM}
 
 	// CP A  [Z 1 H C] 1 [4]
-	d.normal[0xbf] = []func(){
-		func() {
-			cpu.cp(cpu.a)
-		},
-	}
+	d.normal[0xbf] = []func(){cpu.cpA}
 
 	// RET NZ  [] 1 [20 8]
 	d.normal[0xc0] = []func(){nop, nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.ret}
@@ -1656,12 +1611,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// CP d8  [Z 1 H C] 2 [8]
-	d.normal[0xfe] = []func(){
-		d.readParamA,
-		func() {
-			cpu.cp(cpu.u8a)
-		},
-	}
+	d.normal[0xfe] = []func(){d.readParamA, cpu.cpU}
 
 	// RST 38H  [] 1 [16]
 	d.normal[0xff] = []func(){
