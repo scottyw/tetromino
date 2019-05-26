@@ -11,28 +11,33 @@ func (d *Dispatch) handleInterrupt() func() {
 		if cpu.ime {
 			interrupts := memory.IE & memory.IF & 0x1f
 			cpu.ime = false
+
 			switch {
 			case interrupts&bit0 > 0:
 				// 0040 Vertical Blank Interrupt Start Address
-				cpu.rst(0x0040, memory)
+				cpu.rst(0x0040)()
 				memory.IF &^= bit0
 			case interrupts&bit1 > 0:
 				// 0048 LCDC Status Interrupt Start Address
-				cpu.rst(0x0048, memory)
+				cpu.rst(0x0048)()
 				memory.IF &^= bit1
 			case interrupts&bit2 > 0:
 				// 0050 Timer OverflowInterrupt Start Address
-				cpu.rst(0x0050, memory)
+				cpu.rst(0x0050)()
 				memory.IF &^= bit2
 			case interrupts&bit3 > 0:
 				// 0058 Serial Transfer Completion Interrupt Start Address
-				cpu.rst(0x0058, memory)
+				cpu.rst(0x0058)()
 				memory.IF &^= bit3
 			case interrupts&bit4 > 0:
 				// 0060 High-to-Low of P10-P13 Interrupt Start Address
-				cpu.rst(0x0060, memory)
+				cpu.rst(0x0060)()
 				memory.IF &^= bit4
 			}
+
+			// Now push the PC
+			cpu.push(memory, &cpu.m8b)()
+			cpu.push(memory, &cpu.m8a)()
 		}
 	}
 }

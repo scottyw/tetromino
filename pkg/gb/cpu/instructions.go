@@ -141,41 +141,12 @@ func (cpu *CPU) bit(pos uint8, r8 *uint8) func() {
 	}
 }
 
-func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
-	switch kind {
-	case "":
-		cpu.sp--
-		mem.Write(cpu.sp, byte(cpu.pc>>8))
-		cpu.sp--
-		mem.Write(cpu.sp, byte(cpu.pc&0xff))
-		cpu.pc = a16
-	case "NZ":
-		if !cpu.zf() {
-			cpu.call("", a16, mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "Z":
-		if cpu.zf() {
-			cpu.call("", a16, mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "NC":
-		if !cpu.cf() {
-			cpu.call("", a16, mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "C":
-		if cpu.cf() {
-			cpu.call("", a16, mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	default:
-		panic(fmt.Sprintf("No implementation for call: %v %v", kind, a16))
-	}
+func (cpu *CPU) call() {
+	// Store the old PC to write to memory in the next steps
+	cpu.m8a = uint8(cpu.pc & 0xff)
+	cpu.m8b = uint8(cpu.pc >> 8)
+	// Update the PC
+	cpu.pc = cpu.u16()
 }
 
 func (cpu *CPU) ccf() {
@@ -580,8 +551,14 @@ func (cpu *CPU) rrcAddr(a16 uint16, mem *mem.Memory) {
 	mem.Write(a16, value)
 }
 
-func (cpu *CPU) rst(a16 uint16, mem *mem.Memory) {
-	cpu.call("", a16, mem)
+func (cpu *CPU) rst(a16 uint16) func() {
+	return func() {
+		// Store the old PC to write to memory in the next steps
+		cpu.m8a = uint8(cpu.pc & 0xff)
+		cpu.m8b = uint8(cpu.pc >> 8)
+		// Update the PC
+		cpu.pc = a16
+	}
 }
 
 func (cpu *CPU) set(pos uint8, r8 *uint8) func() {

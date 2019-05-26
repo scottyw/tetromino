@@ -111,19 +111,6 @@ func TestBit(t *testing.T) {
 	}
 }
 
-func TestCall(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0xabcd, sp: 0x8642}, CPU{pc: 0x1af2, sp: 0x8640}},
-	} {
-		actual := mem.NewMemory(nil, nil, nil)
-		test.cpu.call("", 0x1af2, actual)
-		expected := mem.NewMemory(nil, nil, nil)
-		expected.Write(0x8640, 0xcd)
-		expected.Write(0x8641, 0xab)
-		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
-	}
-}
-
 func TestCpl(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{a: 0xb1}, CPU{a: 0x4e, f: 0x60}},
@@ -292,19 +279,6 @@ func TestRrca(t *testing.T) {
 	} {
 		test.cpu.rrca()
 		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
-func TestRst(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0xabcd, sp: 0x8642}, CPU{pc: 0x0008, sp: 0x8640}},
-	} {
-		actual := mem.NewMemory(nil, nil, nil)
-		test.cpu.rst(0x0008, actual)
-		expected := mem.NewMemory(nil, nil, nil)
-		expected.Write(0x8640, 0xcd)
-		expected.Write(0x8641, 0xab)
-		compareCPUsAndMemory(t, &test.expectedCPU, &test.cpu, expected, actual, 0x8640, 0xf)
 	}
 }
 

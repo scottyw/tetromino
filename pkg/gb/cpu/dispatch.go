@@ -12,7 +12,6 @@ type Dispatch struct {
 	prefix            [256][]func()
 	steps             *[]func()
 	stepIndex         int
-	altStepIndex      int
 	handlingInterrupt bool
 	Mooneye           bool
 }
@@ -1421,14 +1420,12 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 
 	// CALL NZ a16 [] 3 [24 12]
 	d.normal[0xc4] = []func(){
+		nop,
 		d.readParamA,
 		d.readParamB,
-		func() {
-			cpu.call("NZ", cpu.u16(), mem)
-		},
-		nop,
-		nop,
-		nop,
+		cpu.call,
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// PUSH BC      1 [16]
@@ -1440,11 +1437,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 00H  [] 1 [16]
 	d.normal[0xc7] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0000, mem)
-		},
+		cpu.rst(0x0000),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// RET Z  [] 1 [20 8]
@@ -1480,26 +1475,22 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 
 	// CALL Z a16 [] 3 [24 12]
 	d.normal[0xcc] = []func(){
+		nop,
 		d.readParamA,
 		d.readParamB,
-		func() {
-			cpu.call("Z", cpu.u16(), mem)
-		},
-		nop,
-		nop,
-		nop,
+		cpu.call,
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// CALL a16  [] 3 [24]
 	d.normal[0xcd] = []func(){
+		nop,
 		d.readParamA,
 		d.readParamB,
-		nop,
-		nop,
-		nop,
-		func() {
-			cpu.call("", cpu.u16(), mem)
-		},
+		cpu.call,
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// ADC A d8 [Z 0 H C] 2 [8]
@@ -1508,11 +1499,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 08H  [] 1 [16]
 	d.normal[0xcf] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0008, mem)
-		},
+		cpu.rst(0x0008),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// RET NC  [] 1 [20 8]
@@ -1541,14 +1530,12 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 
 	// CALL NC a16 [] 3 [24 12]
 	d.normal[0xd4] = []func(){
+		nop,
 		d.readParamA,
 		d.readParamB,
-		func() {
-			cpu.call("NC", cpu.u16(), mem)
-		},
-		nop,
-		nop,
-		nop,
+		cpu.call,
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// PUSH DE      1 [16]
@@ -1565,11 +1552,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 10H  [] 1 [16]
 	d.normal[0xd7] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0010, mem)
-		},
+		cpu.rst(0x0010),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// RET C  [] 1 [20 8]
@@ -1605,14 +1590,12 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 
 	// CALL C a16 [] 3 [24 12]
 	d.normal[0xdc] = []func(){
+		nop,
 		d.readParamA,
 		d.readParamB,
-		func() {
-			cpu.call("C", cpu.u16(), mem)
-		},
-		nop,
-		nop,
-		nop,
+		cpu.call,
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// SBC A d8 [Z 1 H C] 2 [8]
@@ -1626,11 +1609,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 18H  [] 1 [16]
 	d.normal[0xdf] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0018, mem)
-		},
+		cpu.rst(0x0018),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// LDH (a8) A   2 [12]
@@ -1666,11 +1647,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 20H  [] 1 [16]
 	d.normal[0xe7] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0020, mem)
-		},
+		cpu.rst(0x0020),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// ADD SP r8 [0 0 H C] 2 [16]
@@ -1704,11 +1683,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 28H  [] 1 [16]
 	d.normal[0xef] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0028, mem)
-		},
+		cpu.rst(0x0028),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// LDH A (a8)   2 [12]
@@ -1754,11 +1731,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 30H  [] 1 [16]
 	d.normal[0xf7] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0030, mem)
-		},
+		cpu.rst(0x0030),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// LD HL SP+r8 [0 0 H C] 2 [12]
@@ -1806,11 +1781,9 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// RST 38H  [] 1 [16]
 	d.normal[0xff] = []func(){
 		nop,
-		nop,
-		nop,
-		func() {
-			cpu.rst(0x0038, mem)
-		},
+		cpu.rst(0x0038),
+		cpu.push(mem, &cpu.m8b),
+		cpu.push(mem, &cpu.m8a),
 	}
 
 	// RLC B  [Z 0 0 C] 2 [8]
