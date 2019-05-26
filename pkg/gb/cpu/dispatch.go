@@ -1033,61 +1033,28 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD A B [Z 0 H C] 1 [4]
-	d.normal[0x80] = []func(){
-		func() {
-			cpu.add(cpu.b)
-		},
-	}
+	d.normal[0x80] = []func(){cpu.addB}
 
 	// ADD A C [Z 0 H C] 1 [4]
-	d.normal[0x81] = []func(){
-		func() {
-			cpu.add(cpu.c)
-		},
-	}
+	d.normal[0x81] = []func(){cpu.addC}
 
 	// ADD A D [Z 0 H C] 1 [4]
-	d.normal[0x82] = []func(){
-		func() {
-			cpu.add(cpu.d)
-		},
-	}
+	d.normal[0x82] = []func(){cpu.addD}
 
 	// ADD A E [Z 0 H C] 1 [4]
-	d.normal[0x83] = []func(){
-		func() {
-			cpu.add(cpu.e)
-		},
-	}
+	d.normal[0x83] = []func(){cpu.addE}
 
 	// ADD A H [Z 0 H C] 1 [4]
-	d.normal[0x84] = []func(){
-		func() {
-			cpu.add(cpu.h)
-		},
-	}
+	d.normal[0x84] = []func(){cpu.addH}
 
 	// ADD A L [Z 0 H C] 1 [4]
-	d.normal[0x85] = []func(){
-		func() {
-			cpu.add(cpu.l)
-		},
-	}
+	d.normal[0x85] = []func(){cpu.addL}
 
 	// ADD A (HL) [Z 0 H C] 1 [8]
-	d.normal[0x86] = []func(){
-		readMemory,
-		func() {
-			cpu.addAddr(cpu.hl(), mem)
-		},
-	}
+	d.normal[0x86] = []func(){d.readHL, cpu.addM8}
 
 	// ADD A A [Z 0 H C] 1 [4]
-	d.normal[0x87] = []func(){
-		func() {
-			cpu.add(cpu.a)
-		},
-	}
+	d.normal[0x87] = []func(){cpu.addA}
 
 	// ADC A B [Z 0 H C] 1 [4]
 	d.normal[0x88] = []func(){cpu.adcB}
@@ -1514,12 +1481,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD A d8 [Z 0 H C] 2 [8]
-	d.normal[0xc6] = []func(){
-		readParam,
-		func() {
-			cpu.add(cpu.u8)
-		},
-	}
+	d.normal[0xc6] = []func(){readParam, cpu.addU8}
 
 	// RST 00H  [] 1 [16]
 	d.normal[0xc7] = []func(){

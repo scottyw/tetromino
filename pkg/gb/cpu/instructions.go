@@ -41,6 +41,24 @@ func (cpu *CPU) adc(u8 uint8) {
 	cpu.setCf(cf)
 }
 
+func (cpu *CPU) addA() { cpu.add(cpu.a) }
+
+func (cpu *CPU) addB() { cpu.add(cpu.b) }
+
+func (cpu *CPU) addC() { cpu.add(cpu.c) }
+
+func (cpu *CPU) addD() { cpu.add(cpu.d) }
+
+func (cpu *CPU) addE() { cpu.add(cpu.e) }
+
+func (cpu *CPU) addH() { cpu.add(cpu.h) }
+
+func (cpu *CPU) addL() { cpu.add(cpu.l) }
+
+func (cpu *CPU) addU8() { cpu.add(cpu.u8) }
+
+func (cpu *CPU) addM8() { cpu.add(cpu.m8) }
+
 func (cpu *CPU) add(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
@@ -75,10 +93,6 @@ func (cpu *CPU) addSP(i8 int8) {
 		cpu.setHf(int(sp)&0x0f >= int(cpu.sp)&0x0f)
 		cpu.setCf(int(sp)&0xff >= int(cpu.sp)&0xff)
 	}
-}
-
-func (cpu *CPU) addAddr(a16 uint16, mem *mem.Memory) {
-	cpu.add(mem.Read(a16))
 }
 
 func (cpu *CPU) and(u8 uint8) {
