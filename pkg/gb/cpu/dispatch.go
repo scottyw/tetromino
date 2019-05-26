@@ -140,12 +140,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD HL BC [- 0 H C] 1 [8]
-	d.normal[0x09] = []func(){
-		nop,
-		func() {
-			cpu.addHL(cpu.bc())
-		},
-	}
+	d.normal[0x09] = []func(){nop, cpu.addHLBC}
 
 	// LD A (BC) [] 1 [8]
 	d.normal[0x0a] = []func(){
@@ -263,12 +258,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD HL DE [- 0 H C] 1 [8]
-	d.normal[0x19] = []func(){
-		nop,
-		func() {
-			cpu.addHL(cpu.de())
-		},
-	}
+	d.normal[0x19] = []func(){nop, cpu.addHLDE}
 
 	// LD A (DE) [] 1 [8]
 	d.normal[0x1a] = []func(){
@@ -388,12 +378,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD HL HL [- 0 H C] 1 [8]
-	d.normal[0x29] = []func(){
-		nop,
-		func() {
-			cpu.addHL(cpu.hl())
-		},
-	}
+	d.normal[0x29] = []func(){nop, cpu.addHLHL}
 
 	// LD A (HL+) [] 1 [8]
 	d.normal[0x2a] = []func(){
@@ -518,12 +503,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD HL SP [- 0 H C] 1 [8]
-	d.normal[0x39] = []func(){
-		nop,
-		func() {
-			cpu.addHL(cpu.sp)
-		},
-	}
+	d.normal[0x39] = []func(){nop, cpu.addHLSP}
 
 	// LD A (HL-) [] 1 [8]
 	d.normal[0x3a] = []func(){

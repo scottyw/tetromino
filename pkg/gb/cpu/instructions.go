@@ -69,6 +69,14 @@ func (cpu *CPU) add(u8 uint8) {
 	cpu.setCf(c8(a, u8))
 }
 
+func (cpu *CPU) addHLBC() { cpu.addHL(cpu.bc()) }
+
+func (cpu *CPU) addHLDE() { cpu.addHL(cpu.de()) }
+
+func (cpu *CPU) addHLHL() { cpu.addHL(cpu.hl()) }
+
+func (cpu *CPU) addHLSP() { cpu.addHL(cpu.sp) }
+
 func (cpu *CPU) addHL(u16 uint16) {
 	hl := cpu.hl()
 	new := hl + u16
