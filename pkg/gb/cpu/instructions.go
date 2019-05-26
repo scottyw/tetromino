@@ -392,6 +392,24 @@ func (cpu *CPU) ldiA16A(mem *mem.Memory) {
 	cpu.inc16(&cpu.h, &cpu.l)
 }
 
+func (cpu *CPU) orA() { cpu.or(cpu.a) }
+
+func (cpu *CPU) orB() { cpu.or(cpu.b) }
+
+func (cpu *CPU) orC() { cpu.or(cpu.c) }
+
+func (cpu *CPU) orD() { cpu.or(cpu.d) }
+
+func (cpu *CPU) orE() { cpu.or(cpu.e) }
+
+func (cpu *CPU) orH() { cpu.or(cpu.h) }
+
+func (cpu *CPU) orL() { cpu.or(cpu.l) }
+
+func (cpu *CPU) orU() { cpu.or(cpu.u8a) }
+
+func (cpu *CPU) orM() { cpu.or(cpu.m8a) }
+
 func (cpu *CPU) or(u8 uint8) {
 	cpu.a |= u8
 	// [Z 0 0 0]
@@ -399,10 +417,6 @@ func (cpu *CPU) or(u8 uint8) {
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(false)
-}
-
-func (cpu *CPU) orAddr(a16 uint16, mem *mem.Memory) {
-	cpu.or(mem.Read(a16))
 }
 
 func (cpu *CPU) pop(mem *mem.Memory, r8 *uint8) func() {

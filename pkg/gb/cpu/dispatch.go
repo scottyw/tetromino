@@ -613,28 +613,28 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xaf] = []func(){func() { cpu.xor(cpu.a) }}
 
 	// OR B  [Z 0 0 0] 1 [4]
-	d.normal[0xb0] = []func(){func() { cpu.or(cpu.b) }}
+	d.normal[0xb0] = []func(){cpu.orB}
 
 	// OR C  [Z 0 0 0] 1 [4]
-	d.normal[0xb1] = []func(){func() { cpu.or(cpu.c) }}
+	d.normal[0xb1] = []func(){cpu.orC}
 
 	// OR D  [Z 0 0 0] 1 [4]
-	d.normal[0xb2] = []func(){func() { cpu.or(cpu.d) }}
+	d.normal[0xb2] = []func(){cpu.orD}
 
 	// OR E  [Z 0 0 0] 1 [4]
-	d.normal[0xb3] = []func(){func() { cpu.or(cpu.e) }}
+	d.normal[0xb3] = []func(){cpu.orE}
 
 	// OR H  [Z 0 0 0] 1 [4]
-	d.normal[0xb4] = []func(){func() { cpu.or(cpu.h) }}
+	d.normal[0xb4] = []func(){cpu.orH}
 
 	// OR L  [Z 0 0 0] 1 [4]
-	d.normal[0xb5] = []func(){func() { cpu.or(cpu.l) }}
+	d.normal[0xb5] = []func(){cpu.orL}
 
 	// OR (HL)  [Z 0 0 0] 1 [8]
-	d.normal[0xb6] = []func(){readMemory, func() { cpu.orAddr(cpu.hl(), mem) }}
+	d.normal[0xb6] = []func(){d.readHL, cpu.orM}
 
 	// OR A  [Z 0 0 0] 1 [4]
-	d.normal[0xb7] = []func(){func() { cpu.or(cpu.a) }}
+	d.normal[0xb7] = []func(){cpu.orA}
 
 	// CP B  [Z 1 H C] 1 [4]
 	d.normal[0xb8] = []func(){cpu.cpB}
@@ -799,7 +799,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xf5] = []func(){nop, nop, cpu.push(mem, &cpu.a), cpu.push(mem, &cpu.f)}
 
 	// OR d8  [Z 0 0 0] 2 [8]
-	d.normal[0xf6] = []func(){d.readParamA, func() { cpu.or(cpu.u8a) }}
+	d.normal[0xf6] = []func(){d.readParamA, cpu.orU}
 
 	// RST 30H  [] 1 [16]
 	d.normal[0xf7] = []func(){nop, cpu.rst(0x0030), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
