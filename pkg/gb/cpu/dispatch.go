@@ -292,7 +292,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x30] = []func(){nop, d.readParamA, cpu.jr}
 
 	// LD SP d16 [] 3 [12]
-	d.normal[0x31] = []func(){d.readParamA, d.readParamB, func() { cpu.ldSP(cpu.u16()) }}
+	d.normal[0x31] = []func(){d.readParamA, d.readParamB, cpu.ldSPU}
 
 	// LD (HL-) A [] 1 [8]
 	d.normal[0x32] = []func(){cpu.ldMA, d.writeHLD}
@@ -865,7 +865,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xf9] = []func(){nop, cpu.ldSPHL}
 
 	// LD A (a16) [] 3 [16]
-	d.normal[0xfa] = []func(){d.readParamA, d.readParamB, readMemory, func() { cpu.ldR8A16(&cpu.a, cpu.u16(), mem) }}
+	d.normal[0xfa] = []func(){d.readParamA, d.readParamB, d.readU16, cpu.ldAM}
 
 	// EI   [] 1 [4]
 	d.normal[0xfb] = []func(){cpu.ei}

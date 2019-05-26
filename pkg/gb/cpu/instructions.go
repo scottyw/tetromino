@@ -488,12 +488,8 @@ func (cpu *CPU) ldHLU() {
 	cpu.l = uint8(u16)
 }
 
-func (cpu *CPU) ldR8A16(r8 *uint8, a16 uint16, mem *mem.Memory) {
-	*r8 = mem.Read(a16)
-}
-
-func (cpu *CPU) ldSP(u16 uint16) {
-	cpu.sp = u16
+func (cpu *CPU) ldSPU() {
+	cpu.sp = cpu.u16()
 }
 
 func (cpu *CPU) ldSPHL() {
