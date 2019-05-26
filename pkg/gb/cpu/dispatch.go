@@ -785,7 +785,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xd5] = []func(){nop, nop, cpu.push(mem, &cpu.d), cpu.push(mem, &cpu.e)}
 
 	// SUB d8  [Z 1 H C] 2 [8]
-	d.normal[0xd6] = []func(){d.readParamA, func() { cpu.sub(cpu.u8a) }}
+	d.normal[0xd6] = []func(){d.readParamA, cpu.subU}
 
 	// RST 10H  [] 1 [16]
 	d.normal[0xd7] = []func(){nop, cpu.rst(0x0010), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
@@ -803,7 +803,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xdc] = []func(){nop, d.readParamA, d.readParamB, cpu.call, cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
 
 	// SBC A d8 [Z 1 H C] 2 [8]
-	d.normal[0xde] = []func(){d.readParamA, func() { cpu.sbc(cpu.u8a) }}
+	d.normal[0xde] = []func(){d.readParamA, cpu.sbcU}
 
 	// RST 18H  [] 1 [16]
 	d.normal[0xdf] = []func(){nop, cpu.rst(0x0018), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
@@ -836,7 +836,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xea] = []func(){d.readParamA, d.readParamB, cpu.ldMA, d.writeU16}
 
 	// XOR d8  [Z 0 0 0] 2 [8]
-	d.normal[0xee] = []func(){d.readParamA, func() { cpu.xor(cpu.u8a) }}
+	d.normal[0xee] = []func(){d.readParamA, cpu.xorU}
 
 	// RST 28H  [] 1 [16]
 	d.normal[0xef] = []func(){nop, cpu.rst(0x0028), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
@@ -866,7 +866,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xf8] = []func(){d.readParamA, nop, func() { cpu.ldHLSP(int8(cpu.u8a)) }}
 
 	// LD SP HL [] 1 [8]
-	d.normal[0xf9] = []func(){nop, func() { cpu.ldSPHL() }}
+	d.normal[0xf9] = []func(){nop, cpu.ldSPHL}
 
 	// LD A (a16) [] 3 [16]
 	d.normal[0xfa] = []func(){d.readParamA, d.readParamB, readMemory, func() { cpu.ldR8A16(&cpu.a, cpu.u16(), mem) }}
