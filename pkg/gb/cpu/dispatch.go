@@ -1723,14 +1723,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// ADD SP r8 [0 0 H C] 2 [16]
-	d.normal[0xe8] = []func(){
-		readParam,
-		nop,
-		nop,
-		func() {
-			cpu.addSP(int8(cpu.u8))
-		},
-	}
+	d.normal[0xe8] = []func(){readParam, nop, nop, cpu.addSP}
 
 	// JP (HL)  [] 1 [4]
 	d.normal[0xe9] = []func(){

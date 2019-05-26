@@ -88,7 +88,8 @@ func (cpu *CPU) addHL(u16 uint16) {
 	cpu.setCf(c16(hl, u16))
 }
 
-func (cpu *CPU) addSP(i8 int8) {
+func (cpu *CPU) addSP() {
+	i8 := int8(cpu.u8)
 	sp := cpu.sp
 	cpu.sp = uint16(int(cpu.sp) + int(i8))
 	// [0 0 H C]
