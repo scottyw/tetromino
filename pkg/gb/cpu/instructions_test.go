@@ -133,30 +133,6 @@ func TestRes(t *testing.T) {
 	}
 }
 
-func TestRet(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642}},
-	} {
-		mem := mem.NewMemory(nil, nil, nil)
-		mem.Write(0x8640, 0xf2)
-		mem.Write(0x8641, 0x1a)
-		test.cpu.ret("", mem)
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
-func TestReti(t *testing.T) {
-	for _, test := range []struct{ cpu, expectedCPU CPU }{
-		{CPU{pc: 0xabab, sp: 0x8640}, CPU{pc: 0x1af2, sp: 0x8642, ime: true}},
-	} {
-		mem := mem.NewMemory(nil, nil, nil)
-		mem.Write(0x8640, 0xf2)
-		mem.Write(0x8641, 0x1a)
-		test.cpu.reti(mem)
-		compareCPUs(t, &test.expectedCPU, &test.cpu)
-	}
-}
-
 func TestRl(t *testing.T) {
 	for _, test := range []struct{ cpu, expectedCPU CPU }{
 		{CPU{c: 0xa8}, CPU{c: 0x50, f: 0x10}},

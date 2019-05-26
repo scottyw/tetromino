@@ -1355,15 +1355,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// RET NZ  [] 1 [20 8]
-	d.normal[0xc0] = []func(){
-		nop,
-		func() {
-			cpu.ret("NZ", mem)
-		},
-		nop,
-		nop,
-		nop,
-	}
+	d.normal[0xc0] = []func(){nop, nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.ret}
 
 	// POP BC  [] 1 [12]
 	d.normal[0xc1] = []func(){nop, cpu.pop(mem, &cpu.c), cpu.pop(mem, &cpu.b)}
@@ -1399,25 +1391,10 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// RET Z  [] 1 [20 8]
-	d.normal[0xc8] = []func(){
-		nop,
-		func() {
-			cpu.ret("Z", mem)
-		},
-		nop,
-		nop,
-		nop,
-	}
+	d.normal[0xc8] = []func(){nop, nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.ret}
 
 	// RET   [] 1 [16]
-	d.normal[0xc9] = []func(){
-		nop,
-		nop,
-		nop,
-		func() {
-			cpu.ret("", mem)
-		},
-	}
+	d.normal[0xc9] = []func(){nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.ret}
 
 	// JP Z a16 [] 3 [16 12]
 	d.normal[0xca] = []func(){nop, d.readParamA, d.readParamB, cpu.jp}
@@ -1454,15 +1431,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// RET NC  [] 1 [20 8]
-	d.normal[0xd0] = []func(){
-		nop,
-		func() {
-			cpu.ret("NC", mem)
-		},
-		nop,
-		nop,
-		nop,
-	}
+	d.normal[0xd0] = []func(){nop, nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.ret}
 
 	// POP DE  [] 1 [12]
 	d.normal[0xd1] = []func(){nop, cpu.pop(mem, &cpu.e), cpu.pop(mem, &cpu.d)}
@@ -1500,25 +1469,10 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	}
 
 	// RET C  [] 1 [20 8]
-	d.normal[0xd8] = []func(){
-		nop,
-		func() {
-			cpu.ret("C", mem)
-		},
-		nop,
-		nop,
-		nop,
-	}
+	d.normal[0xd8] = []func(){nop, nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.ret}
 
 	// RETI   [] 1 [16]
-	d.normal[0xd9] = []func(){
-		nop,
-		nop,
-		nop,
-		func() {
-			cpu.reti(mem)
-		},
-	}
+	d.normal[0xd9] = []func(){nop, cpu.pop(mem, &cpu.m8a), cpu.pop(mem, &cpu.m8b), cpu.reti}
 
 	// JP C a16 [] 3 [16 12]
 	d.normal[0xda] = []func(){nop, d.readParamA, d.readParamB, cpu.jp}

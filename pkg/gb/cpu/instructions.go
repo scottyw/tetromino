@@ -1,8 +1,6 @@
 package cpu
 
 import (
-	"fmt"
-
 	"github.com/scottyw/tetromino/pkg/gb/mem"
 )
 
@@ -381,46 +379,12 @@ func (cpu *CPU) res(pos uint8, r8 *uint8) func() {
 	}
 }
 
-func (cpu *CPU) ret(kind string, mem *mem.Memory) {
-	switch kind {
-	case "":
-		lsb := mem.Read(cpu.sp)
-		cpu.sp++
-		msb := mem.Read(cpu.sp)
-		cpu.sp++
-		retAddr := uint16(msb)<<8 | uint16(lsb)
-		cpu.pc = retAddr
-	case "NZ":
-		if !cpu.zf() {
-			cpu.ret("", mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "Z":
-		if cpu.zf() {
-			cpu.ret("", mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "NC":
-		if !cpu.cf() {
-			cpu.ret("", mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	case "C":
-		if cpu.cf() {
-			cpu.ret("", mem)
-		} else {
-			// cpu.altTicks = true
-		}
-	default:
-		panic(fmt.Sprintf("No implementation for ret"))
-	}
+func (cpu *CPU) ret() {
+	cpu.pc = uint16(cpu.m8b)<<8 | uint16(cpu.m8a)
 }
 
-func (cpu *CPU) reti(mem *mem.Memory) {
-	cpu.ret("", mem)
+func (cpu *CPU) reti() {
+	cpu.ret()
 	cpu.ei()
 }
 
