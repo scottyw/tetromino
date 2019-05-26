@@ -859,7 +859,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xf7] = []func(){nop, cpu.rst(0x0030), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
 
 	// LD HL SP+r8 [0 0 H C] 2 [12]
-	d.normal[0xf8] = []func(){d.readParamA, nop, func() { cpu.ldHLSP(int8(cpu.u8a)) }}
+	d.normal[0xf8] = []func(){d.readParamA, nop,     cpu.ldHLSP }
 
 	// LD SP HL [] 1 [8]
 	d.normal[0xf9] = []func(){nop, cpu.ldSPHL}

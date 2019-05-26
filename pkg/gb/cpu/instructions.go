@@ -501,7 +501,8 @@ func (cpu *CPU) ldMSP() {
 	cpu.m8b = uint8(cpu.sp >> 8)
 }
 
-func (cpu *CPU) ldHLSP(i8 int8) {
+func (cpu *CPU) ldHLSP() {
+	i8 := int8(cpu.u8a)
 	new := int(int(cpu.sp) + int(i8))
 	cpu.h = uint8(new >> 8)
 	cpu.l = uint8(new)
