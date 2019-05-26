@@ -18,9 +18,9 @@ func (cpu *CPU) adcH() { cpu.adc(cpu.h) }
 
 func (cpu *CPU) adcL() { cpu.adc(cpu.l) }
 
-func (cpu *CPU) adcU8() { cpu.adc(cpu.u8a) }
+func (cpu *CPU) adcU() { cpu.adc(cpu.u8a) }
 
-func (cpu *CPU) adcM8() { cpu.adc(cpu.m8a) }
+func (cpu *CPU) adcM() { cpu.adc(cpu.m8a) }
 
 func (cpu *CPU) adc(u8 uint8) {
 	a := cpu.a
@@ -210,6 +210,24 @@ func (cpu *CPU) daa() {
 	cpu.setHf(false)
 }
 
+func (cpu *CPU) decA() { cpu.dec(&cpu.a) }
+
+func (cpu *CPU) decB() { cpu.dec(&cpu.b) }
+
+func (cpu *CPU) decC() { cpu.dec(&cpu.c) }
+
+func (cpu *CPU) decD() { cpu.dec(&cpu.d) }
+
+func (cpu *CPU) decE() { cpu.dec(&cpu.e) }
+
+func (cpu *CPU) decH() { cpu.dec(&cpu.h) }
+
+func (cpu *CPU) decL() { cpu.dec(&cpu.l) }
+
+func (cpu *CPU) decU() { cpu.dec(&cpu.u8a) }
+
+func (cpu *CPU) decM() { cpu.dec(&cpu.m8a) }
+
 func (cpu *CPU) dec(r8 *uint8) {
 	old := *r8
 	*r8--
@@ -219,6 +237,14 @@ func (cpu *CPU) dec(r8 *uint8) {
 	cpu.setHf(hc8Sub(old, 1))
 }
 
+func (cpu *CPU) decBC() { cpu.dec16(&cpu.b, &cpu.c) }
+
+func (cpu *CPU) decDE() { cpu.dec16(&cpu.d, &cpu.e) }
+
+func (cpu *CPU) decHL() { cpu.dec16(&cpu.h, &cpu.l) }
+
+func (cpu *CPU) decM16() { cpu.dec16(&cpu.m8b, &cpu.m8a) }
+
 func (cpu *CPU) dec16(msb, lsb *uint8) {
 	new := uint16(*msb)<<8 + uint16(*lsb) - 1
 	*msb = uint8(new >> 8)
@@ -227,12 +253,6 @@ func (cpu *CPU) dec16(msb, lsb *uint8) {
 
 func (cpu *CPU) decSP() {
 	cpu.sp--
-}
-
-func (cpu *CPU) decAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.dec(&value)
-	mem.Write(a16, value)
 }
 
 func (cpu *CPU) di() {
@@ -248,6 +268,24 @@ func (cpu *CPU) halt() {
 	// FIXME halt bug needs to be implemented
 }
 
+func (cpu *CPU) incA() { cpu.inc(&cpu.a) }
+
+func (cpu *CPU) incB() { cpu.inc(&cpu.b) }
+
+func (cpu *CPU) incC() { cpu.inc(&cpu.c) }
+
+func (cpu *CPU) incD() { cpu.inc(&cpu.d) }
+
+func (cpu *CPU) incE() { cpu.inc(&cpu.e) }
+
+func (cpu *CPU) incH() { cpu.inc(&cpu.h) }
+
+func (cpu *CPU) incL() { cpu.inc(&cpu.l) }
+
+func (cpu *CPU) incU() { cpu.inc(&cpu.u8a) }
+
+func (cpu *CPU) incM() { cpu.inc(&cpu.m8a) }
+
 func (cpu *CPU) inc(r8 *uint8) {
 	old := *r8
 	*r8++
@@ -257,6 +295,14 @@ func (cpu *CPU) inc(r8 *uint8) {
 	cpu.setHf(hc8(old, 1))
 }
 
+func (cpu *CPU) incBC() { cpu.inc16(&cpu.b, &cpu.c) }
+
+func (cpu *CPU) incDE() { cpu.inc16(&cpu.d, &cpu.e) }
+
+func (cpu *CPU) incHL() { cpu.inc16(&cpu.h, &cpu.l) }
+
+func (cpu *CPU) incM16() { cpu.inc16(&cpu.m8b, &cpu.m8a) }
+
 func (cpu *CPU) inc16(msb, lsb *uint8) {
 	new := uint16(*msb)<<8 + uint16(*lsb) + 1
 	*msb = uint8(new >> 8)
@@ -265,12 +311,6 @@ func (cpu *CPU) inc16(msb, lsb *uint8) {
 
 func (cpu *CPU) incSP() {
 	cpu.sp++
-}
-
-func (cpu *CPU) incAddr(a16 uint16, mem *mem.Memory) {
-	value := mem.Read(a16)
-	cpu.inc(&value)
-	mem.Write(a16, value)
 }
 
 func (cpu *CPU) jp() {
