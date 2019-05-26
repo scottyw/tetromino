@@ -71,15 +71,31 @@ func (d *Dispatch) readParamB() {
 }
 
 func (d *Dispatch) readHL() {
+	d.read(d.cpu.hl())
+}
+
+func (d *Dispatch) read(addr uint16) {
 	cpu := d.cpu
 	m := d.memory
-	cpu.m8a = m.Read(cpu.hl())
+	cpu.m8a = m.Read(addr)
+}
+
+func (d *Dispatch) writeC() {
+	d.write(uint16(0xff00 + uint16(d.cpu.c)))
 }
 
 func (d *Dispatch) writeHL() {
+	d.write(d.cpu.hl())
+}
+
+func (d *Dispatch) writeU() {
+	d.write(uint16(0xff00 + uint16(d.cpu.u8a)))
+}
+
+func (d *Dispatch) write(addr uint16) {
 	cpu := d.cpu
 	m := d.memory
-	m.Write(cpu.hl(), cpu.m8a)
+	m.Write(addr, cpu.m8a)
 }
 
 func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
@@ -745,13 +761,13 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xdf] = []func(){nop, cpu.rst(0x0018), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
 
 	// LDH (a8) A   2 [12]
-	d.normal[0xe0] = []func(){d.readParamA, func() { cpu.ld(&cpu.m8a, cpu.a) }, func() { mem.Write(uint16(0xff00+uint16(cpu.u8a)), cpu.m8a) }}
+	d.normal[0xe0] = []func(){d.readParamA, cpu.ldMA, d.writeU}
 
 	// POP HL  [] 1 [12]
 	d.normal[0xe1] = []func(){nop, cpu.pop(mem, &cpu.l), cpu.pop(mem, &cpu.h)}
 
 	// LD (C) A     1 [8]
-	d.normal[0xe2] = []func(){func() { cpu.ld(&cpu.m8a, cpu.a) }, func() { mem.Write(uint16(0xff00+uint16(cpu.c)), cpu.m8a) }}
+	d.normal[0xe2] = []func(){cpu.ldMA, d.writeC}
 
 	// PUSH HL      1 [16]
 	d.normal[0xe5] = []func(){nop, nop, cpu.push(mem, &cpu.h), cpu.push(mem, &cpu.l)}
@@ -778,19 +794,13 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0xef] = []func(){nop, cpu.rst(0x0028), cpu.push(mem, &cpu.m8b), cpu.push(mem, &cpu.m8a)}
 
 	// LDH A (a8)   2 [12]
-	d.normal[0xf0] = []func(){d.readParamA, nop, func() {
-		addr := uint16(0xff00 + uint16(cpu.u8a))
-		cpu.ld(&cpu.a, mem.Read(addr))
-	}}
+	d.normal[0xf0] = []func(){d.readParamA, nop, cpu.ldAUAddr(mem)}
 
 	// POP AF  [Z N H C] 1 [12]
 	d.normal[0xf1] = []func(){nop, cpu.popF(mem), cpu.pop(mem, &cpu.a)}
 
 	// LD A (C)     1 [8]
-	d.normal[0xf2] = []func(){nop, func() {
-		addr := uint16(0xff00 + uint16(cpu.c))
-		cpu.ld(&cpu.a, mem.Read(addr))
-	}}
+	d.normal[0xf2] = []func(){nop, cpu.ldACAddr(mem)}
 
 	// DI   [] 1 [4]
 	d.normal[0xf3] = []func(){cpu.di}
