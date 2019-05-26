@@ -20,9 +20,9 @@ func (cpu *CPU) adcH() { cpu.adc(cpu.h) }
 
 func (cpu *CPU) adcL() { cpu.adc(cpu.l) }
 
-func (cpu *CPU) adcU8() { cpu.adc(cpu.u8) }
+func (cpu *CPU) adcU8() { cpu.adc(cpu.u8a) }
 
-func (cpu *CPU) adcM8() { cpu.adc(cpu.m8) }
+func (cpu *CPU) adcM8() { cpu.adc(cpu.m8a) }
 
 func (cpu *CPU) adc(u8 uint8) {
 	a := cpu.a
@@ -55,9 +55,9 @@ func (cpu *CPU) addH() { cpu.add(cpu.h) }
 
 func (cpu *CPU) addL() { cpu.add(cpu.l) }
 
-func (cpu *CPU) addU8() { cpu.add(cpu.u8) }
+func (cpu *CPU) addU() { cpu.add(cpu.u8a) }
 
-func (cpu *CPU) addM8() { cpu.add(cpu.m8) }
+func (cpu *CPU) addM() { cpu.add(cpu.m8a) }
 
 func (cpu *CPU) add(u8 uint8) {
 	a := cpu.a
@@ -89,7 +89,7 @@ func (cpu *CPU) addHL(u16 uint16) {
 }
 
 func (cpu *CPU) addSP() {
-	i8 := int8(cpu.u8)
+	i8 := int8(cpu.u8a)
 	sp := cpu.sp
 	cpu.sp = uint16(int(cpu.sp) + int(i8))
 	// [0 0 H C]
@@ -118,9 +118,9 @@ func (cpu *CPU) andH() { cpu.and(cpu.h) }
 
 func (cpu *CPU) andL() { cpu.and(cpu.l) }
 
-func (cpu *CPU) andU8() { cpu.and(cpu.u8) }
+func (cpu *CPU) andU() { cpu.and(cpu.u8a) }
 
-func (cpu *CPU) andM8() { cpu.and(cpu.m8) }
+func (cpu *CPU) andM() { cpu.and(cpu.m8a) }
 
 func (cpu *CPU) and(u8 uint8) {
 	cpu.a &= u8

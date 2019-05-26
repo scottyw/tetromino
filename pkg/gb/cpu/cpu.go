@@ -43,9 +43,10 @@ type CPU struct {
 
 	// Context
 	altTicks bool
-	u8       uint8  // 8-bit instruction argument
-	u16      uint16 // 16-bit instruction argument
-	m8       uint8  // Cached copy of 8-bit value memory for instructions that operate over memory
+	u8a      uint8 // 8-bit instruction argument
+	u8b      uint8 // Additional 8-bit instruction argument
+	m8a      uint8 // Cached copy of an 8-bit memory value for instructions that operate over it
+	m8b      uint8 // Additional cached copy of an 8-bit memory value for instructions that operate over it
 
 	// Debug
 	debugCPU      bool
@@ -84,4 +85,8 @@ func (cpu *CPU) af() uint16 {
 
 func (cpu *CPU) hl() uint16 {
 	return uint16(cpu.h)<<8 + uint16(cpu.l)
+}
+
+func (cpu *CPU) u16() uint16 {
+	return uint16(cpu.u8b)<<8 + uint16(cpu.u8a)
 }

@@ -88,21 +88,22 @@ func (d *Dispatch) peek() *[]func() {
 		steps = &d.prefix[md.Dispatch]
 	} else {
 		// Reset any context from previous instructions
-		cpu.u8 = 0
-		cpu.u16 = 0
-		cpu.m8 = 0
-		switch md.Length {
-		case 1:
-			cpu.pc++
-		case 2:
-			cpu.u8 = memory.Read(cpu.pc + 1)
-			value = fmt.Sprintf("%02x", cpu.u8)
-			cpu.pc += 2
-		case 3:
-			cpu.u16 = uint16(memory.Read(cpu.pc+1)) | uint16(memory.Read(cpu.pc+2))<<8
-			value = fmt.Sprintf("%04x", cpu.u16)
-			cpu.pc += 3
+		cpu.u8a = 0
+		cpu.u8b = 0
+		cpu.m8a = 0
+		cpu.m8b = 0
+		if cpu.debugCPU {
+			// Peek at the instruction arguments for debug purposes
+			switch md.Length {
+			case 2:
+				u8 := memory.Read(cpu.pc + 1)
+				value = fmt.Sprintf("%02x", u8)
+			case 3:
+				u16 := uint16(memory.Read(cpu.pc+1)) | uint16(memory.Read(cpu.pc+2))<<8
+				value = fmt.Sprintf("%04x", u16)
+			}
 		}
+		cpu.pc++
 		steps = &d.normal[md.Dispatch]
 	}
 	if md.AltMachineCycles != 0 {
@@ -110,13 +111,6 @@ func (d *Dispatch) peek() *[]func() {
 	} else {
 		d.altStepIndex = 0
 	}
-	// if len(*steps) != md.Length {
-	// 	panic(fmt.Sprintf("Wrong length! Expected %d Actual %d Instruction %v", md.Length, len(*steps), md))
-	// }
-	// FIXME
-	// if cpu.validateFlags {
-	// 	validateFlags(f, cpu.f, *md)
-	// }
 	if cpu.debugCPU {
 		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
 			pc, md.Dispatch, fmt.Sprintf("%s %s %s", md.Mnemonic, md.Operand1, md.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
