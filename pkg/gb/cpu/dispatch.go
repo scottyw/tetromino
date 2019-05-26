@@ -1880,11 +1880,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	// POP AF  [Z N H C] 1 [12]
 	d.normal[0xf1] = []func(){
 		nop,
-		func() {
-			// Lower nibble is always zero no matter what data was written
-			cpu.f = mem.Read(cpu.sp) & 0xf0
-			cpu.sp++
-		},
+		popF(cpu, mem),
 		pop(cpu, mem, &cpu.a),
 	}
 

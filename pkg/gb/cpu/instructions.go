@@ -363,6 +363,14 @@ func pop(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
 	}
 }
 
+func popF(cpu *CPU, mem *mem.Memory) func() {
+	return func() {
+		// Lower nibble is always zero no matter what data was written
+		cpu.f = mem.Read(cpu.sp) & 0xf0
+		cpu.sp++
+	}
+}
+
 func push(cpu *CPU, mem *mem.Memory, a8 *uint8) func() {
 	return func() {
 		cpu.sp--
