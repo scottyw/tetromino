@@ -153,25 +153,25 @@ func (cpu *CPU) call(kind string, a16 uint16, mem *mem.Memory) {
 		if !cpu.zf() {
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
 			cpu.call("", a16, mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for call: %v %v", kind, a16))
@@ -298,25 +298,25 @@ func (cpu *CPU) jp(kind string, a16 uint16) {
 		if !cpu.zf() {
 			cpu.jp("", a16)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
 			cpu.jp("", a16)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
 			cpu.jp("", a16)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
 			cpu.jp("", a16)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for jp: %v %v", kind, a16))
@@ -448,25 +448,25 @@ func (cpu *CPU) ret(kind string, mem *mem.Memory) {
 		if !cpu.zf() {
 			cpu.ret("", mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "Z":
 		if cpu.zf() {
 			cpu.ret("", mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "NC":
 		if !cpu.cf() {
 			cpu.ret("", mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	case "C":
 		if cpu.cf() {
 			cpu.ret("", mem)
 		} else {
-			cpu.altTicks = true
+			// cpu.altTicks = true
 		}
 	default:
 		panic(fmt.Sprintf("No implementation for ret"))

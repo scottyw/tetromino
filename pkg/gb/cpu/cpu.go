@@ -42,11 +42,10 @@ type CPU struct {
 	stopped bool
 
 	// Context
-	altTicks bool
-	u8a      uint8 // 8-bit instruction argument
-	u8b      uint8 // Additional 8-bit instruction argument
-	m8a      uint8 // Cached copy of an 8-bit memory value for instructions that operate over it
-	m8b      uint8 // Additional cached copy of an 8-bit memory value for instructions that operate over it
+	u8a uint8 // 8-bit instruction argument
+	u8b uint8 // Additional 8-bit instruction argument
+	m8a uint8 // Cached copy of an 8-bit memory value for instructions that operate over it
+	m8b uint8 // Additional cached copy of an 8-bit memory value for instructions that operate over it
 
 	// Debug
 	debugCPU      bool

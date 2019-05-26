@@ -62,13 +62,49 @@ func (d *Dispatch) checkInterrupts() *[]func() {
 	return &steps
 }
 
+func (d *Dispatch) useAltMachineCycles(instruction uint8) bool {
+	cpu := d.cpu
+	switch instruction {
+
+	// CALL 3 [24 12] [] 0xc4 NZ a16 196 false 6 3 <nil>
+	// JP 3 [16 12] [] 0xc2 NZ a16 194 false 4 3 <nil>
+	// JR 2 [12 8] [] 0x20 NZ r8 32 false 3 2 <nil>
+	// RET 1 [20 8] [] 0xc0 NZ  192 false 5 2 <nil>
+	case 0xc4, 0xc2, 0x20, 0xc0:
+		return cpu.zf()
+
+	// CALL 3 [24 12] [] 0xcc Z a16 204 false 6 3 <nil>
+	// JP 3 [16 12] [] 0xca Z a16 202 false 4 3 <nil>
+	// JR 2 [12 8] [] 0x28 Z r8 40 false 3 2 <nil>
+	// RET 1 [20 8] [] 0xc8 Z  200 false 5 2 <nil>
+	case 0xcc, 0xca, 0x28, 0xc8:
+		return !cpu.zf()
+
+	// CALL 3 [24 12] [] 0xd4 NC a16 212 false 6 3 <nil>
+	// JP 3 [16 12] [] 0xd2 NC a16 210 false 4 3 <nil>
+	// JR 2 [12 8] [] 0x30 NC r8 48 false 3 2 <nil>
+	// RET 1 [20 8] [] 0xd0 NC  208 false 5 2 <nil>
+	case 0xd4, 0xd2, 0x30, 0xd0:
+		return cpu.cf()
+
+	// CALL 3 [24 12] [] 0xdc C a16 220 false 6 3 <nil>
+	// JP 3 [16 12] [] 0xda C a16 218 false 4 3 <nil>
+	// JR 2 [12 8] [] 0x38 C r8 56 false 3 2 <nil>
+	// RET 1 [20 8] [] 0xd8 C  216 false 5 2 <nil>
+	case 0xdc, 0xda, 0x38, 0xd8:
+		return !cpu.cf()
+
+	}
+	return false
+}
+
 // Every instruction is implemented as a list of steps that take one machine cycle each
 func (d *Dispatch) peek() *[]func() {
 	cpu := d.cpu
 	memory := d.memory
 	instructionByte := memory.Read(cpu.pc)
 	// Mooneye uses the 0x40 instruction as a magic breakpoint
-	// to indicate that a test rom has completeed
+	// to indicate that a test rom has completed
 	if instructionByte == 0x40 {
 		d.Mooneye = true
 	}
@@ -81,19 +117,14 @@ func (d *Dispatch) peek() *[]func() {
 		md = prefixedInstructionMetadata[instructionByte]
 	}
 	pc := cpu.pc
-	var steps *[]func()
+	var steps []func()
 	var value string
 	if md.Prefixed {
+		steps = d.prefix[md.Dispatch]
 		cpu.pc += 2
-		steps = &d.prefix[md.Dispatch]
 	} else {
-		// Reset any context from previous instructions
-		cpu.u8a = 0
-		cpu.u8b = 0
-		cpu.m8a = 0
-		cpu.m8b = 0
+		// Peek at the instruction arguments for debug purposes
 		if cpu.debugCPU {
-			// Peek at the instruction arguments for debug purposes
 			switch md.Length {
 			case 2:
 				u8 := memory.Read(cpu.pc + 1)
@@ -103,27 +134,35 @@ func (d *Dispatch) peek() *[]func() {
 				value = fmt.Sprintf("%04x", u16)
 			}
 		}
+
+		// Reset any context from previous instructions
+		cpu.u8a = 0
+		cpu.u8b = 0
+		cpu.m8a = 0
+		cpu.m8b = 0
+
+		// Get the steps associated with this instruction
+		steps = d.normal[md.Dispatch]
+
+		// Check for instructions that need to use the shorter alt machine cycle count
+		if d.useAltMachineCycles(md.Dispatch) {
+			steps = steps[:md.AltMachineCycles]
+		}
+
+		// Finally increment PC
 		cpu.pc++
-		steps = &d.normal[md.Dispatch]
-	}
-	if md.AltMachineCycles != 0 {
-		d.altStepIndex = md.AltMachineCycles
-	} else {
-		d.altStepIndex = 0
 	}
 	if cpu.debugCPU {
 		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
 			pc, md.Dispatch, fmt.Sprintf("%s %s %s", md.Mnemonic, md.Operand1, md.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 	}
-	return steps
+	return &steps
 }
 
 // ExecuteMachineCycle runs the CPU for one machine cycle
 func (d *Dispatch) ExecuteMachineCycle() {
 	cpu := d.cpu
-	if d.stepIndex == len(*d.steps) ||
-		(cpu.altTicks && d.stepIndex == d.altStepIndex) {
-		cpu.altTicks = false
+	if d.stepIndex == len(*d.steps) {
 		var steps *[]func()
 		if !d.handlingInterrupt {
 			steps = d.checkInterrupts()
