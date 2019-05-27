@@ -72,7 +72,8 @@ func createRAM(cartType, ramSize uint8) [][0x2000]byte {
 		case 0x05:
 			ram = make([][0x2000]byte, 8)
 		default:
-			return nil
+			// This cart has no RAM but capture writes anyway to allow test ROM validation
+			ram = make([][0x2000]byte, 1)
 		}
 	}
 	// Initialize it to 0xff

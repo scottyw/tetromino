@@ -371,3 +371,8 @@ func (m *Memory) Write(addr uint16, value byte) {
 		panic(fmt.Sprintf("Write failed: 0x%04x", addr))
 	}
 }
+
+// CartRAM returns the contents of cartridge RAM, which is useful for verifing test results
+func (m *Memory) CartRAM() [][0x2000]byte {
+	return m.mbc.ram
+}
