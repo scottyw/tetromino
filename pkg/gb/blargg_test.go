@@ -47,9 +47,17 @@ func runBlarggTest(t *testing.T, filename string) {
 	}
 }
 
-func TestBlarggCPU(t *testing.T) { runBlarggTest(t, "cpu_instrs/cpu_instrs.gb") }
+func TestBlarggCPU(t *testing.T) {
+	runBlarggTest(t, "cpu_instrs/cpu_instrs.gb")
+}
 
-func TestBlarggInstrTiming(t *testing.T) { runBlarggTest(t, "instr_timing/instr_timing.gb") }
+func TestBlarggInstrTiming(t *testing.T) {
+	runBlarggTest(t, "instr_timing/instr_timing.gb")
+}
+
+func TestBlarggHaltBug(t *testing.T) {
+	runBlarggTest(t, "halt_bug.gb")
+}
 
 func TestBlarggMemoryTiming(t *testing.T) {
 	runBlarggTest(t, "mem_timing/mem_timing.gb")

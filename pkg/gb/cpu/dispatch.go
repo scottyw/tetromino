@@ -514,7 +514,7 @@ func (d *Dispatch) initialize(cpu *CPU, mem *mem.Memory) {
 	d.normal[0x75] = []func(){d.writeHLX(&d.cpu.l), nop}
 
 	// HALT   [] 1 [4]
-	d.normal[0x76] = []func(){cpu.halt}
+	d.normal[0x76] = []func(){cpu.halt(d.memory)}
 
 	// LD (HL) A [] 1 [8]
 	d.normal[0x77] = []func(){d.writeHLX(&d.cpu.a), nop}

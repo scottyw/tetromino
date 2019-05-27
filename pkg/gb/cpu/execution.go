@@ -126,7 +126,11 @@ func (d *Dispatch) peek() *[]func() {
 	var value string
 	if md.Prefixed {
 		steps = d.prefix[md.Dispatch]
-		cpu.pc += 2
+		if !cpu.haltbug {
+			cpu.pc += 2
+		} else {
+			cpu.haltbug = false
+		}
 	} else {
 		// Peek at the instruction arguments for debug purposes
 		if cpu.debugCPU {
@@ -155,7 +159,11 @@ func (d *Dispatch) peek() *[]func() {
 		}
 
 		// Finally increment PC
-		cpu.pc++
+		if !cpu.haltbug {
+			cpu.pc++
+		} else {
+			cpu.haltbug = false
+		}
 	}
 	if cpu.debugCPU {
 		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",

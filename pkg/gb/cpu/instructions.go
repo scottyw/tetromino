@@ -261,9 +261,19 @@ func (cpu *CPU) ei() {
 	cpu.ime = true
 }
 
-func (cpu *CPU) halt() {
-	cpu.halted = true
-	// FIXME halt bug needs to be implemented
+func (cpu *CPU) halt(mem *mem.Memory) func() {
+	return func() {
+		if cpu.ime {
+			cpu.halted = true
+		} else {
+			interrupts := mem.IE & mem.IF & 0x1f
+			if interrupts == 0 {
+				cpu.halted = true
+			} else {
+				cpu.haltbug = true
+			}
+		}
+	}
 }
 
 func (cpu *CPU) incA() { cpu.inc(&cpu.a) }

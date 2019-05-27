@@ -39,6 +39,7 @@ type CPU struct {
 	pc      uint16
 	ime     bool
 	halted  bool
+	haltbug bool
 	stopped bool
 
 	// Context
