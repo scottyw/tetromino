@@ -35,37 +35,19 @@ func runMooneyeTest(t *testing.T, filename string) {
 	}
 }
 
-// func TestMooneye00(t *testing.T) { runMooneyeTest(t, "acceptance/add_sp_e_timing.gb") }
+func TestMooneye00(t *testing.T) { runMooneyeTest(t, "acceptance/add_sp_e_timing.gb") }
 
-// func TestMooneye01(t *testing.T) { runMooneyeTest(t, "acceptance/bits/mem_oam.gb") }
+func TestMooneye01(t *testing.T) { runMooneyeTest(t, "acceptance/bits/mem_oam.gb") }
 
-// func TestMooneye02(t *testing.T) { runMooneyeTest(t, "acceptance/bits/reg_f.gb") }
+func TestMooneye02(t *testing.T) { runMooneyeTest(t, "acceptance/bits/reg_f.gb") }
 
 // func TestMooneye03(t *testing.T) { runMooneyeTest(t, "acceptance/bits/unused_hwio-GS.gb") }
 
-// func TestMooneye04(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-S.gb") }
-
-// func TestMooneye05(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-dmg0.gb") }
-
 // func TestMooneye06(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-dmgABCmgb.gb") }
-
-// func TestMooneye07(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div2-S.gb") }
-
-// func TestMooneye08(t *testing.T) { runMooneyeTest(t, "acceptance/boot_hwio-S.gb") }
-
-// func TestMooneye09(t *testing.T) { runMooneyeTest(t, "acceptance/boot_hwio-dmg0.gb") }
 
 // func TestMooneye10(t *testing.T) { runMooneyeTest(t, "acceptance/boot_hwio-dmgABCmgb.gb") }
 
-// func TestMooneye11(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-dmg0.gb") }
-
-// func TestMooneye12(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-dmgABC.gb") }
-
-// func TestMooneye13(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-mgb.gb") }
-
-// func TestMooneye14(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-sgb.gb") }
-
-// func TestMooneye15(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-sgb2.gb") }
+func TestMooneye12(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-dmgABC.gb") }
 
 // func TestMooneye16(t *testing.T) { runMooneyeTest(t, "acceptance/call_cc_timing.gb") }
 
@@ -111,11 +93,11 @@ func TestMooneye35(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/basic.g
 
 // func TestMooneye37(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/sources-dmgABCmgbS.gb") }
 
-// func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
+func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
 
 // func TestMooneye39(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_start.gb") }
 
-// func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
+func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
 
 // func TestMooneye41(t *testing.T) { runMooneyeTest(t, "acceptance/pop_timing.gb") }
 
@@ -204,25 +186,3 @@ func TestMooneye82(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_4Mb
 func TestMooneye83(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_512Kb.gb") }
 
 func TestMooneye84(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_8Mb.gb") }
-
-// func TestMooneye85(t *testing.T) { runMooneyeTest(t, "manual-only/sprite_priority.gb") }
-
-// func TestMooneye86(t *testing.T) { runMooneyeTest(t, "misc/bits/unused_hwio-C.gb") }
-
-// func TestMooneye87(t *testing.T) { runMooneyeTest(t, "misc/boot_div-A.gb") }
-
-// func TestMooneye88(t *testing.T) { runMooneyeTest(t, "misc/boot_div-cgb0.gb") }
-
-// func TestMooneye89(t *testing.T) { runMooneyeTest(t, "misc/boot_div-cgbABCDE.gb") }
-
-// func TestMooneye90(t *testing.T) { runMooneyeTest(t, "misc/boot_hwio-C.gb") }
-
-// func TestMooneye91(t *testing.T) { runMooneyeTest(t, "misc/boot_regs-A.gb") }
-
-// func TestMooneye92(t *testing.T) { runMooneyeTest(t, "misc/boot_regs-cgb.gb") }
-
-// func TestMooneye93(t *testing.T) { runMooneyeTest(t, "misc/ppu/vblank_stat_intr-C.gb") }
-
-// func TestMooneye94(t *testing.T) { runMooneyeTest(t, "utils/bootrom_dumper.gb") }
-
-// func TestMooneye95(t *testing.T) { runMooneyeTest(t, "utils/dump_boot_hwio.gb") }
