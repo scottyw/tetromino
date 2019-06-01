@@ -154,6 +154,9 @@ func (m *Memory) startOAM(value uint8) {
 	m.oamRunning = true
 	m.oamCycle = 0
 	m.oamBaseAddr = uint16(value) << 8
+	if m.oamBaseAddr >= 0xe000 {
+		m.oamBaseAddr -= 0x2000
+	}
 }
 
 func (m *Memory) readJOYP() uint8 {
@@ -189,7 +192,7 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr < 0xff00:
 		return 0 // Unusable region
 	case addr == DMA:
-		return 0
+		return uint8(m.oamBaseAddr >> 8)
 	case addr == IE:
 		return m.IE
 	case addr == IF:
