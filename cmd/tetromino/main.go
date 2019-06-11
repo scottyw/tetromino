@@ -29,7 +29,10 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to write cpuprofile.pprof: %v", err)
 		}
-		pprof.StartCPUProfile(f)
+		err = pprof.StartCPUProfile(f)
+		if err != nil {
+			log.Fatalf("Failed to start cpu profile: %v", err)
+		}
 		defer pprof.StopCPUProfile()
 	}
 

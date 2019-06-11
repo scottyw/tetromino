@@ -254,8 +254,6 @@ func (cpu *CPU) decH() { cpu.dec(&cpu.h) }
 
 func (cpu *CPU) decL() { cpu.dec(&cpu.l) }
 
-func (cpu *CPU) decU() { cpu.dec(&cpu.u8a) }
-
 func (cpu *CPU) dec(r8 *uint8) {
 	old := *r8
 	*r8--
@@ -325,8 +323,6 @@ func (cpu *CPU) incH() { cpu.inc(&cpu.h) }
 
 func (cpu *CPU) incL() { cpu.inc(&cpu.l) }
 
-func (cpu *CPU) incU() { cpu.inc(&cpu.u8a) }
-
 func (cpu *CPU) inc(r8 *uint8) {
 	old := *r8
 	*r8++
@@ -376,8 +372,6 @@ func (cpu *CPU) ldAE() { cpu.a = cpu.e }
 func (cpu *CPU) ldAH() { cpu.a = cpu.h }
 
 func (cpu *CPU) ldAL() { cpu.a = cpu.l }
-
-func (cpu *CPU) ldAM() { cpu.a = cpu.m8a }
 
 func (cpu *CPU) ldAU() { cpu.a = cpu.u8a }
 
@@ -468,12 +462,6 @@ func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
 func (cpu *CPU) ldHLU8(mem *mem.Memory) func() {
 	return func() {
 		mem.Write(cpu.hl(), cpu.u8a)
-	}
-}
-
-func (cpu *CPU) ldHLM(mem *mem.Memory) func() {
-	return func() {
-		mem.Write(cpu.hl(), cpu.m8a)
 	}
 }
 
@@ -750,8 +738,6 @@ func (cpu *CPU) rlH() { cpu.rl(&cpu.h) }
 
 func (cpu *CPU) rlL() { cpu.rl(&cpu.l) }
 
-func (cpu *CPU) rlU() { cpu.rl(&cpu.u8a) }
-
 func (cpu *CPU) rl(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
@@ -792,8 +778,6 @@ func (cpu *CPU) rlcE() { cpu.rlc(&cpu.e) }
 func (cpu *CPU) rlcH() { cpu.rlc(&cpu.h) }
 
 func (cpu *CPU) rlcL() { cpu.rlc(&cpu.l) }
-
-func (cpu *CPU) rlcU() { cpu.rlc(&cpu.u8a) }
 
 func (cpu *CPU) rlc(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
@@ -836,8 +820,6 @@ func (cpu *CPU) rrH() { cpu.rr(&cpu.h) }
 
 func (cpu *CPU) rrL() { cpu.rr(&cpu.l) }
 
-func (cpu *CPU) rrU() { cpu.rr(&cpu.u8a) }
-
 func (cpu *CPU) rr(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
@@ -877,8 +859,6 @@ func (cpu *CPU) rrcE() { cpu.rrc(&cpu.e) }
 func (cpu *CPU) rrcH() { cpu.rrc(&cpu.h) }
 
 func (cpu *CPU) rrcL() { cpu.rrc(&cpu.l) }
-
-func (cpu *CPU) rrcU() { cpu.rrc(&cpu.u8a) }
 
 func (cpu *CPU) rrc(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
@@ -943,8 +923,6 @@ func (cpu *CPU) slaH() { cpu.sla(&cpu.h) }
 
 func (cpu *CPU) slaL() { cpu.sla(&cpu.l) }
 
-func (cpu *CPU) slaU() { cpu.sla(&cpu.u8a) }
-
 func (cpu *CPU) sla(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
@@ -975,8 +953,6 @@ func (cpu *CPU) sraE() { cpu.sra(&cpu.e) }
 func (cpu *CPU) sraH() { cpu.sra(&cpu.h) }
 
 func (cpu *CPU) sraL() { cpu.sra(&cpu.l) }
-
-func (cpu *CPU) sraU() { cpu.sra(&cpu.u8a) }
 
 func (cpu *CPU) sra(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
@@ -1013,8 +989,6 @@ func (cpu *CPU) srlH() { cpu.srl(&cpu.h) }
 
 func (cpu *CPU) srlL() { cpu.srl(&cpu.l) }
 
-func (cpu *CPU) srlU() { cpu.srl(&cpu.u8a) }
-
 func (cpu *CPU) srl(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
@@ -1045,8 +1019,6 @@ func (cpu *CPU) swapE() { cpu.swap(&cpu.e) }
 func (cpu *CPU) swapH() { cpu.swap(&cpu.h) }
 
 func (cpu *CPU) swapL() { cpu.swap(&cpu.l) }
-
-func (cpu *CPU) swapU() { cpu.swap(&cpu.u8a) }
 
 func (cpu *CPU) swap(r8 *uint8) {
 	u8 := *r8

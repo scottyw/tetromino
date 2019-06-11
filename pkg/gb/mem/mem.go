@@ -353,7 +353,10 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr == JOYP:
 		m.JOYP = value
 	case addr == SB:
-		m.sbWriter.Write([]byte{value})
+		_, err := m.sbWriter.Write([]byte{value})
+		if err != nil {
+			panic(fmt.Sprintf("Write to SB failed: %v", err))
+		}
 	case addr == SC:
 		// FIXME serial bus support
 	case addr == DIV:

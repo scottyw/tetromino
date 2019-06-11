@@ -161,7 +161,11 @@ func (lcd *LCD) TakeSnapshot() {
 	}
 	defer file.Close()
 	encoder := gob.NewEncoder(file)
-	encoder.Encode(lcd)
+	err = encoder.Encode(lcd)
+	if err != nil {
+		fmt.Printf("Failed to encode LCD snapshot: %v\n", err)
+		return
+	}
 }
 
 // LoadSnapshot updates the current LCD based on the file contents
@@ -305,7 +309,7 @@ func (lcd *LCD) updateSprites(lcdY uint8) {
 		spriteX := startX - 8
 		for tileX := uint8(0); tileX < 8; tileX++ {
 			lcdX := spriteX + tileX
-			if lcdX >= 0 && lcdX < 160 {
+			if lcdX < 160 {
 				lcd.sprites[lcdY][lcdX] = tile[lcdY-startY+16][tileX]
 			}
 		}

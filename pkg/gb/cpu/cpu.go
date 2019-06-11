@@ -49,8 +49,7 @@ type CPU struct {
 	m8b uint8 // Additional cached copy of an 8-bit memory value for instructions that operate over it
 
 	// Debug
-	debugCPU      bool
-	validateFlags bool
+	debugCPU bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
@@ -77,10 +76,6 @@ func (cpu *CPU) bc() uint16 {
 
 func (cpu *CPU) de() uint16 {
 	return uint16(cpu.d)<<8 + uint16(cpu.e)
-}
-
-func (cpu *CPU) af() uint16 {
-	return uint16(cpu.a)<<8 + uint16(cpu.f)
 }
 
 func (cpu *CPU) hl() uint16 {

@@ -1,7 +1,5 @@
 package cpu
 
-import "fmt"
-
 func (cpu *CPU) zf() bool {
 	return cpu.f&zFlag > 0
 }
@@ -73,34 +71,34 @@ func c8Sub(a, b uint8) bool {
 	return int(a)-int(b) < 0
 }
 
-func flagMetadata(i uint, flags []string) string {
-	if len(flags) == 0 {
-		return "-"
-	}
-	return flags[i]
-}
+// func flagMetadata(i uint, flags []string) string {
+// 	if len(flags) == 0 {
+// 		return "-"
+// 	}
+// 	return flags[i]
+// }
 
-func validateFlag(label string, i uint, f1, f2 uint8, im metadata) {
-	bit := uint8(0x80) >> i
-	switch flagMetadata(i, im.Flags) {
-	case "-":
-		if f1&bit != f2&bit {
-			panic(fmt.Sprintf("%s flag invalid! Should not change: before=0x%02x after=0x%02x metadata=%v", label, f1, f2, im))
-		}
-	case "0":
-		if f2&bit != 0 {
-			panic(fmt.Sprintf("%s flag invalid! Should be reset: flags=0x%02x metadata=%v", label, f2, im))
-		}
-	case "1":
-		if f2&bit == 0 {
-			panic(fmt.Sprintf("%s flag invalid! Should be set: flags=0x%02x metadata=%v", label, f2, im))
-		}
-	}
-}
+// func validateFlag(label string, i uint, f1, f2 uint8, im metadata) {
+// 	bit := uint8(0x80) >> i
+// 	switch flagMetadata(i, im.Flags) {
+// 	case "-":
+// 		if f1&bit != f2&bit {
+// 			panic(fmt.Sprintf("%s flag invalid! Should not change: before=0x%02x after=0x%02x metadata=%v", label, f1, f2, im))
+// 		}
+// 	case "0":
+// 		if f2&bit != 0 {
+// 			panic(fmt.Sprintf("%s flag invalid! Should be reset: flags=0x%02x metadata=%v", label, f2, im))
+// 		}
+// 	case "1":
+// 		if f2&bit == 0 {
+// 			panic(fmt.Sprintf("%s flag invalid! Should be set: flags=0x%02x metadata=%v", label, f2, im))
+// 		}
+// 	}
+// }
 
-func validateFlags(f1, f2 uint8, im metadata) {
-	validateFlag("Z", 0, f1, f2, im)
-	validateFlag("N", 1, f1, f2, im)
-	validateFlag("H", 2, f1, f2, im)
-	validateFlag("C", 3, f1, f2, im)
-}
+// func validateFlags(f1, f2 uint8, im metadata) {
+// 	validateFlag("Z", 0, f1, f2, im)
+// 	validateFlag("N", 1, f1, f2, im)
+// 	validateFlag("H", 2, f1, f2, im)
+// 	validateFlag("C", 3, f1, f2, im)
+// }

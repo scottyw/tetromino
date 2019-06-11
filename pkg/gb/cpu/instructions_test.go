@@ -1,34 +1,12 @@
 package cpu
 
 import (
-	"bytes"
 	"testing"
-
-	"github.com/scottyw/tetromino/pkg/gb/mem"
 )
 
 ////////////////////////////////////////////////////////////////
 // Test-agnostic validation functions
 ////////////////////////////////////////////////////////////////
-
-func ReadRegion(memory *mem.Memory, startAddr, length uint16) []byte {
-	region := make([]byte, length)
-	for i := uint16(0); i < length; i++ {
-		region[i] = memory.Read(startAddr + i)
-	}
-	return region
-}
-
-func compareCPUsAndMemory(t *testing.T, expectedCPU, actualCPU *CPU, expectedMem, actualMem *mem.Memory, startAddr, length uint16) {
-	compareCPUs(t, expectedCPU, actualCPU)
-	actual := ReadRegion(actualMem, startAddr, length)
-	expected := ReadRegion(expectedMem, startAddr, length)
-	if bytes.Compare(actual, expected) != 0 {
-		t.Error("Memory does not match")
-		t.Error("  Expected : ", expected)
-		t.Error("  Actual   : ", actual)
-	}
-}
 
 func compareCPUs(t *testing.T, expectedCPU, actualCPU *CPU) {
 	if *actualCPU != *expectedCPU {
