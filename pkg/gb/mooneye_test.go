@@ -43,33 +43,33 @@ func TestMooneye02(t *testing.T) { runMooneyeTest(t, "acceptance/bits/reg_f.gb")
 
 // func TestMooneye03(t *testing.T) { runMooneyeTest(t, "acceptance/bits/unused_hwio-GS.gb") }
 
-// func TestMooneye06(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-dmgABCmgb.gb") }
+func TestMooneye06(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-dmgABCmgb.gb") }
 
 // func TestMooneye10(t *testing.T) { runMooneyeTest(t, "acceptance/boot_hwio-dmgABCmgb.gb") }
 
 func TestMooneye12(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-dmgABC.gb") }
 
-// func TestMooneye16(t *testing.T) { runMooneyeTest(t, "acceptance/call_cc_timing.gb") }
+func TestMooneye16(t *testing.T) { runMooneyeTest(t, "acceptance/call_cc_timing.gb") }
 
 // func TestMooneye17(t *testing.T) { runMooneyeTest(t, "acceptance/call_cc_timing2.gb") }
 
-// func TestMooneye18(t *testing.T) { runMooneyeTest(t, "acceptance/call_timing.gb") }
+func TestMooneye18(t *testing.T) { runMooneyeTest(t, "acceptance/call_timing.gb") }
 
 // func TestMooneye19(t *testing.T) { runMooneyeTest(t, "acceptance/call_timing2.gb") }
 
 // func TestMooneye20(t *testing.T) { runMooneyeTest(t, "acceptance/di_timing-GS.gb") }
 
-// func TestMooneye21(t *testing.T) { runMooneyeTest(t, "acceptance/div_timing.gb") }
+func TestMooneye21(t *testing.T) { runMooneyeTest(t, "acceptance/div_timing.gb") }
 
 // func TestMooneye22(t *testing.T) { runMooneyeTest(t, "acceptance/ei_sequence.gb") }
 
 // func TestMooneye23(t *testing.T) { runMooneyeTest(t, "acceptance/ei_timing.gb") }
 
-// func TestMooneye24(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime0_ei.gb") }
+func TestMooneye24(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime0_ei.gb") }
 
-// func TestMooneye25(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime0_nointr_timing.gb") }
+func TestMooneye25(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime0_nointr_timing.gb") }
 
-// func TestMooneye26(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime1_timing.gb") }
+func TestMooneye26(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime1_timing.gb") }
 
 // func TestMooneye27(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime1_timing2-GS.gb") }
 
@@ -79,11 +79,11 @@ func TestMooneye29(t *testing.T) { runMooneyeTest(t, "acceptance/instr/daa.gb") 
 
 // func TestMooneye30(t *testing.T) { runMooneyeTest(t, "acceptance/interrupts/ie_push.gb") }
 
-// func TestMooneye31(t *testing.T) { runMooneyeTest(t, "acceptance/intr_timing.gb") }
+func TestMooneye31(t *testing.T) { runMooneyeTest(t, "acceptance/intr_timing.gb") }
 
-// func TestMooneye32(t *testing.T) { runMooneyeTest(t, "acceptance/jp_cc_timing.gb") }
+func TestMooneye32(t *testing.T) { runMooneyeTest(t, "acceptance/jp_cc_timing.gb") }
 
-// func TestMooneye33(t *testing.T) { runMooneyeTest(t, "acceptance/jp_timing.gb") }
+func TestMooneye33(t *testing.T) { runMooneyeTest(t, "acceptance/jp_timing.gb") }
 
 // func TestMooneye34(t *testing.T) { runMooneyeTest(t, "acceptance/ld_hl_sp_e_timing.gb") }
 
@@ -99,7 +99,7 @@ func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart
 
 func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
 
-// func TestMooneye41(t *testing.T) { runMooneyeTest(t, "acceptance/pop_timing.gb") }
+func TestMooneye41(t *testing.T) { runMooneyeTest(t, "acceptance/pop_timing.gb") }
 
 // func TestMooneye42(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/hblank_ly_scx_timing-GS.gb") }
 
@@ -129,13 +129,13 @@ func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.
 
 // func TestMooneye55(t *testing.T) { runMooneyeTest(t, "acceptance/rapid_di_ei.gb") }
 
-// func TestMooneye56(t *testing.T) { runMooneyeTest(t, "acceptance/ret_cc_timing.gb") }
+func TestMooneye56(t *testing.T) { runMooneyeTest(t, "acceptance/ret_cc_timing.gb") }
 
-// func TestMooneye57(t *testing.T) { runMooneyeTest(t, "acceptance/ret_timing.gb") }
+func TestMooneye57(t *testing.T) { runMooneyeTest(t, "acceptance/ret_timing.gb") }
 
 // func TestMooneye58(t *testing.T) { runMooneyeTest(t, "acceptance/reti_intr_timing.gb") }
 
-// func TestMooneye59(t *testing.T) { runMooneyeTest(t, "acceptance/reti_timing.gb") }
+func TestMooneye59(t *testing.T) { runMooneyeTest(t, "acceptance/reti_timing.gb") }
 
 // func TestMooneye60(t *testing.T) { runMooneyeTest(t, "acceptance/rst_timing.gb") }
 
