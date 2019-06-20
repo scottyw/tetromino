@@ -32,10 +32,15 @@ func runMooneyeTest(t *testing.T, filename string) {
 	}()
 	gameboy.Run(ctx, nil)
 	<-ctx.Done()
+	screenshotFilename := fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1))
+	gameboy.Screenshot(screenshotFilename)
 	if gameboy.dispatch.TestA() != 0 || !gameboy.dispatch.Mooneye {
 		t.Errorf("Test ROM failed: %s", filename)
+		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
+	} else {
+		// fmt.Printf("| :green_heart: pass | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
 	}
-	gameboy.Screenshot(fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1)))
+
 }
 
 func TestMooneye00(t *testing.T) { runMooneyeTest(t, "acceptance/add_sp_e_timing.gb") }

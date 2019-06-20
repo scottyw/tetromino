@@ -42,11 +42,15 @@ func runBlarggTest(t *testing.T, filename string) {
 	<-ctx.Done()
 	result := sbWriter.String()
 	ram := string(gameboy.memory.CartRAM()[0][:])
+	screenshotFilename := fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1))
+	gameboy.Screenshot(screenshotFilename)
 	if !strings.Contains(result, "Passed") &&
 		!strings.Contains(ram, "Passed") {
 		t.Errorf(result)
+		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
+	} else {
+		// fmt.Printf("| :green_heart: pass | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
 	}
-	gameboy.Screenshot(fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1)))
 }
 
 func TestBlarggCPUInstrs(t *testing.T) {
