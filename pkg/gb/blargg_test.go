@@ -3,6 +3,7 @@ package gb
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -45,6 +46,7 @@ func runBlarggTest(t *testing.T, filename string) {
 		!strings.Contains(ram, "Passed") {
 		t.Errorf(result)
 	}
+	gameboy.Screenshot(fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1)))
 }
 
 func TestBlarggCPUInstrs(t *testing.T) {

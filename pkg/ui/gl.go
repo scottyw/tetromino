@@ -1,9 +1,11 @@
 package ui
 
 import (
+	"fmt"
 	"image"
 	"log"
 	"runtime"
+	"time"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
@@ -112,7 +114,12 @@ func onKeyFunc(emu Emulator) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw
 
 		// Emulator controls
 		if key == glfw.KeyT && action == glfw.Press {
-			emu.Screenshot()
+			t := time.Now()
+			filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
+				t.Year(), t.Month(), t.Day(),
+				t.Hour(), t.Minute(), t.Second())
+			fmt.Println("Writing screenshot to", filename)
+			emu.Screenshot(filename)
 		}
 		if key == glfw.KeyP && action == glfw.Press {
 			emu.Faster()

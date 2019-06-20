@@ -25,7 +25,7 @@ const (
 // Emulator allows the UI to interact with the emulator itself
 type Emulator interface {
 	ButtonAction(Button, bool)
-	Screenshot()
+	Screenshot(string)
 	Faster()
 	Slower()
 	Debug() bool

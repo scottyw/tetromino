@@ -209,12 +209,7 @@ func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 }
 
 // Screenshot writes a screenshot to file
-func (gb *Gameboy) Screenshot() {
-	t := time.Now()
-	filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
-		t.Year(), t.Month(), t.Day(),
-		t.Hour(), t.Minute(), t.Second())
-	fmt.Println("Writing screenshot to", filename)
+func (gb *Gameboy) Screenshot(filename string) {
 	f, err := os.Create(filename)
 	if err != nil {
 		fmt.Println(err)
