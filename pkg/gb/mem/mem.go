@@ -200,7 +200,7 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr == LCDC:
 		return m.LCDC
 	case addr == STAT:
-		return m.STAT
+		return m.STAT | 0x80 // First bit is always high
 	case addr == SCY:
 		return m.SCY
 	case addr == SCX:
@@ -238,7 +238,7 @@ func (m *Memory) Read(addr uint16) byte {
 		// case NR51:
 		// case NR52:
 	case addr == JOYP:
-		return m.readJOYP()
+		return m.readJOYP() | 0xc0 // First 2 bits are always high
 		// case SB:
 		// case SC:
 	case addr == DIV:
@@ -248,7 +248,7 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr == TMA:
 		return m.timer.TMA()
 	case addr == TAC:
-		return m.timer.TAC()
+		return m.timer.TAC() | 0xf8 // First 5 bits are always high
 	case addr < 0xff80:
 		return 0xff // Default of a non-hardware register is read
 	case addr < 0xffff:

@@ -49,7 +49,7 @@ func TestMooneye01(t *testing.T) { runMooneyeTest(t, "acceptance/bits/mem_oam.gb
 
 func TestMooneye02(t *testing.T) { runMooneyeTest(t, "acceptance/bits/reg_f.gb") }
 
-// func TestMooneye03(t *testing.T) { runMooneyeTest(t, "acceptance/bits/unused_hwio-GS.gb") }
+func TestMooneye03(t *testing.T) { runMooneyeTest(t, "acceptance/bits/unused_hwio-GS.gb") }
 
 func TestMooneye06(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-dmgABCmgb.gb") }
 
