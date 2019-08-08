@@ -56,35 +56,51 @@ const (
 	TAC  = 0xFF07
 	IF   = 0xFF0F
 	IE   = 0xFFFF
-
-	//
-	// Defaults
-	//
-
-	JOYPDEFAULT = 0x0f
-	NR10DEFAULT = 0x80
-	NR11DEFAULT = 0xbf
-	NR12DEFAULT = 0xf3
-	NR13DEFAULT = 0xbf
-	NR21DEFAULT = 0x3f
-	NR24DEFAULT = 0xbf
-	NR30DEFAULT = 0x7f
-	NR31DEFAULT = 0xff
-	NR32DEFAULT = 0x9f
-	NR34DEFAULT = 0xbf
-	NR41DEFAULT = 0xff
-	NR44DEFAULT = 0xbf
-	NR50DEFAULT = 0x77
-	NR51DEFAULT = 0xf3
-	NR52DEFAULT = 0xf1
-	LCDCDEFAULT = 0x91
-	BGPDEFAULT  = 0xfc
-	OBP0DEFAULT = 0xff
-	OBP1DEFAULT = 0xff
 )
 
 // Memory allows read and write access to memory
 type Memory struct {
+
+	// HW registers
+	IE   byte
+	IF   byte
+	LCDC byte
+	LY   byte
+	LYC  byte
+	SCX  byte
+	SCY  byte
+	STAT byte
+	WX   byte
+	WY   byte
+	JOYP byte
+	SB   byte
+	SC   byte
+	BGP  byte
+	OBP0 byte
+	OBP1 byte
+	NR10 byte
+	NR11 byte
+	NR12 byte
+	NR13 byte
+	NR14 byte
+	NR21 byte
+	NR22 byte
+	NR23 byte
+	NR24 byte
+	NR30 byte
+	NR31 byte
+	NR32 byte
+	NR33 byte
+	NR34 byte
+	NR41 byte
+	NR42 byte
+	NR43 byte
+	NR44 byte
+	NR50 byte
+	NR51 byte
+	NR52 byte
+
+	// Implementation
 	mbc               *mbc
 	VideoRAM          [0x2000]byte
 	internalRAM       [0x2000]byte
@@ -95,17 +111,6 @@ type Memory struct {
 	oamCycle          uint16
 	oamBaseAddr       uint16
 	oamRead           uint8
-	IE                byte
-	IF                byte
-	LCDC              byte
-	LY                byte
-	LYC               byte
-	SCX               byte
-	SCY               byte
-	STAT              byte
-	WX                byte
-	WY                byte
-	JOYP              byte
 	DirectionInput    uint8 // JOYP
 	ButtonInput       uint8 // JOYP
 	timer             *timer.Timer
@@ -123,10 +128,47 @@ func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer) *Memory {
 		sbWriter = ioutil.Discard
 	}
 	return &Memory{
+
+		// HW register defaults
+		IE:   0x00,
+		IF:   0x01,
+		LCDC: 0x91,
+		LY:   0x00,
+		LYC:  0x00,
+		SCX:  0x00,
+		SCY:  0x00,
+		STAT: 0x00,
+		WX:   0x00,
+		WY:   0x00,
+		JOYP: 0x0f,
+		SB:   0x00,
+		SC:   0x7e,
+		NR10: 0x80,
+		NR11: 0xbf,
+		NR12: 0xf3,
+		NR13: 0xff,
+		NR14: 0xbf,
+		NR21: 0x3f,
+		NR23: 0xff,
+		NR24: 0xbf,
+		NR30: 0x7f,
+		NR31: 0xff,
+		NR32: 0x9f,
+		NR33: 0xff,
+		NR34: 0xbf,
+		NR41: 0xff,
+		NR44: 0xbf,
+		NR50: 0x77,
+		NR51: 0xf3,
+		NR52: 0xf1,
+		BGP:  0xfc,
+		OBP0: 0xff,
+		OBP1: 0xff,
+
+		// Implementation
 		mbc:            newMBC(rom),
-		LCDC:           LCDCDEFAULT,
-		DirectionInput: JOYPDEFAULT,
-		ButtonInput:    JOYPDEFAULT,
+		DirectionInput: 0x0f,
+		ButtonInput:    0x0f,
 		timer:          timer,
 		sbWriter:       sbWriter,
 	}
@@ -200,7 +242,7 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr == LCDC:
 		return m.LCDC
 	case addr == STAT:
-		return m.STAT
+		return m.STAT | 0x80 // First bit is always high
 	case addr == SCY:
 		return m.SCY
 	case addr == SCX:
@@ -213,34 +255,60 @@ func (m *Memory) Read(addr uint16) byte {
 		return m.WY
 	case addr == WX:
 		return m.WX
-		// case BGP:
-		// case OBP0:
-		// case OBP1:
-		// case NR10:
-		// case NR11:
-		// case NR12:
-		// case NR13:
-		// case NR14:
-		// case NR21:
-		// case NR22:
-		// case NR23:
-		// case NR24:
-		// case NR30:
-		// case NR31:
-		// case NR32:
-		// case NR33:
-		// case NR34:
-		// case NR41:
-		// case NR42:
-		// case NR43:
-		// case NR44:
-		// case NR50:
-		// case NR51:
-		// case NR52:
+	case addr == BGP:
+		return m.BGP
+	case addr == OBP0:
+		return m.OBP0
+	case addr == OBP1:
+		return m.OBP1
+	case addr == NR10:
+		return m.NR10
+	case addr == NR11:
+		return m.NR11
+	case addr == NR12:
+		return m.NR12
+	case addr == NR13:
+		return m.NR13
+	case addr == NR14:
+		return m.NR14
+	case addr == NR21:
+		return m.NR21
+	case addr == NR22:
+		return m.NR22
+	case addr == NR23:
+		return m.NR23
+	case addr == NR24:
+		return m.NR24
+	case addr == NR30:
+		return m.NR30
+	case addr == NR31:
+		return m.NR31
+	case addr == NR32:
+		return m.NR32
+	case addr == NR33:
+		return m.NR33
+	case addr == NR34:
+		return m.NR34
+	case addr == NR41:
+		return m.NR41
+	case addr == NR42:
+		return m.NR42
+	case addr == NR43:
+		return m.NR43
+	case addr == NR44:
+		return m.NR44
+	case addr == NR50:
+		return m.NR50
+	case addr == NR51:
+		return m.NR51
+	case addr == NR52:
+		return m.NR52
 	case addr == JOYP:
-		return m.readJOYP()
-		// case SB:
-		// case SC:
+		return m.readJOYP() | 0xc0 // First 2 bits are always high
+	case addr == SB:
+		return m.SB
+	case addr == SC:
+		return m.SC
 	case addr == DIV:
 		return m.timer.DIV()
 	case addr == TIMA:
@@ -248,7 +316,7 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr == TMA:
 		return m.timer.TMA()
 	case addr == TAC:
-		return m.timer.TAC()
+		return m.timer.TAC() | 0xf8 // First 5 bits are always high
 	case addr < 0xff80:
 		return 0xff // Default of a non-hardware register is read
 	case addr < 0xffff:
