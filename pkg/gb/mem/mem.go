@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/ioutil"
 
+	"github.com/scottyw/tetromino/pkg/gb/audio"
 	"github.com/scottyw/tetromino/pkg/gb/timer"
 )
 
@@ -78,27 +79,6 @@ type Memory struct {
 	BGP  byte
 	OBP0 byte
 	OBP1 byte
-	NR10 byte
-	NR11 byte
-	NR12 byte
-	NR13 byte
-	NR14 byte
-	NR21 byte
-	NR22 byte
-	NR23 byte
-	NR24 byte
-	NR30 byte
-	NR31 byte
-	NR32 byte
-	NR33 byte
-	NR34 byte
-	NR41 byte
-	NR42 byte
-	NR43 byte
-	NR44 byte
-	NR50 byte
-	NR51 byte
-	NR52 byte
 
 	// Implementation
 	mbc               *mbc
@@ -114,6 +94,7 @@ type Memory struct {
 	DirectionInput    uint8 // JOYP
 	ButtonInput       uint8 // JOYP
 	timer             *timer.Timer
+	audio             *audio.Audio
 	sbWriter          io.Writer
 }
 
@@ -123,7 +104,7 @@ type WriteNotification interface {
 }
 
 // NewMemory creates the memory struct and initializes it with ROM contents and default values
-func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer) *Memory {
+func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer, audio *audio.Audio) *Memory {
 	if sbWriter == nil {
 		sbWriter = ioutil.Discard
 	}
@@ -143,24 +124,6 @@ func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer) *Memory {
 		JOYP: 0x0f,
 		SB:   0x00,
 		SC:   0x7e,
-		NR10: 0x80,
-		NR11: 0xbf,
-		NR12: 0xf3,
-		NR13: 0xff,
-		NR14: 0xbf,
-		NR21: 0x3f,
-		NR23: 0xff,
-		NR24: 0xbf,
-		NR30: 0x7f,
-		NR31: 0xff,
-		NR32: 0x9f,
-		NR33: 0xff,
-		NR34: 0xbf,
-		NR41: 0xff,
-		NR44: 0xbf,
-		NR50: 0x77,
-		NR51: 0xf3,
-		NR52: 0xf1,
 		BGP:  0xfc,
 		OBP0: 0xff,
 		OBP1: 0xff,
@@ -170,6 +133,7 @@ func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer) *Memory {
 		DirectionInput: 0x0f,
 		ButtonInput:    0x0f,
 		timer:          timer,
+		audio:          audio,
 		sbWriter:       sbWriter,
 	}
 }
@@ -262,47 +226,47 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr == OBP1:
 		return m.OBP1
 	case addr == NR10:
-		return m.NR10
+		return m.audio.ReadNR10()
 	case addr == NR11:
-		return m.NR11
+		return m.audio.ReadNR11()
 	case addr == NR12:
-		return m.NR12
+		return m.audio.ReadNR12()
 	case addr == NR13:
-		return m.NR13
+		return m.audio.ReadNR13()
 	case addr == NR14:
-		return m.NR14
+		return m.audio.ReadNR14()
 	case addr == NR21:
-		return m.NR21
+		return m.audio.ReadNR21()
 	case addr == NR22:
-		return m.NR22
+		return m.audio.ReadNR22()
 	case addr == NR23:
-		return m.NR23
+		return m.audio.ReadNR23()
 	case addr == NR24:
-		return m.NR24
+		return m.audio.ReadNR24()
 	case addr == NR30:
-		return m.NR30
+		return m.audio.ReadNR30()
 	case addr == NR31:
-		return m.NR31
+		return m.audio.ReadNR31()
 	case addr == NR32:
-		return m.NR32
+		return m.audio.ReadNR32()
 	case addr == NR33:
-		return m.NR33
+		return m.audio.ReadNR33()
 	case addr == NR34:
-		return m.NR34
+		return m.audio.ReadNR34()
 	case addr == NR41:
-		return m.NR41
+		return m.audio.ReadNR41()
 	case addr == NR42:
-		return m.NR42
+		return m.audio.ReadNR42()
 	case addr == NR43:
-		return m.NR43
+		return m.audio.ReadNR43()
 	case addr == NR44:
-		return m.NR44
+		return m.audio.ReadNR44()
 	case addr == NR50:
-		return m.NR50
+		return m.audio.ReadNR50()
 	case addr == NR51:
-		return m.NR51
+		return m.audio.ReadNR51()
 	case addr == NR52:
-		return m.NR52
+		return m.audio.ReadNR52()
 	case addr == JOYP:
 		return m.readJOYP() | 0xc0 // First 2 bits are always high
 	case addr == SB:
@@ -377,47 +341,47 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr == OBP1:
 		// FIXME sprite palette support
 	case addr == NR10:
-		// FIXME sound support
+		m.audio.WriteNR10(value)
 	case addr == NR11:
-		// FIXME sound support
+		m.audio.WriteNR11(value)
 	case addr == NR12:
-		// FIXME sound support
+		m.audio.WriteNR12(value)
 	case addr == NR13:
-		// FIXME sound support
+		m.audio.WriteNR13(value)
 	case addr == NR14:
-		// FIXME sound support
+		m.audio.WriteNR14(value)
 	case addr == NR21:
-		// FIXME sound support
+		m.audio.WriteNR21(value)
 	case addr == NR22:
-		// FIXME sound support
+		m.audio.WriteNR22(value)
 	case addr == NR23:
-		// FIXME sound support
+		m.audio.WriteNR23(value)
 	case addr == NR24:
-		// FIXME sound support
+		m.audio.WriteNR24(value)
 	case addr == NR30:
-		// FIXME sound support
+		m.audio.WriteNR30(value)
 	case addr == NR31:
-		// FIXME sound support
+		m.audio.WriteNR31(value)
 	case addr == NR32:
-		// FIXME sound support
+		m.audio.WriteNR32(value)
 	case addr == NR33:
-		// FIXME sound support
+		m.audio.WriteNR33(value)
 	case addr == NR34:
-		// FIXME sound support
+		m.audio.WriteNR34(value)
 	case addr == NR41:
-		// FIXME sound support
+		m.audio.WriteNR41(value)
 	case addr == NR42:
-		// FIXME sound support
+		m.audio.WriteNR42(value)
 	case addr == NR43:
-		// FIXME sound support
+		m.audio.WriteNR43(value)
 	case addr == NR44:
-		// FIXME sound support
+		m.audio.WriteNR44(value)
 	case addr == NR50:
-		// FIXME sound support
+		m.audio.WriteNR50(value)
 	case addr == NR51:
-		// FIXME sound support
+		m.audio.WriteNR51(value)
 	case addr == NR52:
-		// FIXME sound support
+		m.audio.WriteNR52(value)
 	case addr == JOYP:
 		m.JOYP = value
 	case addr == SB:

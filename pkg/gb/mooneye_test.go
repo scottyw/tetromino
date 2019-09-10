@@ -12,6 +12,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 	opts := Options{
 		RomFilename: "testdata/mooneye-gb_hwtests/" + filename,
 		Fast:        true,
+		Silent:      true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

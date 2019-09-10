@@ -15,6 +15,7 @@ func runBlarggTest(t *testing.T, filename string) {
 		RomFilename: "testdata/blargg/" + filename,
 		SBWriter:    sbWriter,
 		Fast:        true,
+		Silent:      true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

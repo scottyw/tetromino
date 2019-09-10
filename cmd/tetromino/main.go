@@ -15,7 +15,8 @@ import (
 func main() {
 
 	// Command line flags
-	fast := flag.Bool("fast", true, "When true, Tetromino runs the emulator as fast as possible")
+	fast := flag.Bool("fast", true, "When true, Tetromino runs the emulator as fast as possible (true by default)")
+	silent := flag.Bool("silent", true, "When true, Tetromino disables all sound output (true by default)")
 	debugCPU := flag.Bool("debugcpu", false, "When true, CPU debugging is enabled")
 	debugTimer := flag.Bool("debugtimer", false, "When true, timer debugging is enabled")
 	debugLCD := flag.Bool("debuglcd", false, "When true, colour-based LCD debugging is enabled")
@@ -45,6 +46,7 @@ func main() {
 	opts := gb.Options{
 		RomFilename: rom,
 		Fast:        *fast,
+		Silent:      *silent,
 		DebugCPU:    *debugCPU,
 		DebugTimer:  *debugTimer,
 		DebugLCD:    *debugLCD,

@@ -10,6 +10,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/gordonklaus/portaudio"
+	"github.com/scottyw/tetromino/pkg/gb/audio"
 	"github.com/scottyw/tetromino/pkg/gb/cpu"
 	"github.com/scottyw/tetromino/pkg/gb/lcd"
 	"github.com/scottyw/tetromino/pkg/gb/mem"
@@ -27,6 +29,7 @@ type gui interface {
 type Options struct {
 	RomFilename string
 	Fast        bool
+	Silent      bool
 	DebugCPU    bool
 	DebugTimer  bool
 	DebugLCD    bool
@@ -39,6 +42,7 @@ type Gameboy struct {
 	memory   *mem.Memory
 	timer    *timer.Timer
 	lcd      *lcd.LCD
+	audio    *audio.Audio
 	start    time.Time
 	opts     Options
 	cancel   func()
@@ -56,19 +60,23 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 	}
 	c := cpu.NewCPU(opts.DebugCPU)
 	timer := timer.NewTimer(opts.DebugTimer)
-	memory := mem.NewMemory(rom, opts.SBWriter, timer)
+	audio := audio.NewAudio(opts.Silent)
+	memory := mem.NewMemory(rom, opts.SBWriter, timer, audio)
 	dispatch := cpu.NewDispatch(c, memory)
 	lcd := lcd.NewLCD(memory, opts.DebugLCD)
+
 	start := time.Now()
 	duration := frameDuration
 	if opts.Fast {
 		duration = 0
 	}
+
 	return Gameboy{
 		dispatch: dispatch,
 		memory:   memory,
 		timer:    timer,
 		lcd:      lcd,
+		audio:    audio,
 		start:    start,
 		opts:     opts,
 		cancel:   cancel,
@@ -97,6 +105,7 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 		gb.dispatch.ExecuteMachineCycle()
 		gb.memory.ExecuteMachineCycle()
 		gb.lcd.EndMachineCycle()
+		gb.audio.EndMachineCycle()
 		timerInterruptRequested := gb.timer.EndMachineCycle()
 		if timerInterruptRequested {
 			gb.memory.IF |= 0x04
@@ -239,4 +248,5 @@ func (gb *Gameboy) Debug() bool {
 // Shutdown the emulator
 func (gb *Gameboy) Shutdown() {
 	gb.cancel()
+	portaudio.Terminate()
 }
