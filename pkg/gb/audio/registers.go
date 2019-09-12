@@ -48,22 +48,22 @@ type channel4 struct {
 
 type control struct {
 	on             bool
-	sound1on       bool
-	sound2on       bool
-	sound3on       bool
-	sound4on       bool
-	outputCh1ToSO1 bool
-	outputCh2ToSO1 bool
-	outputCh3ToSO1 bool
-	outputCh4ToSO1 bool
-	outputCh1ToSO2 bool
-	outputCh2ToSO2 bool
-	outputCh3ToSO2 bool
-	outputCh4ToSO2 bool
-	vinToSO2       uint8
-	volumeSO2      uint8
-	vinToSO1       uint8
-	volumeSO1      uint8
+	ch1Enable      bool
+	ch2Enable      bool
+	ch3Enable      bool
+	ch4Enable      bool
+	ch1Right       bool
+	ch2Right       bool
+	ch3Right       bool
+	ch4Right       bool
+	ch1Left        bool
+	ch2Left        bool
+	ch3Left        bool
+	ch4Left        bool
+	vinLeftEnable  bool
+	volumeLeft     uint8
+	vinRightEnable bool
+	volumeRight    uint8
 }
 
 // FF10 - NR10 - Channel 1 Sweep register (R/W)
@@ -247,7 +247,7 @@ func (a *Audio) ReadNR24() uint8 {
 	return 0xbf | a.ch2.initial<<7 | a.ch2.consecutive<<6 | uint8((a.ch2.frequency&0x70)>>8)
 }
 
-// FF1A - NR30 - Channel 3 Sound on/off (R/W)
+// FF1A - NR30 - Channel 3 ch Enable/off (R/W)
 //   Bit 7 - Sound Channel 3 Off  (0=Stop, 1=Playback)  (Read/Write)
 
 // WriteNR30 handles writes to sound register NR30
@@ -410,15 +410,23 @@ func (a *Audio) ReadNR44() uint8 {
 
 // WriteNR50 handles writes to sound register NR50
 func (a *Audio) WriteNR50(value uint8) {
-	a.control.vinToSO2 = (value >> 7) & 0x01
-	a.control.volumeSO2 = (value >> 4) & 0x07
-	a.control.vinToSO1 = (value >> 3) & 0x01
-	a.control.volumeSO1 = value & 0x07
+	a.control.vinLeftEnable = (value>>7)&0x01 > 0
+	a.control.volumeLeft = (value >> 4) & 0x07
+	a.control.vinRightEnable = (value>>3)&0x01 > 0
+	a.control.volumeRight = value & 0x07
 }
 
 // ReadNR50 handles reads from sound register NR50
 func (a *Audio) ReadNR50() uint8 {
-	return a.control.vinToSO2<<7 | a.control.volumeSO2<<4 | a.control.vinToSO1<<3 | a.control.volumeSO1
+	nr50 := a.control.volumeLeft<<4 | a.control.volumeRight
+	if a.control.vinLeftEnable {
+		nr50 += 0x80
+	}
+	if a.control.vinRightEnable {
+		nr50 += 0x08
+	}
+	return nr50
+
 }
 
 // FF25 - NR51 - Selection of Sound output terminal (R/W)
@@ -433,53 +441,53 @@ func (a *Audio) ReadNR50() uint8 {
 
 // WriteNR51 handles writes to sound register NR51
 func (a *Audio) WriteNR51(value uint8) {
-	a.control.outputCh4ToSO2 = value&0x80 > 0
-	a.control.outputCh3ToSO2 = value&0x40 > 0
-	a.control.outputCh2ToSO2 = value&0x20 > 0
-	a.control.outputCh1ToSO2 = value&0x10 > 0
-	a.control.outputCh4ToSO1 = value&0x08 > 0
-	a.control.outputCh3ToSO1 = value&0x04 > 0
-	a.control.outputCh2ToSO1 = value&0x02 > 0
-	a.control.outputCh1ToSO1 = value&0x01 > 0
+	a.control.ch4Left = value&0x80 > 0
+	a.control.ch3Left = value&0x40 > 0
+	a.control.ch2Left = value&0x20 > 0
+	a.control.ch1Left = value&0x10 > 0
+	a.control.ch4Right = value&0x08 > 0
+	a.control.ch3Right = value&0x04 > 0
+	a.control.ch2Right = value&0x02 > 0
+	a.control.ch1Right = value&0x01 > 0
 }
 
 // ReadNR51 handles reads from sound register NR51
 func (a *Audio) ReadNR51() uint8 {
 	var nr51 uint8
-	if a.control.outputCh4ToSO2 {
+	if a.control.ch4Left {
 		nr51 += 0x80
 	}
-	if a.control.outputCh3ToSO2 {
+	if a.control.ch3Left {
 		nr51 += 0x40
 	}
-	if a.control.outputCh2ToSO2 {
+	if a.control.ch2Left {
 		nr51 += 0x20
 	}
-	if a.control.outputCh1ToSO2 {
+	if a.control.ch1Left {
 		nr51 += 0x10
 	}
-	if a.control.outputCh4ToSO1 {
+	if a.control.ch4Right {
 		nr51 += 0x08
 	}
-	if a.control.outputCh3ToSO1 {
+	if a.control.ch3Right {
 		nr51 += 0x04
 	}
-	if a.control.outputCh2ToSO1 {
+	if a.control.ch2Right {
 		nr51 += 0x02
 	}
-	if a.control.outputCh1ToSO1 {
+	if a.control.ch1Right {
 		nr51 += 0x01
 	}
 	return nr51
 }
 
-// FF26 - NR52 - Sound on/off
+// FF26 - NR52 - ch Enable/off
 // If your GB programs don't use sound then Write 00h to this register to save
 // 16% or more on GB power consumption. Disabeling the sound controller by
 // clearing Bit 7 destroys the contents of all sound registers. Also, it is not
 // possible to access any sound registers (execpt FF26) while the sound
 // controller is disabled.
-//   Bit 7 - All sound on/off  (0: stop all sound circuits) (Read/Write)
+//   Bit 7 - All ch Enable/off  (0: stop all sound circuits) (Read/Write)
 //   Bit 3 - Sound 4 ON flag (Read Only)
 //   Bit 2 - Sound 3 ON flag (Read Only)
 //   Bit 1 - Sound 2 ON flag (Read Only)
@@ -501,16 +509,16 @@ func (a *Audio) ReadNR52() uint8 {
 	if a.control.on {
 		nr52 += 0x80
 	}
-	if a.control.sound4on {
+	if a.control.ch4Enable {
 		nr52 += 0x08
 	}
-	if a.control.sound3on {
+	if a.control.ch3Enable {
 		nr52 += 0x04
 	}
-	if a.control.sound2on {
+	if a.control.ch2Enable {
 		nr52 += 0x02
 	}
-	if a.control.sound1on {
+	if a.control.ch1Enable {
 		nr52 += 0x01
 	}
 	return 0x70 | nr52
