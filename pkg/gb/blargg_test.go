@@ -15,11 +15,10 @@ func runBlarggTest(t *testing.T, filename string) {
 		RomFilename: "testdata/blargg/" + filename,
 		SBWriter:    sbWriter,
 		Fast:        true,
-		Silent:      true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	gameboy := NewGameboy(opts, cancel)
+	gameboy := NewGameboy(opts)
 	go func() {
 		for {
 			result := sbWriter.String()
@@ -39,12 +38,12 @@ func runBlarggTest(t *testing.T, filename string) {
 			time.Sleep(100 * time.Millisecond)
 		}
 	}()
-	gameboy.Run(ctx, nil)
+	gameboy.Run(ctx)
 	<-ctx.Done()
 	result := sbWriter.String()
 	ram := string(gameboy.memory.CartRAM()[0][:])
 	screenshotFilename := fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1))
-	gameboy.Screenshot(screenshotFilename)
+	gameboy.lcd.Screenshot(screenshotFilename)
 	if !strings.Contains(result, "Passed") &&
 		!strings.Contains(ram, "Passed") {
 		t.Errorf(result)
