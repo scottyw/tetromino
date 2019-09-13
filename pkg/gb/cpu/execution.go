@@ -107,6 +107,9 @@ func (d *Dispatch) useAltMachineCycles(instruction uint8) bool {
 func (d *Dispatch) peek() *[]func() {
 	cpu := d.cpu
 	memory := d.memory
+	if cpu.pc >= 0x0100 {
+		memory.DisableBIOS()
+	}
 	instructionByte := memory.Read(cpu.pc)
 	// Mooneye uses the 0x40 instruction as a magic breakpoint
 	// to indicate that a test rom has completed

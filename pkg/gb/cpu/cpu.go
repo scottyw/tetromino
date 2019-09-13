@@ -66,7 +66,7 @@ func NewCPU(debugCPU bool) *CPU {
 		h:        0x01,
 		l:        0x4d,
 		sp:       0xfffe,
-		pc:       0x0100,
+		pc:       0x0000,
 	}
 }
 

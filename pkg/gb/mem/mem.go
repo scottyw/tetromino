@@ -87,6 +87,7 @@ type Memory struct {
 	OAM               [0xa0]byte
 	zeroPage          [0x8f]byte
 	WriteNotification WriteNotification
+	biosDisabled      bool
 	oamRunning        bool
 	oamCycle          uint16
 	oamBaseAddr       uint16
@@ -180,6 +181,11 @@ func (m *Memory) readJOYP() uint8 {
 // Read a byte from the chosen memory location
 func (m *Memory) Read(addr uint16) byte {
 	switch {
+	case addr < 0x0100:
+		if m.biosDisabled {
+			return m.mbc.read(addr)
+		}
+		return bios[addr]
 	case addr < 0x8000:
 		return m.mbc.read(addr)
 	case addr < 0xa000:
@@ -413,4 +419,9 @@ func (m *Memory) Write(addr uint16, value byte) {
 // CartRAM returns the contents of cartridge RAM, which is useful for verifing test results
 func (m *Memory) CartRAM() [][0x2000]byte {
 	return m.mbc.ram
+}
+
+// DisableBIOS disables access to the BIOS once it has run at start time
+func (m *Memory) DisableBIOS() {
+	m.biosDisabled = true
 }
