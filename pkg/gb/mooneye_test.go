@@ -12,11 +12,10 @@ func runMooneyeTest(t *testing.T, filename string) {
 	opts := Options{
 		RomFilename: "testdata/mooneye-gb_hwtests/" + filename,
 		Fast:        true,
-		Silent:      true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	gameboy := NewGameboy(opts, cancel)
+	gameboy := NewGameboy(opts)
 	go func() {
 		for {
 			select {
@@ -31,10 +30,10 @@ func runMooneyeTest(t *testing.T, filename string) {
 			time.Sleep(10 * time.Millisecond)
 		}
 	}()
-	gameboy.Run(ctx, nil)
+	gameboy.Run(ctx)
 	<-ctx.Done()
 	screenshotFilename := fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1))
-	gameboy.Screenshot(screenshotFilename)
+	gameboy.lcd.Screenshot(screenshotFilename)
 	if gameboy.dispatch.TestA() != 0 || !gameboy.dispatch.Mooneye {
 		t.Errorf("Test ROM failed: %s", filename)
 		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)

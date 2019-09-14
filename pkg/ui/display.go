@@ -1,35 +1,34 @@
 package ui
 
 import (
-	"fmt"
+	"context"
 	"image"
-	"log"
 	"runtime"
-	"time"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
+	"github.com/scottyw/tetromino/pkg/gb"
 )
 
-// GL maintains state for the GL UI implementation
-type GL struct {
-	emu     Emulator
-	window  *glfw.Window
-	texture uint32
-	width   float32
-	height  float32
+// GLDisplay implements the LCD display using GL
+type GLDisplay struct {
+	cancelFunc context.CancelFunc
+	window     *glfw.Window
+	texture    uint32
+	width      float32
+	height     float32
 }
 
-// NewGL implements a user interface in GL
-func NewGL(emu Emulator) *GL {
+// NewGLDisplay implements an LCD display in GL
+func NewGLDisplay(gameboy *gb.Gameboy, cancelFunc context.CancelFunc) (*GLDisplay, error) {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	// define window width
 	var width float32
 	var height float32
-	if emu.Debug() {
+	if gameboy.Debug() {
 		width = 256
 		height = 256
 	} else {
@@ -42,7 +41,7 @@ func NewGL(emu Emulator) *GL {
 	glfw.WindowHint(glfw.Resizable, 0)
 	window, err := glfw.CreateWindow(int(width*3), int(height*3), "Tetromino", nil, nil)
 	if err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	window.MakeContextCurrent()
 
@@ -51,83 +50,74 @@ func NewGL(emu Emulator) *GL {
 
 	// initialize gl
 	if err := gl.Init(); err != nil {
-		log.Fatalln(err)
+		return nil, err
 	}
 	gl.Enable(gl.TEXTURE_2D)
-	window.SetKeyCallback(onKeyFunc(emu))
-	return &GL{
-		emu:     emu,
-		window:  window,
-		texture: createTexture(),
-		width:   width,
-		height:  height,
+	window.SetKeyCallback(onKeyFunc(gameboy))
+	display := &GLDisplay{
+		cancelFunc: cancelFunc,
+		window:     window,
+		texture:    createTexture(),
+		width:      width,
+		height:     height,
 	}
+	return display, nil
 }
 
-// DrawFrame draws a frame to the GL window and returns user input
-func (glx *GL) DrawFrame(image *image.RGBA) {
+// Cleanup returns resources to the OS
+func (d *GLDisplay) Cleanup() {
+	glfw.Terminate()
+}
+
+// DisplayFrame draws a frame to the GL window and returns user input
+func (d *GLDisplay) DisplayFrame(image *image.RGBA) {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
-	gl.BindTexture(gl.TEXTURE_2D, glx.texture)
+	gl.BindTexture(gl.TEXTURE_2D, d.texture)
 	setTexture(image)
-	drawBuffer(glx.window, glx.width, glx.height)
+	drawBuffer(d.window, d.width, d.height)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
-	glx.window.SwapBuffers()
+	d.window.SwapBuffers()
 	glfw.PollEvents()
-	if glx.window.ShouldClose() {
-		glfw.Terminate()
-		glx.emu.Shutdown()
+	if d.window.ShouldClose() {
+		d.cancelFunc()
 	}
 }
 
-func onKeyFunc(emu Emulator) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(gameboy *gb.Gameboy) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		if action != glfw.Press && action != glfw.Release {
 			return
 		}
-
-		// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
-		// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
-		// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
-		// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
-		if key == glfw.KeyA {
-			emu.ButtonAction(Start, action == glfw.Press)
+		switch key {
+		case glfw.KeyA:
+			gameboy.ButtonAction(gb.Start, action == glfw.Press)
+		case glfw.KeyS:
+			gameboy.ButtonAction(gb.Select, action == glfw.Press)
+		case glfw.KeyZ:
+			gameboy.ButtonAction(gb.B, action == glfw.Press)
+		case glfw.KeyX:
+			gameboy.ButtonAction(gb.A, action == glfw.Press)
+		case glfw.KeyUp:
+			gameboy.ButtonAction(gb.Up, action == glfw.Press)
+		case glfw.KeyDown:
+			gameboy.ButtonAction(gb.Down, action == glfw.Press)
+		case glfw.KeyLeft:
+			gameboy.ButtonAction(gb.Left, action == glfw.Press)
+		case glfw.KeyRight:
+			gameboy.ButtonAction(gb.Right, action == glfw.Press)
+		case glfw.KeyT:
+			if action == glfw.Press {
+				gameboy.EmulatorAction(gb.TakeScreenshot)
+			}
+		case glfw.KeyP:
+			if action == glfw.Press {
+				gameboy.EmulatorAction(gb.RunFaster)
+			}
+		case glfw.KeyO:
+			if action == glfw.Press {
+				gameboy.EmulatorAction(gb.RunSlower)
+			}
 		}
-		if key == glfw.KeyS {
-			emu.ButtonAction(Select, action == glfw.Press)
-		}
-		if key == glfw.KeyZ {
-			emu.ButtonAction(B, action == glfw.Press)
-		}
-		if key == glfw.KeyX {
-			emu.ButtonAction(A, action == glfw.Press)
-		}
-		if key == glfw.KeyUp {
-			emu.ButtonAction(Up, action == glfw.Press)
-		} else if key == glfw.KeyDown {
-			emu.ButtonAction(Down, action == glfw.Press)
-		}
-		if key == glfw.KeyLeft {
-			emu.ButtonAction(Left, action == glfw.Press)
-		} else if key == glfw.KeyRight {
-			emu.ButtonAction(Right, action == glfw.Press)
-		}
-
-		// Emulator controls
-		if key == glfw.KeyT && action == glfw.Press {
-			t := time.Now()
-			filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
-				t.Year(), t.Month(), t.Day(),
-				t.Hour(), t.Minute(), t.Second())
-			fmt.Println("Writing screenshot to", filename)
-			emu.Screenshot(filename)
-		}
-		if key == glfw.KeyP && action == glfw.Press {
-			emu.Faster()
-		}
-		if key == glfw.KeyO && action == glfw.Press {
-			emu.Slower()
-		}
-
 	}
 }
 

@@ -1,23 +1,22 @@
 package audio
 
-import (
-	"log"
-
-	"github.com/gordonklaus/portaudio"
-)
+// Speakers abstracts over a real-world implementation of the Gameboy speakers
+type Speakers interface {
+	PlayAudio(uint8)
+}
 
 // Audio stream
 type Audio struct {
-	stream  *portaudio.Stream
-	ch1     channel1
-	ch2     channel2
-	ch3     channel3
-	ch4     channel4
-	control control
+	speakers Speakers
+	ch1      channel1
+	ch2      channel2
+	ch3      channel3
+	ch4      channel4
+	control  control
 }
 
 // NewAudio initializes our internal channel for audio data
-func NewAudio(silent bool) *Audio {
+func NewAudio() *Audio {
 	audio := Audio{}
 
 	// Set default values for the NR registers
@@ -43,15 +42,6 @@ func NewAudio(silent bool) *Audio {
 	// Sound 1 is also flagged as on at start time
 	audio.control.sound1on = true
 
-	// Initial the OS audio if enabled
-	if !silent {
-		portaudio.Initialize()
-		err := audio.Start()
-		if err != nil {
-			log.Fatal(err)
-		}
-	}
-
 	return &audio
 }
 
@@ -59,5 +49,13 @@ func NewAudio(silent bool) *Audio {
 func (a *Audio) EndMachineCycle() {
 
 	// mix audio from all channels here if enabled
+	if a.speakers != nil {
+		a.speakers.PlayAudio(0)
+	}
 
+}
+
+// RegisterSpeakers associates real-world audio output with the audio subsystem
+func (a *Audio) RegisterSpeakers(speakers Speakers) {
+	a.speakers = speakers
 }

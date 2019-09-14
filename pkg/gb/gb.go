@@ -3,33 +3,57 @@ package gb
 import (
 	"context"
 	"fmt"
-	"image"
-	"image/png"
 	"io"
 	"io/ioutil"
-	"os"
 	"time"
 
-	"github.com/gordonklaus/portaudio"
 	"github.com/scottyw/tetromino/pkg/gb/audio"
 	"github.com/scottyw/tetromino/pkg/gb/cpu"
 	"github.com/scottyw/tetromino/pkg/gb/lcd"
 	"github.com/scottyw/tetromino/pkg/gb/mem"
 	"github.com/scottyw/tetromino/pkg/gb/timer"
-	"github.com/scottyw/tetromino/pkg/ui"
 )
 
 const frameDuration = float64(16742706)
 
-type gui interface {
-	DrawFrame(image *image.RGBA)
-}
+// Button represents a direction pad or button control
+type Button int
+
+const (
+	// Up on the control pad
+	Up = iota
+	//Down on the control pad
+	Down = iota
+	// Left on the control pad
+	Left = iota
+	// Right on the control pad
+	Right = iota
+	// A button
+	A = iota
+	// B button
+	B = iota
+	// Start button
+	Start = iota
+	// Select button
+	Select = iota
+)
+
+// Action  represents emulator controls
+type Action int
+
+const (
+	// TakeScreenshot of the current LCD
+	TakeScreenshot = iota
+	// RunFaster speeds the emulator up
+	RunFaster = iota
+	// RunSlower slows the emulator down
+	RunSlower = iota
+)
 
 // Options control emulator behaviour
 type Options struct {
 	RomFilename string
 	Fast        bool
-	Silent      bool
 	DebugCPU    bool
 	DebugTimer  bool
 	DebugLCD    bool
@@ -45,13 +69,12 @@ type Gameboy struct {
 	audio    *audio.Audio
 	start    time.Time
 	opts     Options
-	cancel   func()
 	dur      time.Duration
 	frame    int
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy(opts Options, cancel func()) Gameboy {
+func NewGameboy(opts Options) *Gameboy {
 	var rom []byte
 	if opts.RomFilename == "" {
 		rom = make([]byte, 0x8000)
@@ -60,18 +83,16 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 	}
 	c := cpu.NewCPU(opts.DebugCPU)
 	timer := timer.NewTimer(opts.DebugTimer)
-	audio := audio.NewAudio(opts.Silent)
+	audio := audio.NewAudio()
 	memory := mem.NewMemory(rom, opts.SBWriter, timer, audio)
 	dispatch := cpu.NewDispatch(c, memory)
 	lcd := lcd.NewLCD(memory, opts.DebugLCD)
-
 	start := time.Now()
 	duration := frameDuration
 	if opts.Fast {
 		duration = 0
 	}
-
-	return Gameboy{
+	return &Gameboy{
 		dispatch: dispatch,
 		memory:   memory,
 		timer:    timer,
@@ -79,7 +100,6 @@ func NewGameboy(opts Options, cancel func()) Gameboy {
 		audio:    audio,
 		start:    start,
 		opts:     opts,
-		cancel:   cancel,
 		dur:      time.Duration(duration),
 	}
 }
@@ -96,7 +116,7 @@ func readRomFile(romFilename string) []byte {
 	return rom
 }
 
-func (gb *Gameboy) runFrame(gui gui, end time.Time) {
+func (gb *Gameboy) runFrame(end time.Time) {
 	// The Game Boy clock runs at 4.194304MHz
 	// Each loop iteration below represents one machine cycle
 	// One machine cycle is 4 clock cycles
@@ -112,15 +132,12 @@ func (gb *Gameboy) runFrame(gui gui, end time.Time) {
 		}
 	}
 	gb.lcd.FrameEnd()
-	if gui != nil {
-		gui.DrawFrame(gb.lcd.Frame)
-	}
 	time.Sleep(time.Until(end))
 	gb.frame++
 }
 
 // Run the Gameboy
-func (gb *Gameboy) Run(ctx context.Context, gui gui) {
+func (gb *Gameboy) Run(ctx context.Context) {
 	end := time.Now()
 	for {
 		select {
@@ -128,13 +145,13 @@ func (gb *Gameboy) Run(ctx context.Context, gui gui) {
 			return
 		default:
 			end = end.Add(gb.dur)
-			gb.runFrame(gui, end)
+			gb.runFrame(end)
 		}
 	}
 }
 
 // Time the Gameboy as it runs
-func (gb *Gameboy) Time(ctx context.Context, gui gui) {
+func (gb *Gameboy) Time(ctx context.Context) {
 	end := time.Now()
 	for {
 		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
@@ -146,7 +163,7 @@ func (gb *Gameboy) Time(ctx context.Context, gui gui) {
 				return
 			default:
 				end = end.Add(gb.dur)
-				gb.runFrame(gui, end)
+				gb.runFrame(end)
 			}
 		}
 		t1 := time.Now()
@@ -154,61 +171,71 @@ func (gb *Gameboy) Time(ctx context.Context, gui gui) {
 	}
 }
 
-// ButtonAction turns UI key presses into emulator button presses
-func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
+// ButtonAction turns UI key presses into emulator button presses corresponding to the Gameboy controls
+func (gb *Gameboy) ButtonAction(button Button, pressed bool) {
+
 	// Start the CPU in case it was stopped waiting for input
 	gb.dispatch.Start()
+
 	// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 	// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)
 	// Bit 1 - P11 Input Left  or Button B (0=Pressed) (Read Only)
 	// Bit 0 - P10 Input Right or Button A (0=Pressed) (Read Only)
-	if b == ui.Start {
+
+	switch button {
+
+	// FIXME it shouldn't be possible to press left and right at once or up and down at once
+
+	case Start:
 		if pressed {
 			gb.memory.ButtonInput &^= 0x8
 		} else {
 			gb.memory.ButtonInput |= 0x8
 		}
-	} else if b == ui.Select {
+
+	case Select:
 		if pressed {
 			gb.memory.ButtonInput &^= 0x4
 		} else {
 			gb.memory.ButtonInput |= 0x4
 		}
-	}
-	if b == ui.B {
+
+	case B:
 		if pressed {
 			gb.memory.ButtonInput &^= 0x2
 		} else {
 			gb.memory.ButtonInput |= 0x2
 		}
-	}
-	if b == ui.A {
+
+	case A:
 		if pressed {
 			gb.memory.ButtonInput &^= 0x1
 		} else {
 			gb.memory.ButtonInput |= 0x1
 		}
-	}
-	if b == ui.Down {
+
+	case Down:
 		if pressed {
 			gb.memory.DirectionInput &^= 0x8
 		} else {
 			gb.memory.DirectionInput |= 0x8
 		}
-	} else if b == ui.Up {
+
+	case Up:
 		if pressed {
 			gb.memory.DirectionInput &^= 0x4
 		} else {
 			gb.memory.DirectionInput |= 0x4
 		}
-	}
-	if b == ui.Left {
+
+	case Left:
 		if pressed {
 			gb.memory.DirectionInput &^= 0x2
 		} else {
 			gb.memory.DirectionInput |= 0x2
 		}
-	} else if b == ui.Right {
+
+	case Right:
 		if pressed {
 			gb.memory.DirectionInput &^= 0x1
 		} else {
@@ -217,27 +244,21 @@ func (gb *Gameboy) ButtonAction(b ui.Button, pressed bool) {
 	}
 }
 
-// Screenshot writes a screenshot to file
-func (gb *Gameboy) Screenshot(filename string) {
-	f, err := os.Create(filename)
-	if err != nil {
-		fmt.Println(err)
+// EmulatorAction turns UI key presses into actions controlling the emulator itself
+func (gb *Gameboy) EmulatorAction(action Action) {
+	switch action {
+	case TakeScreenshot:
+		t := time.Now()
+		filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
+			t.Year(), t.Month(), t.Day(),
+			t.Hour(), t.Minute(), t.Second())
+		fmt.Println("Writing screenshot to", filename)
+		gb.lcd.Screenshot(filename)
+	case RunFaster:
+		gb.dur /= 2
+	case RunSlower:
+		gb.dur *= 2
 	}
-	defer f.Close()
-	err = png.Encode(f, gb.lcd.Frame)
-	if err != nil {
-		fmt.Println(err)
-	}
-}
-
-// Faster makes the emulator run faster
-func (gb *Gameboy) Faster() {
-	gb.dur /= 2
-}
-
-// Slower makes the emulator run slower
-func (gb *Gameboy) Slower() {
-	gb.dur *= 2
 }
 
 // Debug enabled for the UI
@@ -245,8 +266,12 @@ func (gb *Gameboy) Debug() bool {
 	return gb.opts.DebugLCD
 }
 
-// Shutdown the emulator
-func (gb *Gameboy) Shutdown() {
-	gb.cancel()
-	portaudio.Terminate()
+// RegisterDisplay registers a real-world display implementation with the LCD subsystem
+func (gb *Gameboy) RegisterDisplay(display lcd.Display) {
+	gb.lcd.RegisterDisplay(display)
+}
+
+// RegisterSpeakers registers a real-world audio implementation with the audio subsystem
+func (gb *Gameboy) RegisterSpeakers(speakers audio.Speakers) {
+	gb.audio.RegisterSpeakers(speakers)
 }

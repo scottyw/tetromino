@@ -16,7 +16,6 @@ func main() {
 
 	// Command line flags
 	fast := flag.Bool("fast", true, "When true, Tetromino runs the emulator as fast as possible (true by default)")
-	silent := flag.Bool("silent", true, "When true, Tetromino disables all sound output (true by default)")
 	debugCPU := flag.Bool("debugcpu", false, "When true, CPU debugging is enabled")
 	debugTimer := flag.Bool("debugtimer", false, "When true, timer debugging is enabled")
 	debugLCD := flag.Bool("debuglcd", false, "When true, colour-based LCD debugging is enabled")
@@ -28,11 +27,13 @@ func main() {
 	if *enableProfiling {
 		f, err := os.Create("cpuprofile.pprof")
 		if err != nil {
-			log.Fatalf("Failed to write cpuprofile.pprof: %v", err)
+			log.Printf("Failed to write cpuprofile.pprof: %v", err)
+			return
 		}
 		err = pprof.StartCPUProfile(f)
 		if err != nil {
-			log.Fatalf("Failed to start cpu profile: %v", err)
+			log.Printf("Failed to start cpu profile: %v", err)
+			return
 		}
 		defer pprof.StopCPUProfile()
 	}
@@ -46,20 +47,40 @@ func main() {
 	opts := gb.Options{
 		RomFilename: rom,
 		Fast:        *fast,
-		Silent:      *silent,
 		DebugCPU:    *debugCPU,
 		DebugTimer:  *debugTimer,
 		DebugLCD:    *debugLCD,
 	}
 
-	// Start running the Gameboy with a GL UI
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	gameboy := gb.NewGameboy(opts, cancel)
-	gui := ui.NewGL(&gameboy)
-	if *enableTiming {
-		gameboy.Time(ctx, gui)
-	} else {
-		gameboy.Run(ctx, gui)
+	// Run context
+	ctx, cancelFunc := context.WithCancel(context.Background())
+
+	// Create the Gameboy emulator
+	gameboy := gb.NewGameboy(opts)
+
+	// Create a display
+	display, err := ui.NewGLDisplay(gameboy, cancelFunc)
+	if err != nil {
+		log.Printf("Failed to create display: %v", err)
+		return
 	}
+	defer display.Cleanup()
+	gameboy.RegisterDisplay(display)
+
+	// Create speakers
+	speakers, err := ui.NewPortaudioSpeakers()
+	if err != nil {
+		log.Printf("Failed to create speakers: %v", err)
+		return
+	}
+	defer speakers.Cleanup()
+	gameboy.RegisterSpeakers(speakers)
+
+	// Start running the emulator
+	if *enableTiming {
+		gameboy.Time(ctx)
+	} else {
+		gameboy.Run(ctx)
+	}
+
 }

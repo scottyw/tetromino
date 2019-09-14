@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"image"
 	"image/color"
+	"image/png"
 	"os"
 
 	"github.com/scottyw/tetromino/pkg/gb/mem"
@@ -51,8 +52,14 @@ var (
 	}
 )
 
+// Display abstracts over a real-world implementation of the LCD display
+type Display interface {
+	DisplayFrame(*image.RGBA)
+}
+
 // LCD represents the LCD display of the Gameboy
 type LCD struct {
+	display        Display
 	memory         *mem.Memory
 	videoRAM       *[0x2000]byte
 	oam            *[0xa0]byte
@@ -62,7 +69,7 @@ type LCD struct {
 	bg             [256][256]uint8
 	window         [256][256]uint8
 	sprites        [144][160]uint8
-	Frame          *image.RGBA
+	frame          *image.RGBA
 	tick           int
 	debug          bool
 }
@@ -73,7 +80,7 @@ func NewLCD(memory *mem.Memory, debug bool) *LCD {
 		videoRAM: &memory.VideoRAM,
 		oam:      &memory.OAM,
 		memory:   memory,
-		Frame:    image.NewRGBA(image.Rect(0, 0, 256, 256)),
+		frame:    image.NewRGBA(image.Rect(0, 0, 256, 256)),
 		debug:    debug,
 	}
 	memory.WriteNotification = &lcd
@@ -356,12 +363,12 @@ func (lcd *LCD) renderLine(y, scy uint8) {
 	if lcd.debug {
 		for x := 0; x < 256; x++ {
 			pixel := lcd.renderPixel(uint8(x)-scx, y-scy, scx, scy, wx, wy, true)
-			lcd.Frame.SetRGBA(x, int(y), pixel)
+			lcd.frame.SetRGBA(x, int(y), pixel)
 		}
 	} else {
 		for x := 0; x < 160; x++ {
 			pixel := lcd.renderPixel(uint8(x), y, scx, scy, wx, wy, false)
-			lcd.Frame.SetRGBA(x, int(y), pixel)
+			lcd.frame.SetRGBA(x, int(y), pixel)
 		}
 	}
 }
@@ -381,4 +388,25 @@ func (lcd *LCD) FrameEnd() {
 			lcd.updateLcdLine(y)
 		}
 	}
+	if lcd.display != nil {
+		lcd.display.DisplayFrame(lcd.frame)
+	}
+}
+
+// Screenshot writes a screenshot to file
+func (lcd *LCD) Screenshot(filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+	err = png.Encode(f, lcd.frame)
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+// RegisterDisplay associates real-world display output with the LCD subsystem
+func (lcd *LCD) RegisterDisplay(display Display) {
+	lcd.display = display
 }
