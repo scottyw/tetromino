@@ -39,8 +39,8 @@ func NewAudio() *Audio {
 	audio.WriteNR51(0xf3)
 	audio.WriteNR52(0xf1)
 
-	// Sound 1 is also flagged as on at start time
-	audio.control.sound1on = true
+	// Ch1 is flagged as enabled at start time
+	audio.control.ch1Enable = true
 
 	return &audio
 }
