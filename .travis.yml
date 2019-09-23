@@ -1,11 +1,11 @@
 language: go
 go:
-  - "1.10"
+  - "stable"
+
+# Install OS dependencies to support video/audio output
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq libgl1-mesa-dev and xorg-dev
-install:
-  - go get github.com/go-gl/gl/v2.1/gl
-  - go get github.com/go-gl/glfw/v3.1/glfw
+  - sudo apt-get install -qq libgl1-mesa-dev and xorg-dev portaudio19-dev
+
 script:
   - go test ./...
