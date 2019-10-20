@@ -5,3 +5,5 @@ require (
 	github.com/go-gl/glfw v0.0.0-20181014061658-691ee1b84c51
 	github.com/gordonklaus/portaudio v0.0.0-20180817120803-00e7307ccd93
 )
+
+go 1.13
