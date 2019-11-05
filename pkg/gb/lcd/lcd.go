@@ -335,6 +335,13 @@ func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA
 			}
 		}
 	}
+
+	// Make tiles visible
+	// if (x+scx)%8 == 0 && (y+scy)%2 == 0 ||
+	// 	(x+scx)%2 == 0 && (y+scy)%8 == 0 {
+	// 	return color.RGBA{0xff, 0, 0, 0xff}
+	// }
+
 	if lcd.windowDisplayEnable() {
 		// Use WX/WY to shift the visible pixels
 		if x >= wx && y >= wy {
@@ -351,6 +358,7 @@ func (lcd *LCD) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA
 		if debug && (x >= 160 || y >= 144) {
 			return red[pixel]
 		}
+
 		return gray[pixel]
 	}
 	return gray[0]
