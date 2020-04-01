@@ -226,46 +226,67 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr == OBP1:
 		return m.OBP1
 	case addr == NR10:
+		// fmt.Printf("ReadNR10: %+v\n", m.audio)
 		return m.audio.ReadNR10()
 	case addr == NR11:
+		// fmt.Printf("ReadNR11: %+v\n", m.audio)
 		return m.audio.ReadNR11()
 	case addr == NR12:
+		// fmt.Printf("ReadNR12: %+v\n", m.audio)
 		return m.audio.ReadNR12()
 	case addr == NR13:
+		// fmt.Printf("ReadNR13: %+v\n", m.audio)
 		return m.audio.ReadNR13()
 	case addr == NR14:
+		// fmt.Printf("ReadNR14: %+v\n", m.audio)
 		return m.audio.ReadNR14()
 	case addr == NR21:
+		// fmt.Printf("ReadNR21: %+v\n", m.audio)
 		return m.audio.ReadNR21()
 	case addr == NR22:
+		// fmt.Printf("ReadNR22: %+v\n", m.audio)
 		return m.audio.ReadNR22()
 	case addr == NR23:
+		// fmt.Printf("ReadNR23: %+v\n", m.audio)
 		return m.audio.ReadNR23()
 	case addr == NR24:
+		// fmt.Printf("ReadNR24: %+v\n", m.audio)
 		return m.audio.ReadNR24()
 	case addr == NR30:
+		// fmt.Printf("ReadNR30: %+v\n", m.audio)
 		return m.audio.ReadNR30()
 	case addr == NR31:
+		// fmt.Printf("ReadNR31: %+v\n", m.audio)
 		return m.audio.ReadNR31()
 	case addr == NR32:
+		// fmt.Printf("ReadNR32: %+v\n", m.audio)
 		return m.audio.ReadNR32()
 	case addr == NR33:
+		// fmt.Printf("ReadNR33: %+v\n", m.audio)
 		return m.audio.ReadNR33()
 	case addr == NR34:
+		// fmt.Printf("ReadNR34: %+v\n", m.audio)
 		return m.audio.ReadNR34()
 	case addr == NR41:
+		// fmt.Printf("ReadNR41: %+v\n", m.audio)
 		return m.audio.ReadNR41()
 	case addr == NR42:
+		// fmt.Printf("ReadNR42: %+v\n", m.audio)
 		return m.audio.ReadNR42()
 	case addr == NR43:
+		// fmt.Printf("ReadNR43: %+v\n", m.audio)
 		return m.audio.ReadNR43()
 	case addr == NR44:
+		// fmt.Printf("ReadNR44: %+v\n", m.audio)
 		return m.audio.ReadNR44()
 	case addr == NR50:
+		// fmt.Printf("ReadNR50: %+v\n", m.audio)
 		return m.audio.ReadNR50()
 	case addr == NR51:
+		// fmt.Printf("ReadNR51: %+v\n", m.audio)
 		return m.audio.ReadNR51()
 	case addr == NR52:
+		// fmt.Printf("ReadNR52: %+v\n", m.audio)
 		return m.audio.ReadNR52()
 	case addr == JOYP:
 		return m.readJOYP() | 0xc0 // First 2 bits are always high
@@ -341,46 +362,71 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr == OBP1:
 		// FIXME sprite palette support
 	case addr == NR10:
+		//	fmt.Printf("WriteNR10: 0x%02x\n", value)
 		m.audio.WriteNR10(value)
 	case addr == NR11:
+		//	fmt.Printf("WriteNR11: 0x%02x\n", value)
 		m.audio.WriteNR11(value)
 	case addr == NR12:
+		//	fmt.Printf("WriteNR12: 0x%02x\n", value)
 		m.audio.WriteNR12(value)
 	case addr == NR13:
+		//	fmt.Printf("WriteNR13: 0x%02x\n", value)
 		m.audio.WriteNR13(value)
 	case addr == NR14:
+		//	fmt.Printf("WriteNR14: 0x%02x\n", value)
 		m.audio.WriteNR14(value)
 	case addr == NR21:
+		//	fmt.Printf("WriteNR21: 0x%02x\n", value)
 		m.audio.WriteNR21(value)
 	case addr == NR22:
+		//	fmt.Printf("WriteNR22: 0x%02x\n", value)
 		m.audio.WriteNR22(value)
 	case addr == NR23:
+		//	fmt.Printf("WriteNR23: 0x%02x\n", value)
 		m.audio.WriteNR23(value)
 	case addr == NR24:
+		//	fmt.Printf("WriteNR24: 0x%02x\n", value)
 		m.audio.WriteNR24(value)
 	case addr == NR30:
+		// fmt.Printf("WriteNR30: 0x%02x\n", value)
 		m.audio.WriteNR30(value)
 	case addr == NR31:
+		// fmt.Printf("WriteNR31: 0x%02x\n", value)
 		m.audio.WriteNR31(value)
 	case addr == NR32:
+		// fmt.Printf("WriteNR32: 0x%02x\n", value)
 		m.audio.WriteNR32(value)
 	case addr == NR33:
+		// fmt.Printf("WriteNR33: 0x%02x\n", value)
 		m.audio.WriteNR33(value)
 	case addr == NR34:
+		// fmt.Printf("WriteNR34: 0x%02x\n", value)
 		m.audio.WriteNR34(value)
 	case addr == NR41:
+		// fmt.Printf("WriteNR41: 0x%02x\n", value)
 		m.audio.WriteNR41(value)
 	case addr == NR42:
+		// fmt.Printf("WriteNR42: 0x%02x\n", value)
 		m.audio.WriteNR42(value)
 	case addr == NR43:
+		// fmt.Printf("WriteNR43: 0x%02x\n", value)
 		m.audio.WriteNR43(value)
 	case addr == NR44:
+		// fmt.Printf("WriteNR44: 0x%02x\n", value)
 		m.audio.WriteNR44(value)
 	case addr == NR50:
+		if value != 0x77 {
+			// fmt.Printf("WriteNR50: 0x%02x\n", value)
+		}
 		m.audio.WriteNR50(value)
 	case addr == NR51:
+		if value != 0xff {
+			// fmt.Printf("WriteNR51: 0x%02x\n", value)
+		}
 		m.audio.WriteNR51(value)
 	case addr == NR52:
+		// fmt.Printf("WriteNR52: 0x%02x\n", value)
 		m.audio.WriteNR52(value)
 	case addr == JOYP:
 		m.JOYP = value

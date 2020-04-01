@@ -2,17 +2,21 @@ package audio
 
 // Speakers abstracts over a real-world implementation of the Gameboy speakers
 type Speakers interface {
-	PlayAudio(uint8)
+	Left() chan float32
+	Right() chan float32
 }
 
 // Audio stream
 type Audio struct {
-	speakers Speakers
-	ch1      channel1
-	ch2      channel2
-	ch3      channel3
-	ch4      channel4
-	control  control
+	waitCycles uint32
+	sample     uint32
+	l          chan float32
+	r          chan float32
+	ch1        channel1
+	ch2        channel2
+	ch3        channel3
+	ch4        channel4
+	control    control
 }
 
 // NewAudio initializes our internal channel for audio data
@@ -48,14 +52,21 @@ func NewAudio() *Audio {
 // EndMachineCycle emulates the audio hardware at the end of a machine cycle
 func (a *Audio) EndMachineCycle() {
 
-	// mix audio from all channels here if enabled
-	if a.speakers != nil {
-		a.speakers.PlayAudio(0)
+	// Audio is 44.1KHz which means writing every 24 cycles roughly
+	// This messes up timing accuracy because once every 24 cycles is slightly too infrequently so the whole Gameboy slows down
+	a.waitCycles++
+	if a.waitCycles <= 24 {
+		return
 	}
 
+	a.generateSample()
+
+	a.sample++
+	a.waitCycles = 0
 }
 
 // RegisterSpeakers associates real-world audio output with the audio subsystem
 func (a *Audio) RegisterSpeakers(speakers Speakers) {
-	a.speakers = speakers
+	a.l = speakers.Left()
+	a.r = speakers.Right()
 }
