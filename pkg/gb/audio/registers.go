@@ -14,10 +14,11 @@ type square struct {
 	lengthEnable     bool
 
 	// Internal state
-	dutyIndex uint8
-	timer     uint16
-	timerOut  float32
-	enabled   bool
+	enabled       bool
+	dutyIndex     uint8
+	timer         uint16
+	timerOut      float32
+	envelopeTimer uint8
 }
 
 type wave struct {

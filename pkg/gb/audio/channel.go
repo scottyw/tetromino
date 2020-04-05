@@ -93,7 +93,23 @@ func (s *square) tickLength() {
 }
 
 func (s *square) tickVolumeEnvelope() {
-
+	if s.envelopeSweep == 0 {
+		return
+	}
+	if s.envelopeTimer >= s.envelopeSweep {
+		if s.envelopeIncrease {
+			if s.initialVolume < 15 {
+				s.initialVolume++
+				s.envelopeTimer = 0
+			}
+		} else {
+			if s.initialVolume > 0 {
+				s.initialVolume--
+				s.envelopeTimer = 0
+			}
+		}
+	}
+	s.envelopeTimer++
 }
 
 func (s *square) tickSweep() {
