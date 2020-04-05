@@ -5,22 +5,22 @@ import (
 )
 
 const (
-	period512hz   = 4194304 / 512
-	period44100hz = 95.108934240362812
+	frameSeqTicks = 4194304 / 512      // 512Hz
+	samplerPeriod = 95.108934240362812 // 44100 Hz
 )
 
 // Audio stream
 type Audio struct {
-	l       chan float32
-	r       chan float32
-	ch1     square
-	ch2     square
-	ch3     wave
-	ch4     noise
-	control control
-	tick    uint64
-	tick2   uint64
-	sample  float64
+	l             chan float32
+	r             chan float32
+	ch1           square
+	ch2           square
+	ch3           wave
+	ch4           noise
+	control       control
+	ticks         uint64
+	frameSeqTicks uint64
+	samplerTicks  float64
 }
 
 // NewAudio initializes our internal channel for audio data
@@ -75,51 +75,74 @@ func (a *Audio) EndMachineCycle() {
 }
 
 func (a *Audio) tickClock() {
-	if a.tick >= 4194304 {
-		a.tick = 0
-		a.sample = 0
+	if a.ticks >= 4194304 {
+		a.ticks = 0
+		a.ticks = 0
+		a.samplerTicks = 0
 	}
 
-	// Tick this function every clock cycle i.e. 4194304 Hz
-	a.tick4194304()
+	// Tick every clock cycle
+	a.tick()
 
-	// Tick this function at 512 Hz
-	if a.tick%period512hz == 0 {
-		a.tick512()
+	// Tick the frame sequencer at 512 Hz
+	if a.ticks%frameSeqTicks == 0 {
+		a.tickFrameSequencer()
+		a.frameSeqTicks++
+		if a.frameSeqTicks >= 512 {
+			a.frameSeqTicks = 512
+		}
 	}
 
 	// Tick this function at 44100 Hz
-	if a.tick == uint64(math.Round(a.sample*period44100hz)) {
-		a.tick44100()
-		a.sample++
+	if a.ticks == uint64(math.Round(a.samplerTicks*samplerPeriod)) {
+		a.tickSampler()
+		a.samplerTicks++
 	}
 
-	a.tick++
+	a.ticks++
 }
 
-func (a *Audio) tick4194304() {
+func (a *Audio) tick() {
 
 	a.ch1.tickTimer()
 	a.ch2.tickTimer()
 
 }
 
-func (a *Audio) tick512() {
+func (a *Audio) tickFrameSequencer() {
 
-	if a.tick2%2 == 0 {
+	// Step   Length Ctr  Vol Env     Sweep
+	// ---------------------------------------
+	// 0      Clock       -           -
+	// 1      -           -           -
+	// 2      Clock       -           Clock
+	// 3      -           -           -
+	// 4      Clock       -           -
+	// 5      -           -           -
+	// 6      Clock       -           Clock
+	// 7      -           Clock       -
+	// ---------------------------------------
+	// Rate   256 Hz      64 Hz       128 Hz
+
+	if a.frameSeqTicks%2 == 0 {
 		a.ch1.tickLength()
 		a.ch2.tickLength()
 		// a.ch3.tickLength()
 		// a.ch4.tickLength()
 	}
 
-	a.tick2++
-	if a.tick2 >= 512 {
-		a.tick2 = 512
+	if (a.frameSeqTicks-7)%8 == 0 {
+		a.ch1.tickVolumeEnvelope()
+		a.ch2.tickVolumeEnvelope()
+		// a.ch4.tickVolumeEnvelope()
+	}
+
+	if (a.frameSeqTicks-2)%4 == 0 {
+		a.ch1.tickSweep()
 	}
 
 }
 
-func (a *Audio) tick44100() {
+func (a *Audio) tickSampler() {
 	a.takeSample()
 }

@@ -92,6 +92,14 @@ func (s *square) tickLength() {
 	}
 }
 
+func (s *square) tickVolumeEnvelope() {
+
+}
+
+func (s *square) tickSweep() {
+
+}
+
 func (s *square) takeSample() float32 {
 
 	if !s.enabled {
