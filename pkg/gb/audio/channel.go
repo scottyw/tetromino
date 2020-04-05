@@ -1,7 +1,6 @@
 package audio
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -18,7 +17,7 @@ var waveduty = [][]float32{
 	[]float32{0, 0, 0, 0, 0, 0, 1.0, 1.0},
 }
 
-func (a *Audio) generateSample() {
+func (a *Audio) takeSample() {
 
 	if !a.control.on || a.l == nil || a.r == nil {
 		return
@@ -34,19 +33,15 @@ func (a *Audio) generateSample() {
 		wave1 = waveduty[a.ch1.duty][int(index1)]
 
 		if a.ch1.envelopeSweep > 0 && a.ch1.initialVolume > 0 {
-			fmt.Printf("CH1 %+v\n", a.ch1)
 			if a.ch1.nextSweep == 0 {
 				a.ch1.nextSweep = 44100 * int(a.ch1.envelopeSweep) / 64
-				fmt.Printf("nextSweep %v\n", a.ch1.nextSweep)
 			}
 			a.ch1.nextSweep--
 			if a.ch1.nextSweep == 0 {
 				if a.ch1.envelopeIncrease {
 					a.ch1.initialVolume++
-					fmt.Printf("inc %v\n", a.ch1.initialVolume)
 				} else {
 					a.ch1.initialVolume--
-					fmt.Printf("dec %v\n", a.ch1.initialVolume)
 				}
 			}
 		}
@@ -113,7 +108,5 @@ func (a *Audio) generateSample() {
 	right /= 2
 	right *= float32(a.control.volumeRight) / 8 * masterVolume
 	a.r <- right
-
-	a.sample++
 
 }

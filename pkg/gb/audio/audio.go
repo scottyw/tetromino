@@ -1,22 +1,25 @@
 package audio
 
-// Speakers abstracts over a real-world implementation of the Gameboy speakers
-type Speakers interface {
-	Left() chan float32
-	Right() chan float32
-}
+import (
+	"math"
+)
+
+const (
+	period512hz   = 4194304 / 512
+	period44100hz = 95.108934240362812
+)
 
 // Audio stream
 type Audio struct {
-	waitCycles uint32
-	sample     uint32
-	l          chan float32
-	r          chan float32
-	ch1        channel1
-	ch2        channel2
-	ch3        channel3
-	ch4        channel4
-	control    control
+	l       chan float32
+	r       chan float32
+	ch1     channel1
+	ch2     channel2
+	ch3     channel3
+	ch4     channel4
+	control control
+	tick    uint64
+	sample  float64
 }
 
 // NewAudio initializes our internal channel for audio data
@@ -49,24 +52,46 @@ func NewAudio() *Audio {
 	return &audio
 }
 
-// EndMachineCycle emulates the audio hardware at the end of a machine cycle
-func (a *Audio) EndMachineCycle() {
-
-	// Audio is 44.1KHz which means writing every 24 cycles roughly
-	// This messes up timing accuracy because once every 24 cycles is slightly too infrequently so the whole Gameboy slows down
-	a.waitCycles++
-	if a.waitCycles <= 24 {
-		return
-	}
-
-	a.generateSample()
-
-	a.sample++
-	a.waitCycles = 0
+// Speakers abstracts over a real-world implementation of the Gameboy speakers
+type Speakers interface {
+	Left() chan float32
+	Right() chan float32
 }
 
 // RegisterSpeakers associates real-world audio output with the audio subsystem
 func (a *Audio) RegisterSpeakers(speakers Speakers) {
 	a.l = speakers.Left()
 	a.r = speakers.Right()
+}
+
+// EndMachineCycle emulates the audio hardware at the end of a machine cycle
+func (a *Audio) EndMachineCycle() {
+	// Each machine cycle is four clock cycles
+	a.tickClock()
+	a.tickClock()
+	a.tickClock()
+	a.tickClock()
+}
+
+func (a *Audio) tickClock() {
+	if a.tick >= 4194304 {
+		a.tick = 0
+		a.sample = 0
+	}
+	if a.tick%period512hz == 0 {
+		a.tick512()
+	}
+	if a.tick == uint64(math.Round(a.sample*period44100hz)) {
+		a.tick44100()
+		a.sample++
+	}
+	a.tick++
+}
+
+func (a *Audio) tick512() {
+
+}
+
+func (a *Audio) tick44100() {
+	a.takeSample()
 }
