@@ -13,10 +13,10 @@ const (
 type Audio struct {
 	l       chan float32
 	r       chan float32
-	ch1     channel1
-	ch2     channel2
-	ch3     channel3
-	ch4     channel4
+	ch1     square
+	ch2     square
+	ch3     wave
+	ch4     noise
 	control control
 	tick    uint64
 	sample  float64
@@ -78,14 +78,29 @@ func (a *Audio) tickClock() {
 		a.tick = 0
 		a.sample = 0
 	}
+
+	// Tick this function every clock cycle i.e. 4194304 Hz
+	a.tick4194304()
+
+	// Tick this function at 512 Hz
 	if a.tick%period512hz == 0 {
 		a.tick512()
 	}
+
+	// Tick this function at 44100 Hz
 	if a.tick == uint64(math.Round(a.sample*period44100hz)) {
 		a.tick44100()
 		a.sample++
 	}
+
 	a.tick++
+}
+
+func (a *Audio) tick4194304() {
+
+	a.ch1.tickTimer()
+	a.ch2.tickTimer()
+
 }
 
 func (a *Audio) tick512() {

@@ -1,6 +1,6 @@
 package audio
 
-type channel1 struct {
+type square struct {
 	sweepTime        uint8
 	sweepIncrease    uint8
 	sweepShift       uint8
@@ -14,24 +14,12 @@ type channel1 struct {
 	counter          bool
 
 	// Internal state
-	nextSweep int
+	dutyIndex uint8
+	timer     uint16
+	timerOut  float32
 }
 
-type channel2 struct {
-	duty             uint8
-	length           uint8
-	initialVolume    uint8
-	envelopeIncrease bool
-	envelopeSweep    uint8
-	frequency        uint16
-	initial          uint8
-	counter          bool
-
-	// Internal state
-	nextSweep int
-}
-
-type channel3 struct {
+type wave struct {
 	enable      uint8
 	length      uint8
 	outputLevel uint8
@@ -40,7 +28,7 @@ type channel3 struct {
 	counter     bool
 }
 
-type channel4 struct {
+type noise struct {
 	length           uint8
 	initialVolume    uint8
 	envelopeIncrease bool
@@ -157,6 +145,7 @@ func (a *Audio) ReadNR12() uint8 {
 // WriteNR13 handles writes to sound register NR13
 func (a *Audio) WriteNR13(value uint8) {
 	a.ch1.frequency = (a.ch1.frequency & 0x70) | uint16(value) // Update low byte
+	a.ch1.timer = (2048 - a.ch1.frequency) * 4
 }
 
 // ReadNR13 handles reads from sound register NR13
@@ -176,6 +165,7 @@ func (a *Audio) WriteNR14(value uint8) {
 	a.ch1.initial = (value >> 7) & 0x01
 	a.ch1.counter = (value>>6)&0x01 > 0
 	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
+	a.ch1.timer = (2048 - a.ch1.frequency) * 4
 }
 
 // ReadNR14 handles reads from sound register NR14
