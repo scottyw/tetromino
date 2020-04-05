@@ -11,21 +11,22 @@ type square struct {
 	envelopeSweep    uint8
 	frequency        uint16
 	initial          uint8
-	counter          bool
+	lengthEnable     bool
 
 	// Internal state
 	dutyIndex uint8
 	timer     uint16
 	timerOut  float32
+	enabled   bool
 }
 
 type wave struct {
-	enable      uint8
-	length      uint8
-	outputLevel uint8
-	frequency   uint16
-	initial     uint8
-	counter     bool
+	enable       uint8
+	length       uint8
+	outputLevel  uint8
+	frequency    uint16
+	initial      uint8
+	lengthEnable bool
 }
 
 type noise struct {
@@ -37,7 +38,7 @@ type noise struct {
 	step             uint8
 	ratio            uint8
 	initial          uint8
-	counter          bool
+	lengthEnable     bool
 }
 
 type control struct {
@@ -163,7 +164,7 @@ func (a *Audio) ReadNR13() uint8 {
 // WriteNR14 handles writes to sound register NR14
 func (a *Audio) WriteNR14(value uint8) {
 	a.ch1.initial = (value >> 7) & 0x01
-	a.ch1.counter = (value>>6)&0x01 > 0
+	a.ch1.lengthEnable = (value>>6)&0x01 > 0
 	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	a.ch1.timer = (2048 - a.ch1.frequency) * 4
 }
@@ -171,7 +172,7 @@ func (a *Audio) WriteNR14(value uint8) {
 // ReadNR14 handles reads from sound register NR14
 func (a *Audio) ReadNR14() uint8 {
 	nr14 := 0xbf | a.ch1.initial<<7 | uint8((a.ch1.frequency&0x70)>>8)
-	if a.ch1.counter {
+	if a.ch1.lengthEnable {
 		nr14 += 0x40
 	}
 	return nr14
@@ -246,14 +247,14 @@ func (a *Audio) ReadNR23() uint8 {
 // WriteNR24 handles writes to sound register NR24
 func (a *Audio) WriteNR24(value uint8) {
 	a.ch2.initial = (value >> 7) & 0x01
-	a.ch2.counter = (value>>6)&0x01 > 0
+	a.ch2.lengthEnable = (value>>6)&0x01 > 0
 	a.ch2.frequency = (a.ch2.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 }
 
 // ReadNR24 handles reads from sound register NR24
 func (a *Audio) ReadNR24() uint8 {
 	nr24 := 0xbf | a.ch2.initial<<7 | uint8((a.ch2.frequency&0x70)>>8)
-	if a.ch2.counter {
+	if a.ch2.lengthEnable {
 		nr24 += 0x40
 	}
 	return nr24
@@ -328,14 +329,14 @@ func (a *Audio) ReadNR33() uint8 {
 // WriteNR34 handles writes to sound register NR34
 func (a *Audio) WriteNR34(value uint8) {
 	a.ch3.initial = (value >> 7) & 0x01
-	a.ch3.counter = (value>>6)&0x01 > 0
+	a.ch3.lengthEnable = (value>>6)&0x01 > 0
 	a.ch3.frequency = (a.ch3.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 }
 
 // ReadNR34 handles reads from sound register NR34
 func (a *Audio) ReadNR34() uint8 {
 	nr34 := 0xbf | a.ch3.initial<<7 | uint8((a.ch3.frequency&0x70)>>8)
-	if a.ch3.counter {
+	if a.ch3.lengthEnable {
 		nr34 += 0x40
 	}
 	return nr34
@@ -409,13 +410,13 @@ func (a *Audio) ReadNR43() uint8 {
 // WriteNR44 handles writes to sound register NR44
 func (a *Audio) WriteNR44(value uint8) {
 	a.ch4.initial = (value >> 7) & 0x01
-	a.ch4.counter = (value>>6)&0x01 > 0
+	a.ch4.lengthEnable = (value>>6)&0x01 > 0
 }
 
 // ReadNR44 handles reads from sound register NR44
 func (a *Audio) ReadNR44() uint8 {
 	nr44 := 0xbf | a.ch4.initial<<7
-	if a.ch4.counter {
+	if a.ch4.lengthEnable {
 		nr44 += 0x40
 	}
 	return nr44

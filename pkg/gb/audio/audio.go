@@ -19,6 +19,7 @@ type Audio struct {
 	ch4     noise
 	control control
 	tick    uint64
+	tick2   uint64
 	sample  float64
 }
 
@@ -104,6 +105,18 @@ func (a *Audio) tick4194304() {
 }
 
 func (a *Audio) tick512() {
+
+	if a.tick2%2 == 0 {
+		a.ch1.tickLength()
+		a.ch2.tickLength()
+		// a.ch3.tickLength()
+		// a.ch4.tickLength()
+	}
+
+	a.tick2++
+	if a.tick2 >= 512 {
+		a.tick2 = 512
+	}
 
 }
 

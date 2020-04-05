@@ -31,31 +31,6 @@ func (a *Audio) takeSample() {
 		wave1 = a.ch2.takeSample()
 	}
 
-	// // channel 2
-	// if a.control.ch2Enable {
-	// 	freq2 := 65536 / float64(2048-a.ch2.frequency)
-	// 	slice2 := float64(a.sample) / 44100 * freq2 * 8
-	// 	index2 := math.Mod(slice2, 8)
-	// 	wave2 = waveduty[a.ch2.duty][int(index2)]
-
-	// 	if a.ch2.envelopeSweep > 0 && a.ch2.initialVolume > 0 {
-	// 		if a.ch2.nextSweep == 0 {
-	// 			a.ch2.nextSweep = 44100 * int(a.ch2.envelopeSweep) / 64
-	// 		}
-	// 		a.ch2.nextSweep--
-	// 		if a.ch2.nextSweep == 0 {
-	// 			if a.ch2.envelopeIncrease {
-	// 				a.ch2.initialVolume++
-	// 			} else {
-	// 				a.ch2.initialVolume--
-	// 			}
-	// 		}
-	// 	}
-
-	// 	wave2 *= float32(a.ch2.initialVolume) / 8
-
-	// }
-
 	// channel 3
 	if a.control.ch3Enable {
 		panic("ch3")
@@ -93,6 +68,7 @@ func (a *Audio) takeSample() {
 }
 
 func (s *square) tickTimer() {
+	s.timer--
 	if s.timer == 0 {
 		s.timerOut = waveduty[s.duty][s.dutyIndex]
 		s.timer = (2048 - s.frequency) * 4
@@ -101,10 +77,26 @@ func (s *square) tickTimer() {
 			s.dutyIndex = 0
 		}
 	}
-	s.timer--
+}
+
+func (s *square) tickLength() {
+	if !s.lengthEnable {
+		s.enabled = true
+		return
+	}
+	if s.length == 0 {
+		s.enabled = false
+	} else {
+		s.enabled = true
+		s.length--
+	}
 }
 
 func (s *square) takeSample() float32 {
+
+	if !s.enabled {
+		return 0
+	}
 
 	wave1 := s.timerOut * float32(s.initialVolume) / 8
 
