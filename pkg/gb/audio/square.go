@@ -13,22 +13,81 @@ type square struct {
 	lengthEnable     bool
 
 	// Internal state
-	enabled       bool
-	dutyIndex     uint8
-	timer         uint16
-	sweepTimer    uint8
-	envelopeTimer uint8
-	freqShadow    uint16
+	supportSweep    bool
+	enabled         bool
+	dutyIndex       uint8
+	volume          uint8
+	timer           uint16
+	envelopeTimer   uint8
+	sweepEnabled    bool
+	sweepTimer      uint8
+	shadowFrequency uint16
 }
 
-func (s *square) trigger() {
+func (s *square) trigger(dacEnabled bool) {
 
-	// a.ch1.timer = (2048 - a.ch1.frequency) * 4
+	// Channel is enabled (see length counter).
+	s.enabled = true
+
+	// If length counter is zero, it is set to 64 (256 for wave channel).
+	if s.length == 0 {
+		s.length = 64
+	}
+
+	// Frequency timer is reloaded with period.
+	s.timer = (2048 - s.frequency) * 4
+
+	// Volume envelope timer is reloaded with period.
+	s.envelopeTimer = s.envelopeSweep
+
+	// Channel volume is reloaded from NRx2.
+	s.volume = s.initialVolume
+
+	if s.supportSweep {
+
+		// Square 1's frequency is copied to the shadow register.
+		s.shadowFrequency = s.frequency
+
+		// The sweep timer is reloaded.
+		s.sweepTimer = s.sweepTime
+
+		// The internal enabled flag is set if either the sweep period or shift are non-zero, cleared otherwise.
+		s.sweepEnabled = s.sweepTime > 0 || s.sweepShift > 0
+
+		// If the sweep shift is non-zero, frequency calculation and the overflow check are performed immediately.
+		if s.sweepShift > 0 {
+
+			// Frequency calculation consists of taking the value in the frequency shadow register ...
+			newFrequency := s.shadowFrequency
+
+			// ... shifting it right by sweep shift ...
+			newFrequency <<= s.sweepShift
+
+			// ... optionally negating the value ...
+			if !s.sweepIncrease {
+				newFrequency = -newFrequency
+			}
+
+			// ... and summing this with the frequency shadow register to produce a new frequency
+			newFrequency = s.shadowFrequency + newFrequency
+
+			// The overflow check simply calculates the new frequency and if this is greater than 2047, square 1 is disabled.
+			if newFrequency > 2047 {
+				s.enabled = false
+			}
+
+		}
+
+	}
+
+	// Note that if the channel's DAC is off, after the above actions occur the channel will be immediately disabled again.
+	if !dacEnabled {
+		s.enabled = false
+	}
 
 }
 
 func (s *square) tickTimer() {
-	s.timer--
 	if s.timer == 0 {
 		s.timer = (2048 - s.frequency) * 4
 		s.dutyIndex++
@@ -36,17 +95,13 @@ func (s *square) tickTimer() {
 			s.dutyIndex = 0
 		}
 	}
+	s.timer--
 }
 
 func (s *square) tickLength() {
-	if !s.lengthEnable {
-		s.enabled = true
-		return
-	}
 	if s.length == 0 {
 		s.enabled = false
 	} else {
-		s.enabled = true
 		s.length--
 	}
 }
@@ -55,24 +110,43 @@ func (s *square) tickVolumeEnvelope() {
 	if s.envelopeSweep == 0 {
 		return
 	}
-	s.envelopeTimer++
-	if s.envelopeTimer >= s.envelopeSweep {
+	if s.envelopeTimer == 0 {
 		if s.envelopeIncrease {
-			if s.initialVolume < 15 {
-				s.initialVolume++
-				s.envelopeTimer = 0
+			if s.volume < 15 {
+				s.volume++
+				s.envelopeTimer = s.envelopeSweep
 			}
 		} else {
-			if s.initialVolume > 0 {
-				s.initialVolume--
-				s.envelopeTimer = 0
+			if s.volume > 0 {
+				s.volume--
+				s.envelopeTimer = s.envelopeSweep
 			}
 		}
 	}
+	s.envelopeTimer--
 }
 
 func (s *square) tickSweep() {
-
+	if s.supportSweep && s.sweepEnabled && s.sweepTime > 0 {
+		newFrequency := s.shadowFrequency
+		newFrequency <<= s.sweepShift
+		if !s.sweepIncrease {
+			newFrequency = -newFrequency
+		}
+		newFrequency = s.shadowFrequency + newFrequency
+		if newFrequency < 2048 && s.sweepShift > 0 {
+			s.frequency = newFrequency
+			s.shadowFrequency = newFrequency
+			newFrequency <<= s.sweepShift
+			if !s.sweepIncrease {
+				newFrequency = -newFrequency
+			}
+			newFrequency = s.shadowFrequency + newFrequency
+			if newFrequency > 2047 {
+				s.enabled = false
+			}
+		}
+	}
 }
 
 func (s *square) takeSample() float32 {
@@ -83,7 +157,7 @@ func (s *square) takeSample() float32 {
 
 	wave := waveduty[s.duty][s.dutyIndex]
 
-	wave *= float32(s.initialVolume) / 8
+	wave *= float32(s.volume) / 8
 
 	return wave
 

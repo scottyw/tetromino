@@ -130,7 +130,7 @@ func (a *Audio) WriteNR14(value uint8) {
 	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
-		a.ch1.trigger()
+		a.ch1.trigger(a.control.ch1Enable)
 	}
 }
 
@@ -214,7 +214,7 @@ func (a *Audio) WriteNR24(value uint8) {
 	a.ch2.frequency = (a.ch2.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
-		a.ch2.trigger()
+		a.ch2.trigger(a.control.ch2Enable)
 	}
 }
 

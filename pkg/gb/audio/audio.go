@@ -50,6 +50,10 @@ func NewAudio() *Audio {
 	// Ch1 is flagged as enabled at start time
 	audio.control.ch1Enable = true
 
+	// Ch 1 supports sweep, ch 2 does not
+	audio.ch1.supportSweep = true
+	audio.ch2.supportSweep = false
+
 	return &audio
 }
 
