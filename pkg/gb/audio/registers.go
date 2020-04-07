@@ -1,47 +1,5 @@
 package audio
 
-type square struct {
-	sweepTime        uint8
-	sweepIncrease    uint8
-	sweepShift       uint8
-	duty             uint8
-	length           uint8
-	initialVolume    uint8
-	envelopeIncrease bool
-	envelopeSweep    uint8
-	frequency        uint16
-	initial          uint8
-	lengthEnable     bool
-
-	// Internal state
-	enabled       bool
-	dutyIndex     uint8
-	timer         uint16
-	timerOut      float32
-	envelopeTimer uint8
-}
-
-type wave struct {
-	enable       uint8
-	length       uint8
-	outputLevel  uint8
-	frequency    uint16
-	initial      uint8
-	lengthEnable bool
-}
-
-type noise struct {
-	length           uint8
-	initialVolume    uint8
-	envelopeIncrease bool
-	envelopeSweep    uint8
-	shift            uint8
-	step             uint8
-	ratio            uint8
-	initial          uint8
-	lengthEnable     bool
-}
-
 type control struct {
 	on             bool
 	ch1Enable      bool
@@ -85,13 +43,17 @@ type control struct {
 // WriteNR10 handles writes to sound register NR10
 func (a *Audio) WriteNR10(value uint8) {
 	a.ch1.sweepTime = (value >> 4) & 0x07
-	a.ch1.sweepIncrease = (value >> 3) & 0x01
+	a.ch1.sweepIncrease = (value>>3)&0x01 > 0
 	a.ch1.sweepShift = value & 0x07
 }
 
 // ReadNR10 handles reads from sound register NR10
 func (a *Audio) ReadNR10() uint8 {
-	return 0x80 | a.ch1.sweepTime<<4 | a.ch1.sweepIncrease<<3 | a.ch1.sweepShift
+	nr10 := 0x80 | a.ch1.sweepTime<<4 | a.ch1.sweepShift
+	if a.ch1.sweepIncrease {
+		nr10 += 0x08
+	}
+	return nr10
 }
 
 // FF11 - NR11 - Channel 1 Sound length/Wave pattern duty (R/W)
@@ -113,7 +75,7 @@ func (a *Audio) WriteNR11(value uint8) {
 
 // ReadNR11 handles reads from sound register NR11
 func (a *Audio) ReadNR11() uint8 {
-	return 0x3f | a.ch1.duty<<6 | a.ch1.length
+	return 0x3f | a.ch1.duty<<6
 }
 
 // FF12 - NR12 - Channel 1 Volume Envelope (R/W)
@@ -164,19 +126,20 @@ func (a *Audio) ReadNR13() uint8 {
 
 // WriteNR14 handles writes to sound register NR14
 func (a *Audio) WriteNR14(value uint8) {
-	a.ch1.initial = (value >> 7) & 0x01
 	a.ch1.lengthEnable = (value>>6)&0x01 > 0
 	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
-	a.ch1.timer = (2048 - a.ch1.frequency) * 4
+	trigger := (value>>7)&0x01 > 0
+	if trigger {
+		a.ch1.trigger()
+	}
 }
 
 // ReadNR14 handles reads from sound register NR14
 func (a *Audio) ReadNR14() uint8 {
-	nr14 := 0xbf | a.ch1.initial<<7 | uint8((a.ch1.frequency&0x70)>>8)
 	if a.ch1.lengthEnable {
-		nr14 += 0x40
+		return 0xff
 	}
-	return nr14
+	return 0xbf
 }
 
 // FF16 - NR21 - Channel 2 Sound Length/Wave Pattern Duty (R/W)
@@ -198,7 +161,7 @@ func (a *Audio) WriteNR21(value uint8) {
 
 // ReadNR21 handles reads from sound register NR21
 func (a *Audio) ReadNR21() uint8 {
-	return 0x3f | a.ch2.duty<<6 | a.ch2.length
+	return 0x3f | a.ch2.duty<<6
 }
 
 // FF17 - NR22 - Channel 2 Volume Envelope (R/W)
@@ -247,18 +210,20 @@ func (a *Audio) ReadNR23() uint8 {
 
 // WriteNR24 handles writes to sound register NR24
 func (a *Audio) WriteNR24(value uint8) {
-	a.ch2.initial = (value >> 7) & 0x01
 	a.ch2.lengthEnable = (value>>6)&0x01 > 0
 	a.ch2.frequency = (a.ch2.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
+	trigger := (value>>7)&0x01 > 0
+	if trigger {
+		a.ch2.trigger()
+	}
 }
 
 // ReadNR24 handles reads from sound register NR24
 func (a *Audio) ReadNR24() uint8 {
-	nr24 := 0xbf | a.ch2.initial<<7 | uint8((a.ch2.frequency&0x70)>>8)
 	if a.ch2.lengthEnable {
-		nr24 += 0x40
+		return 0xff
 	}
-	return nr24
+	return 0xbf
 }
 
 // FF1A - NR30 - Channel 3 ch Enable/off (R/W)
@@ -266,12 +231,15 @@ func (a *Audio) ReadNR24() uint8 {
 
 // WriteNR30 handles writes to sound register NR30
 func (a *Audio) WriteNR30(value uint8) {
-	a.ch3.enable = (value >> 7) & 0x01
+	a.ch3.enable = (value>>7)&0x01 > 0
 }
 
 // ReadNR30 handles reads from sound register NR30
 func (a *Audio) ReadNR30() uint8 {
-	return 0x7f | a.ch3.enable<<7
+	if a.ch3.enable {
+		return 0xff
+	}
+	return 0x7f
 }
 
 // FF1B - NR31 - Channel 3 Sound Length
@@ -304,7 +272,7 @@ func (a *Audio) WriteNR32(value uint8) {
 
 // ReadNR32 handles reads from sound register NR32
 func (a *Audio) ReadNR32() uint8 {
-	return 0x9f | a.ch3.enable<<5
+	return 0x9f | a.ch3.outputLevel<<5
 }
 
 // FF1D - NR33 - Channel 3 Frequency's lower data (W)
@@ -329,18 +297,20 @@ func (a *Audio) ReadNR33() uint8 {
 
 // WriteNR34 handles writes to sound register NR34
 func (a *Audio) WriteNR34(value uint8) {
-	a.ch3.initial = (value >> 7) & 0x01
 	a.ch3.lengthEnable = (value>>6)&0x01 > 0
 	a.ch3.frequency = (a.ch3.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
+	trigger := (value>>7)&0x01 > 0
+	if trigger {
+		a.ch3.trigger()
+	}
 }
 
 // ReadNR34 handles reads from sound register NR34
 func (a *Audio) ReadNR34() uint8 {
-	nr34 := 0xbf | a.ch3.initial<<7 | uint8((a.ch3.frequency&0x70)>>8)
 	if a.ch3.lengthEnable {
-		nr34 += 0x40
+		return 0xff
 	}
-	return nr34
+	return 0xbf
 }
 
 // FF20 - NR41 - Channel 4 Sound Length (R/W)
@@ -410,17 +380,19 @@ func (a *Audio) ReadNR43() uint8 {
 
 // WriteNR44 handles writes to sound register NR44
 func (a *Audio) WriteNR44(value uint8) {
-	a.ch4.initial = (value >> 7) & 0x01
 	a.ch4.lengthEnable = (value>>6)&0x01 > 0
+	trigger := (value>>7)&0x01 > 0
+	if trigger {
+		a.ch4.trigger()
+	}
 }
 
 // ReadNR44 handles reads from sound register NR44
 func (a *Audio) ReadNR44() uint8 {
-	nr44 := 0xbf | a.ch4.initial<<7
 	if a.ch4.lengthEnable {
-		nr44 += 0x40
+		return 0xff
 	}
-	return nr44
+	return 0xbf
 }
 
 // FF24 - NR50 - Channel control / ON-OFF / Volume (R/W)
@@ -452,7 +424,6 @@ func (a *Audio) ReadNR50() uint8 {
 		nr50 += 0x08
 	}
 	return nr50
-
 }
 
 // FF25 - NR51 - Selection of Sound output terminal (R/W)

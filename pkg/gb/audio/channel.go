@@ -1,18 +1,5 @@
 package audio
 
-// Wave Duty:
-//   00: 12.5% ( _-------_-------_------- )
-//   01: 25%   ( __------__------__------ )
-//   10: 50%   ( ____----____----____---- ) (normal)
-//   11: 75%   ( ______--______--______-- )
-
-var waveduty = [][]float32{
-	[]float32{0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-	[]float32{0, 0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-	[]float32{0, 0, 0, 0, 1.0, 1.0, 1.0, 1.0},
-	[]float32{0, 0, 0, 0, 0, 0, 1.0, 1.0},
-}
-
 func (a *Audio) takeSample() {
 
 	if !a.control.on || a.l == nil || a.r == nil {
@@ -64,66 +51,5 @@ func (a *Audio) takeSample() {
 	right /= 2
 	right *= float32(a.control.volumeRight) / 8 * masterVolume
 	a.r <- right
-
-}
-
-func (s *square) tickTimer() {
-	s.timer--
-	if s.timer == 0 {
-		s.timerOut = waveduty[s.duty][s.dutyIndex]
-		s.timer = (2048 - s.frequency) * 4
-		s.dutyIndex++
-		if s.dutyIndex >= 8 {
-			s.dutyIndex = 0
-		}
-	}
-}
-
-func (s *square) tickLength() {
-	if !s.lengthEnable {
-		s.enabled = true
-		return
-	}
-	if s.length == 0 {
-		s.enabled = false
-	} else {
-		s.enabled = true
-		s.length--
-	}
-}
-
-func (s *square) tickVolumeEnvelope() {
-	if s.envelopeSweep == 0 {
-		return
-	}
-	if s.envelopeTimer >= s.envelopeSweep {
-		if s.envelopeIncrease {
-			if s.initialVolume < 15 {
-				s.initialVolume++
-				s.envelopeTimer = 0
-			}
-		} else {
-			if s.initialVolume > 0 {
-				s.initialVolume--
-				s.envelopeTimer = 0
-			}
-		}
-	}
-	s.envelopeTimer++
-}
-
-func (s *square) tickSweep() {
-
-}
-
-func (s *square) takeSample() float32 {
-
-	if !s.enabled {
-		return 0
-	}
-
-	wave1 := s.timerOut * float32(s.initialVolume) / 8
-
-	return wave1
 
 }
