@@ -18,6 +18,7 @@ type Audio struct {
 	ch3           wave
 	ch4           noise
 	control       control
+	waveram       [32]uint8
 	ticks         uint64
 	frameSeqTicks uint64
 	samplerTicks  float64

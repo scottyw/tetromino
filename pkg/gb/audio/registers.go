@@ -520,3 +520,13 @@ func (a *Audio) ReadNR52() uint8 {
 	}
 	return 0x70 | nr52
 }
+
+// WriteWaveRAM updates the audio channel 3 wave RAM
+func (a *Audio) WriteWaveRAM(addr uint16, value uint8) {
+	a.waveram[addr-0xff30] = value
+}
+
+// ReadWaveRAM reads the audio channel 3 wave RAM
+func (a *Audio) ReadWaveRAM(addr uint16) uint8 {
+	return a.waveram[addr-0xff30]
+}
