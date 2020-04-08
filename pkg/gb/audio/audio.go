@@ -18,7 +18,7 @@ type Audio struct {
 	ch3           wave
 	ch4           noise
 	control       control
-	waveram       [32]uint8
+	waveram       [16]uint8
 	ticks         uint64
 	frameSeqTicks uint64
 	samplerTicks  float64
@@ -26,7 +26,9 @@ type Audio struct {
 
 // NewAudio initializes our internal channel for audio data
 func NewAudio() *Audio {
-	audio := Audio{}
+	audio := Audio{
+		waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA},
+	}
 
 	// Set default values for the NR registers
 	audio.WriteNR10(0x80)
@@ -47,9 +49,6 @@ func NewAudio() *Audio {
 	audio.WriteNR50(0x77)
 	audio.WriteNR51(0xf3)
 	audio.WriteNR52(0xf1)
-
-	// Ch1 is flagged as enabled at start time
-	audio.control.ch1Enable = true
 
 	// Ch 1 supports sweep, ch 2 does not
 	audio.ch1.supportSweep = true
