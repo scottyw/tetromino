@@ -262,12 +262,12 @@ func (a *Audio) WriteNR30(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch3.enable = (value>>7)&0x01 > 0
+	a.ch3.enabled = (value>>7)&0x01 > 0
 }
 
 // ReadNR30 handles reads from sound register NR30
 func (a *Audio) ReadNR30() uint8 {
-	if a.ch3.enable {
+	if a.ch3.enabled {
 		return 0xff
 	}
 	return 0x7f
@@ -344,7 +344,7 @@ func (a *Audio) WriteNR34(value uint8) {
 	a.ch3.frequency = (a.ch3.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
-		a.ch3.trigger()
+		a.ch3.trigger(a.control.ch3Enable)
 	}
 }
 
@@ -416,13 +416,13 @@ func (a *Audio) WriteNR43(value uint8) {
 		return
 	}
 	a.ch4.shift = value >> 4
-	a.ch4.step = (value >> 3) & 0x01
-	a.ch4.ratio = value & 0x07
+	a.ch4.lfsrWidth = (value >> 3) & 0x01
+	a.ch4.divisor = value & 0x07
 }
 
 // ReadNR43 handles reads from sound register NR43
 func (a *Audio) ReadNR43() uint8 {
-	return a.ch4.shift<<4 | a.ch4.step<<3 | a.ch4.ratio
+	return a.ch4.shift<<4 | a.ch4.lfsrWidth<<3 | a.ch4.divisor
 }
 
 // FF23 - NR44 - Channel 4 Counter/consecutive; Inital (R/W)
@@ -438,7 +438,7 @@ func (a *Audio) WriteNR44(value uint8) {
 	a.ch4.lengthEnable = (value>>6)&0x01 > 0
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
-		a.ch4.trigger()
+		a.ch4.trigger(a.control.ch4Enable)
 	}
 }
 

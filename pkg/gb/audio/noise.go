@@ -6,22 +6,62 @@ type noise struct {
 	envelopeIncrease bool
 	envelopeSweep    uint8
 	shift            uint8
-	step             uint8
-	ratio            uint8
+	lfsrWidth        uint8
+	divisor          uint8
 	lengthEnable     bool
+
+	// Internal state
+	enabled       bool
+	volume        uint8
+	timer         uint16
+	envelopeTimer uint8
+	lfsr          uint16
 }
 
-func (n *noise) trigger() {
+func (n *noise) trigger(dacEnabled bool) {
 
 	// Channel is enabled (see length counter).
+	n.enabled = true
+
 	// If length counter is zero, it is set to 64 (256 for wave channel).
+	if n.length == 0 {
+		n.length = 64
+	}
+
 	// Frequency timer is reloaded with period.
+	n.timer = 8 << n.divisor
+
 	// Volume envelope timer is reloaded with period.
+	n.envelopeTimer = n.envelopeSweep
+
 	// Channel volume is reloaded from NRx2.
+	n.volume = n.initialVolume
+
 	// Noise channel's LFSR bits are all set to 1.
-	// Wave channel's position is set to 0 but sample buffer is NOT refilled.
-	// Square 1's sweep does several things (see frequency sweep).
+	n.lfsr = 0xffff
 
 	// Note that if the channel's DAC is off, after the above actions occur the channel will be immediately disabled again.
+	if !dacEnabled {
+		n.enabled = false
+	}
+
+}
+
+func (n *noise) tickTimer() {
+	if n.timer == 0 {
+		n.timer = 8 << n.divisor
+	}
+	n.timer--
+}
+
+func (n *noise) takeSample() float32 {
+
+	if !n.enabled {
+		return 0
+	}
+
+	wave := float32(0)
+
+	return wave
 
 }

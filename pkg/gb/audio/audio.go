@@ -107,10 +107,10 @@ func (a *Audio) tickClock() {
 }
 
 func (a *Audio) tick() {
-
 	a.ch1.tickTimer()
 	a.ch2.tickTimer()
-
+	a.ch3.tickTimer()
+	a.ch4.tickTimer()
 }
 
 func (a *Audio) tickFrameSequencer() {
