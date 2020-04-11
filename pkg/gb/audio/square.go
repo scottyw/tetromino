@@ -34,6 +34,11 @@ func (s *square) trigger() {
 	if s.length == 0 {
 		s.length = 64
 	}
+	// if s.supportSweep {
+	// 	fmt.Println("CH1 trigger", s.length)
+	// } else {
+	// 	fmt.Println("CH2 trigger", s.length)
+	// }
 
 	// Frequency timer is reloaded with period.
 	s.timer = (2048 - s.frequency) * 4
@@ -100,11 +105,18 @@ func (s *square) tickTimer() {
 }
 
 func (s *square) tickLength() {
-	if s.length == 0 {
-		s.enabled = false
-	} else {
+	if s.length > 0 {
 		s.length--
 	}
+	if s.length == 0 {
+		s.enabled = false
+	}
+
+	// if s.supportSweep {
+	// 	fmt.Println("CH1 tickLength", s.length)
+	// } else {
+	// 	fmt.Println("CH2 tickLength", s.length)
+	// }
 }
 
 func (s *square) tickVolumeEnvelope() {
@@ -170,8 +182,8 @@ func (s *square) takeSample() float32 {
 //   10: 50%   ( ____----____----____---- ) (normal)
 //   11: 75%   ( ______--______--______-- )
 var waveduty = [][]float32{
-	[]float32{0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-	[]float32{0, 0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
-	[]float32{0, 0, 0, 0, 1.0, 1.0, 1.0, 1.0},
-	[]float32{0, 0, 0, 0, 0, 0, 1.0, 1.0},
+	{0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
+	{0, 0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0},
+	{0, 0, 0, 0, 1.0, 1.0, 1.0, 1.0},
+	{0, 0, 0, 0, 0, 0, 1.0, 1.0},
 }
