@@ -8,19 +8,13 @@ type wave struct {
 
 	// Internal state
 	enabled     bool
+	dacEnabled  bool
 	timer       uint16
 	outputLevel uint8
 	position    uint8
 }
 
 func (w *wave) trigger() {
-
-	// Volume envelope timer is reloaded with period.
-	// Channel volume is reloaded from NRx2.
-	// Noise channel's LFSR bits are all set to 1.
-	// Square 1's sweep does several things (see frequency sweep).
-
-	// Note that if the channel's DAC is off, after the above actions occur the channel will be immediately disabled again.
 
 	// Channel is enabled (see length counter).
 	w.enabled = true
@@ -31,13 +25,18 @@ func (w *wave) trigger() {
 	}
 
 	// Frequency timer is reloaded with period.
-	w.timer = (2048 - w.frequency) * 4
+	w.timer = (2048 - w.frequency) * 2
 
 	// Channel volume is reloaded from NRx2.
 	w.outputLevel = w.initialOutputLevel
 
 	// Wave channel's position is set to 0 but sample buffer is NOT refilled.
 	w.position = 0
+
+	// Note that if the channel's DAC is off, after the above actions occur the channel will be immediately disabled again.
+	if !w.dacEnabled {
+		w.enabled = false
+	}
 
 }
 
@@ -49,10 +48,14 @@ func (w *wave) tickTimer() {
 }
 
 func (w *wave) tickLength() {
+	if !w.lengthEnable {
+		return
+	}
+	if w.length > 0 {
+		w.length--
+	}
 	if w.length == 0 {
 		w.enabled = false
-	} else {
-		w.length--
 	}
 }
 

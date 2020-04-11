@@ -19,7 +19,7 @@ type Audio struct {
 	ch4           noise
 	control       control
 	waveram       [16]uint8
-	ticks         uint64
+	timerTicks    uint64
 	frameSeqTicks uint64
 	samplerTicks  float64
 }
@@ -79,38 +79,36 @@ func (a *Audio) EndMachineCycle() {
 }
 
 func (a *Audio) tickClock() {
-	if a.ticks >= 4194304 {
-		a.ticks = 0
-		a.ticks = 0
+	if a.timerTicks >= 4194304 {
+		a.timerTicks = 0
+		a.frameSeqTicks = 0
 		a.samplerTicks = 0
 	}
 
 	// Tick every clock cycle
-	a.tick()
+	a.tickTimer()
 
 	// Tick the frame sequencer at 512 Hz
-	if a.ticks%frameSeqTicks == 0 {
+	if a.timerTicks%frameSeqTicks == 0 {
 		a.tickFrameSequencer()
-		a.frameSeqTicks++
 		if a.frameSeqTicks >= 512 {
 			a.frameSeqTicks = 0
 		}
 	}
 
 	// Tick this function at 44100 Hz
-	if a.ticks == uint64(math.Round(a.samplerTicks*samplerPeriod)) {
+	if a.timerTicks == uint64(math.Round(a.samplerTicks*samplerPeriod)) {
 		a.tickSampler()
-		a.samplerTicks++
 	}
 
-	a.ticks++
 }
 
-func (a *Audio) tick() {
+func (a *Audio) tickTimer() {
 	a.ch1.tickTimer()
 	a.ch2.tickTimer()
 	a.ch3.tickTimer()
 	a.ch4.tickTimer()
+	a.timerTicks++
 }
 
 func (a *Audio) tickFrameSequencer() {
@@ -145,8 +143,11 @@ func (a *Audio) tickFrameSequencer() {
 		a.ch1.tickSweep()
 	}
 
+	a.frameSeqTicks++
+
 }
 
 func (a *Audio) tickSampler() {
 	a.takeSample()
+	a.samplerTicks++
 }

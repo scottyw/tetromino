@@ -97,6 +97,9 @@ func (a *Audio) WriteNR12(value uint8) {
 	a.ch1.envelopeIncrease = (value>>3)&0x01 > 0
 	a.ch1.envelopeSweep = value & 0x07
 	a.ch1.dacEnabled = a.ch1.initialVolume > 0 || a.ch1.envelopeIncrease
+	if !a.ch1.dacEnabled {
+		a.ch1.enabled = false
+	}
 }
 
 // ReadNR12 handles reads from sound register NR12
@@ -144,8 +147,6 @@ func (a *Audio) WriteNR14(value uint8) {
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
 		a.ch1.trigger()
-	} else {
-		a.ch1.enabled = false
 	}
 }
 
@@ -198,6 +199,9 @@ func (a *Audio) WriteNR22(value uint8) {
 	a.ch2.envelopeIncrease = (value>>3)&0x01 > 0
 	a.ch2.envelopeSweep = value & 0x07
 	a.ch2.dacEnabled = a.ch2.initialVolume > 0 || a.ch2.envelopeIncrease
+	if !a.ch2.dacEnabled {
+		a.ch2.enabled = false
+	}
 }
 
 // ReadNR22 handles reads from sound register NR22
@@ -243,8 +247,6 @@ func (a *Audio) WriteNR24(value uint8) {
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
 		a.ch2.trigger()
-	} else {
-		a.ch2.enabled = false
 	}
 }
 
@@ -264,12 +266,15 @@ func (a *Audio) WriteNR30(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch3.enabled = (value>>7)&0x01 > 0
+	a.ch3.dacEnabled = (value>>7)&0x01 > 0
+	if !a.ch3.dacEnabled {
+		a.ch3.enabled = false
+	}
 }
 
 // ReadNR30 handles reads from sound register NR30
 func (a *Audio) ReadNR30() uint8 {
-	if a.ch3.enabled {
+	if a.ch3.dacEnabled {
 		return 0xff
 	}
 	return 0x7f
@@ -347,8 +352,6 @@ func (a *Audio) WriteNR34(value uint8) {
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
 		a.ch3.trigger()
-	} else {
-		a.ch3.enabled = false
 	}
 }
 
@@ -370,7 +373,7 @@ func (a *Audio) WriteNR41(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch4.length = 64 - (value & 0x1f)
+	a.ch4.length = 64 - (value & 0x3f)
 }
 
 // ReadNR41 handles reads from sound register NR41
@@ -394,6 +397,9 @@ func (a *Audio) WriteNR42(value uint8) {
 	a.ch4.envelopeIncrease = (value>>3)&0x01 > 0
 	a.ch4.envelopeSweep = value & 0x07
 	a.ch4.dacEnabled = a.ch4.initialVolume > 0 || a.ch4.envelopeIncrease
+	if !a.ch4.dacEnabled {
+		a.ch4.enabled = false
+	}
 }
 
 // ReadNR42 handles reads from sound register NR42
@@ -444,8 +450,6 @@ func (a *Audio) WriteNR44(value uint8) {
 	trigger := (value>>7)&0x01 > 0
 	if trigger {
 		a.ch4.trigger()
-	} else {
-		a.ch4.enabled = false
 	}
 }
 

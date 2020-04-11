@@ -100,6 +100,9 @@ func (s *square) tickTimer() {
 }
 
 func (s *square) tickLength() {
+	if !s.lengthEnable {
+		return
+	}
 	if s.length > 0 {
 		s.length--
 	}

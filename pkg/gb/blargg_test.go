@@ -61,13 +61,13 @@ func TestBlarggCPUInstrs(t *testing.T) {
 // 	runBlarggTest(t, "dmg_sound/dmg_sound.gb")
 // }
 
-// func TestBlarggDMGSound01(t *testing.T) {
-// 	runBlarggTest(t, "dmg_sound/rom_singles/01-registers.gb")
-// }
+func TestBlarggDMGSound01(t *testing.T) {
+	runBlarggTest(t, "dmg_sound/rom_singles/01-registers.gb")
+}
 
-// func TestBlarggDMGSound02(t *testing.T) {
-// 	runBlarggTest(t, "dmg_sound/rom_singles/02-len ctr.gb")
-// }
+func TestBlarggDMGSound02(t *testing.T) {
+	runBlarggTest(t, "dmg_sound/rom_singles/02-len ctr.gb")
+}
 
 // func TestBlarggDMGSound03(t *testing.T) {
 // 	runBlarggTest(t, "dmg_sound/rom_singles/03-trigger.gb")

@@ -51,15 +51,27 @@ func (n *noise) trigger() {
 func (n *noise) tickTimer() {
 	if n.timer == 0 {
 		n.timer = 8 << n.divisor
+		b0 := n.lfsr & 0x01
+		b1 := (n.lfsr >> 1) & 0x01
+		new := b0 ^ b1
+		n.lfsr >>= 1
+		n.lfsr |= new << 14
+		if n.lfsrWidth > 0 {
+			n.lfsr |= new << 6
+		}
 	}
 	n.timer--
 }
 
 func (n *noise) tickLength() {
+	if !n.lengthEnable {
+		return
+	}
+	if n.length > 0 {
+		n.length--
+	}
 	if n.length == 0 {
 		n.enabled = false
-	} else {
-		n.length--
 	}
 }
 
@@ -73,7 +85,7 @@ func (n *noise) takeSample() float32 {
 		return 0
 	}
 
-	wave := float32(0)
+	wave := float32(1 - (n.lfsr & 0x01))
 
 	return wave
 

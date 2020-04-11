@@ -44,7 +44,7 @@ T : Take screenshot
 
 ### Tests
 
-Tetromino has accurate CPU, timer and MBC1 implementations but there is no sound, no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority).
+Tetromino has accurate CPU, timer and MBC1 implementations but sound support is incomplete. There is also no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority).
 
 | Result             | Blargg test                  | Screenshot                                                 |
 | ------------------ | ---------------------------- | ---------------------------------------------------------- |
