@@ -12,13 +12,14 @@ type noise struct {
 
 	// Internal state
 	enabled       bool
+	dacEnabled    bool
 	volume        uint8
 	timer         uint16
 	envelopeTimer uint8
 	lfsr          uint16
 }
 
-func (n *noise) trigger(dacEnabled bool) {
+func (n *noise) trigger() {
 
 	// Channel is enabled (see length counter).
 	n.enabled = true
@@ -41,7 +42,7 @@ func (n *noise) trigger(dacEnabled bool) {
 	n.lfsr = 0xffff
 
 	// Note that if the channel's DAC is off, after the above actions occur the channel will be immediately disabled again.
-	if !dacEnabled {
+	if !n.dacEnabled {
 		n.enabled = false
 	}
 
@@ -54,9 +55,21 @@ func (n *noise) tickTimer() {
 	n.timer--
 }
 
+func (n *noise) tickLength() {
+	if n.length == 0 {
+		n.enabled = false
+	} else {
+		n.length--
+	}
+}
+
+func (n *noise) tickVolumeEnvelope() {
+
+}
+
 func (n *noise) takeSample() float32 {
 
-	if !n.enabled {
+	if !n.enabled || !n.dacEnabled {
 		return 0
 	}
 

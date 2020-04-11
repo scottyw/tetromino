@@ -131,14 +131,14 @@ func (a *Audio) tickFrameSequencer() {
 	if a.frameSeqTicks%2 == 0 {
 		a.ch1.tickLength()
 		a.ch2.tickLength()
-		// a.ch3.tickLength()
-		// a.ch4.tickLength()
+		a.ch3.tickLength()
+		a.ch4.tickLength()
 	}
 
 	if (a.frameSeqTicks-7)%8 == 0 {
 		a.ch1.tickVolumeEnvelope()
 		a.ch2.tickVolumeEnvelope()
-		// a.ch4.tickVolumeEnvelope()
+		a.ch4.tickVolumeEnvelope()
 	}
 
 	if (a.frameSeqTicks-2)%4 == 0 {

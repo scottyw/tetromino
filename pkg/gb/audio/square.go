@@ -15,6 +15,7 @@ type square struct {
 	// Internal state
 	supportSweep    bool
 	enabled         bool
+	dacEnabled      bool
 	dutyIndex       uint8
 	volume          uint8
 	timer           uint16
@@ -24,7 +25,7 @@ type square struct {
 	shadowFrequency uint16
 }
 
-func (s *square) trigger(dacEnabled bool) {
+func (s *square) trigger() {
 
 	// Channel is enabled (see length counter).
 	s.enabled = true
@@ -81,7 +82,7 @@ func (s *square) trigger(dacEnabled bool) {
 	}
 
 	// Note that if the channel's DAC is off, after the above actions occur the channel will be immediately disabled again.
-	if !dacEnabled {
+	if !s.dacEnabled {
 		s.enabled = false
 	}
 
@@ -151,7 +152,7 @@ func (s *square) tickSweep() {
 
 func (s *square) takeSample() float32 {
 
-	if !s.enabled {
+	if !s.enabled || !s.dacEnabled {
 		return 0
 	}
 

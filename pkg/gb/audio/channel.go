@@ -9,24 +9,16 @@ func (a *Audio) takeSample() {
 	var wave1, wave2, wave3, wave4 float32
 
 	// channel 1
-	if a.control.ch1Enable {
-		wave1 = a.ch1.takeSample()
-	}
+	wave1 = a.ch1.takeSample()
 
 	// channel 2
-	if a.control.ch2Enable {
-		wave2 = a.ch2.takeSample()
-	}
+	wave2 = a.ch2.takeSample()
 
 	// channel 3
-	if a.control.ch3Enable {
-		wave3 = a.ch3.takeSample()
-	}
+	wave3 = a.ch3.takeSample()
 
 	// channel 4
-	if a.control.ch4Enable {
-		wave4 = a.ch4.takeSample()
-	}
+	wave4 = a.ch4.takeSample()
 
 	// Hardcode master volume for now
 	masterVolume := float32(0.6)
