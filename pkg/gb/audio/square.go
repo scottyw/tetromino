@@ -34,11 +34,6 @@ func (s *square) trigger() {
 	if s.length == 0 {
 		s.length = 64
 	}
-	// if s.supportSweep {
-	// 	fmt.Println("CH1 trigger", s.length)
-	// } else {
-	// 	fmt.Println("CH2 trigger", s.length)
-	// }
 
 	// Frequency timer is reloaded with period.
 	s.timer = (2048 - s.frequency) * 4
@@ -111,12 +106,6 @@ func (s *square) tickLength() {
 	if s.length == 0 {
 		s.enabled = false
 	}
-
-	// if s.supportSweep {
-	// 	fmt.Println("CH1 tickLength", s.length)
-	// } else {
-	// 	fmt.Println("CH2 tickLength", s.length)
-	// }
 }
 
 func (s *square) tickVolumeEnvelope() {

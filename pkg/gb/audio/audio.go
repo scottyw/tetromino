@@ -93,7 +93,7 @@ func (a *Audio) tickClock() {
 		a.tickFrameSequencer()
 		a.frameSeqTicks++
 		if a.frameSeqTicks >= 512 {
-			a.frameSeqTicks = 512
+			a.frameSeqTicks = 0
 		}
 	}
 
