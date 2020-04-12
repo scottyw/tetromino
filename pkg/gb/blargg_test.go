@@ -68,9 +68,9 @@ func TestBlarggDMGSound02(t *testing.T) {
 	runBlarggTest(t, "dmg_sound/rom_singles/02-len ctr.gb")
 }
 
-// func TestBlarggDMGSound03(t *testing.T) {
-// 	runBlarggTest(t, "dmg_sound/rom_singles/03-trigger.gb")
-// }
+func TestBlarggDMGSound03(t *testing.T) {
+	runBlarggTest(t, "dmg_sound/rom_singles/03-trigger.gb")
+}
 
 // func TestBlarggDMGSound04(t *testing.T) {
 // 	runBlarggTest(t, "dmg_sound/rom_singles/04-sweep.gb")

@@ -105,9 +105,9 @@ func (s *square) tickLength() {
 	}
 	if s.length > 0 {
 		s.length--
-	}
-	if s.length == 0 {
-		s.enabled = false
+		if s.length == 0 {
+			s.enabled = false
+		}
 	}
 }
 

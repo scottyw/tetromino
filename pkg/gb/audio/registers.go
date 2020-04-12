@@ -142,12 +142,22 @@ func (a *Audio) WriteNR14(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch1.lengthEnable = (value>>6)&0x01 > 0
 	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
+	lengthEnable := (value>>6)&0x01 > 0
+	if !a.ch1.lengthEnable && lengthEnable && a.ch1.length > 0 && a.frameSeqTicks%2 == 1 {
+		a.ch1.length--
+		if a.ch1.length == 0 && !trigger {
+			a.ch1.enabled = false
+		}
+	}
 	if trigger {
 		a.ch1.trigger()
+		if lengthEnable && a.ch1.length == 64 && a.frameSeqTicks%2 == 1 {
+			a.ch1.length--
+		}
 	}
+	a.ch1.lengthEnable = lengthEnable
 }
 
 // ReadNR14 handles reads from sound register NR14
@@ -242,12 +252,22 @@ func (a *Audio) WriteNR24(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch2.lengthEnable = (value>>6)&0x01 > 0
 	a.ch2.frequency = (a.ch2.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
+	lengthEnable := (value>>6)&0x01 > 0
+	if !a.ch2.lengthEnable && lengthEnable && a.ch2.length > 0 && a.frameSeqTicks%2 == 1 {
+		a.ch2.length--
+		if a.ch2.length == 0 && !trigger {
+			a.ch2.enabled = false
+		}
+	}
 	if trigger {
 		a.ch2.trigger()
+		if lengthEnable && a.ch2.length == 64 && a.frameSeqTicks%2 == 1 {
+			a.ch2.length--
+		}
 	}
+	a.ch2.lengthEnable = lengthEnable
 }
 
 // ReadNR24 handles reads from sound register NR24
@@ -347,12 +367,22 @@ func (a *Audio) WriteNR34(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch3.lengthEnable = (value>>6)&0x01 > 0
 	a.ch3.frequency = (a.ch3.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
+	lengthEnable := (value>>6)&0x01 > 0
+	if !a.ch3.lengthEnable && lengthEnable && a.ch3.length > 0 && a.frameSeqTicks%2 == 1 {
+		a.ch3.length--
+		if a.ch3.length == 0 && !trigger {
+			a.ch3.enabled = false
+		}
+	}
 	if trigger {
 		a.ch3.trigger()
+		if lengthEnable && a.ch3.length == 256 && a.frameSeqTicks%2 == 1 {
+			a.ch3.length--
+		}
 	}
+	a.ch3.lengthEnable = lengthEnable
 }
 
 // ReadNR34 handles reads from sound register NR34
@@ -446,11 +476,21 @@ func (a *Audio) WriteNR44(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch4.lengthEnable = (value>>6)&0x01 > 0
 	trigger := (value>>7)&0x01 > 0
+	lengthEnable := (value>>6)&0x01 > 0
+	if !a.ch4.lengthEnable && lengthEnable && a.ch4.length > 0 && a.frameSeqTicks%2 == 1 {
+		a.ch4.length--
+		if a.ch4.length == 0 && !trigger {
+			a.ch4.enabled = false
+		}
+	}
 	if trigger {
 		a.ch4.trigger()
+		if lengthEnable && a.ch4.length == 64 && a.frameSeqTicks%2 == 1 {
+			a.ch4.length--
+		}
 	}
+	a.ch4.lengthEnable = lengthEnable
 }
 
 // ReadNR44 handles reads from sound register NR44
