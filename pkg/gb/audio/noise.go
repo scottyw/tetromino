@@ -87,6 +87,8 @@ func (n *noise) takeSample() float32 {
 
 	wave := float32(1 - (n.lfsr & 0x01))
 
+	wave *= float32(n.volume) / 8
+
 	return wave
 
 }
