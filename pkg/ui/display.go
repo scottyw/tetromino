@@ -109,14 +109,6 @@ func onKeyFunc(gameboy *gb.Gameboy) func(*glfw.Window, glfw.Key, int, glfw.Actio
 			if action == glfw.Press {
 				gameboy.EmulatorAction(gb.TakeScreenshot)
 			}
-		case glfw.KeyP:
-			if action == glfw.Press {
-				gameboy.EmulatorAction(gb.RunFaster)
-			}
-		case glfw.KeyO:
-			if action == glfw.Press {
-				gameboy.EmulatorAction(gb.RunSlower)
-			}
 		}
 	}
 }

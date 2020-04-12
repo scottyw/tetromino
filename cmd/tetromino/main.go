@@ -17,7 +17,6 @@ func main() {
 	// Command line flags
 	fast := flag.Bool("fast", false, "When true, Tetromino runs the emulator as fast as possible (audio support is disabled)")
 	debugCPU := flag.Bool("debugcpu", false, "When true, CPU debugging is enabled")
-	debugTimer := flag.Bool("debugtimer", false, "When true, timer debugging is enabled")
 	debugLCD := flag.Bool("debuglcd", false, "When true, colour-based LCD debugging is enabled")
 	enableTiming := flag.Bool("timing", false, "When true, timing is output every 60 frames")
 	enableProfiling := flag.Bool("profiling", false, "When true, CPU profiling data is written to 'cpuprofile.pprof'")
@@ -25,7 +24,6 @@ func main() {
 
 	// CPU profiling
 	if *enableProfiling {
-		fmt.Println("Profiling enabled ...")
 		f, err := os.Create("cpuprofile.pprof")
 		if err != nil {
 			log.Printf("Failed to write cpuprofile.pprof: %v", err)
@@ -47,20 +45,8 @@ func main() {
 
 	opts := gb.Options{
 		RomFilename: rom,
-		Fast:        *fast,
 		DebugCPU:    *debugCPU,
-		DebugTimer:  *debugTimer,
 		DebugLCD:    *debugLCD,
-	}
-
-	if *fast {
-		fmt.Println("Fast mode enabled ...")
-	}
-	if *debugCPU {
-		fmt.Println("CPU debug mode enabled ...")
-	}
-	if *debugLCD {
-		fmt.Println("LCD debug mode enabled ...")
 	}
 
 	// Run context

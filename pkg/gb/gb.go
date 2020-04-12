@@ -14,8 +14,6 @@ import (
 	"github.com/scottyw/tetromino/pkg/gb/timer"
 )
 
-const frameDuration = float64(16742706)
-
 // Button represents a direction pad or button control
 type Button int
 
@@ -44,18 +42,12 @@ type Action int
 const (
 	// TakeScreenshot of the current LCD
 	TakeScreenshot = iota
-	// RunFaster speeds the emulator up
-	RunFaster = iota
-	// RunSlower slows the emulator down
-	RunSlower = iota
 )
 
 // Options control emulator behaviour
 type Options struct {
 	RomFilename string
-	Fast        bool
 	DebugCPU    bool
-	DebugTimer  bool
 	DebugLCD    bool
 	SBWriter    io.Writer
 }
@@ -67,9 +59,7 @@ type Gameboy struct {
 	timer    *timer.Timer
 	lcd      *lcd.LCD
 	audio    *audio.Audio
-	start    time.Time
 	opts     Options
-	dur      time.Duration
 	frame    int
 }
 
@@ -82,25 +72,18 @@ func NewGameboy(opts Options) *Gameboy {
 		rom = readRomFile(opts.RomFilename)
 	}
 	c := cpu.NewCPU(opts.DebugCPU)
-	timer := timer.NewTimer(opts.DebugTimer)
+	timer := timer.NewTimer()
 	audio := audio.NewAudio()
 	memory := mem.NewMemory(rom, opts.SBWriter, timer, audio)
 	dispatch := cpu.NewDispatch(c, memory)
 	lcd := lcd.NewLCD(memory, opts.DebugLCD)
-	start := time.Now()
-	duration := frameDuration
-	if opts.Fast {
-		duration = 0
-	}
 	return &Gameboy{
 		dispatch: dispatch,
 		memory:   memory,
 		timer:    timer,
 		lcd:      lcd,
 		audio:    audio,
-		start:    start,
 		opts:     opts,
-		dur:      time.Duration(duration),
 	}
 }
 
@@ -116,7 +99,7 @@ func readRomFile(romFilename string) []byte {
 	return rom
 }
 
-func (gb *Gameboy) runFrame(end time.Time) {
+func (gb *Gameboy) runFrame() {
 	// The Game Boy clock runs at 4.194304MHz
 	// Each loop iteration below represents one machine cycle
 	// One machine cycle is 4 clock cycles
@@ -132,27 +115,33 @@ func (gb *Gameboy) runFrame(end time.Time) {
 		}
 	}
 	gb.lcd.FrameEnd()
-	time.Sleep(time.Until(end))
 	gb.frame++
+
+	// The emulator can run a frame much faster than a real Gameboy when running on a modern computer.
+	// There is no need to sleep now between frames however, because the audio subsystem consumes
+	// samples at a fixed rate from a blocking channel. The emulator can only push audio samples into
+	// the channel at the same rate that the "speakers" consume them. Since the "speakers" are
+	// consuming the data at the rate of a real Gameboy (in order to make sound play correctly), the
+	// rest of the emulator is slowed to the same correct rate. In "fast" mode, the emulator disables
+	// the "speakers" meaning there is no constraint on how fast samples are consumed or on how fast
+	// the emulator runs.
+
 }
 
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context) {
-	end := time.Now()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			end = end.Add(gb.dur)
-			gb.runFrame(end)
+			gb.runFrame()
 		}
 	}
 }
 
 // Time the Gameboy as it runs
 func (gb *Gameboy) Time(ctx context.Context) {
-	end := time.Now()
 	for {
 		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
 		// On a real Gameboy this would take 1 second
@@ -162,8 +151,7 @@ func (gb *Gameboy) Time(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			default:
-				end = end.Add(gb.dur)
-				gb.runFrame(end)
+				gb.runFrame()
 			}
 		}
 		t1 := time.Now()
@@ -254,10 +242,6 @@ func (gb *Gameboy) EmulatorAction(action Action) {
 			t.Hour(), t.Minute(), t.Second())
 		fmt.Println("Writing screenshot to", filename)
 		gb.lcd.Screenshot(filename)
-	case RunFaster:
-		gb.dur /= 2
-	case RunSlower:
-		gb.dur *= 2
 	}
 }
 
