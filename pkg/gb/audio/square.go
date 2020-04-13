@@ -1,9 +1,17 @@
 package audio
 
+type sweep struct {
+	sweepPeriod   uint8
+	sweepIncrease bool
+	sweepShift    uint8
+
+	// Internal state
+	sweepEnabled    bool
+	sweepTimer      uint8
+	shadowFrequency uint16
+}
+
 type square struct {
-	sweepTime        uint8
-	sweepIncrease    bool
-	sweepShift       uint8
 	duty             uint8
 	length           uint8
 	initialVolume    uint8
@@ -11,18 +19,15 @@ type square struct {
 	envelopeSweep    uint8
 	frequency        uint16
 	lengthEnable     bool
+	*sweep
 
 	// Internal state
-	supportSweep    bool
-	enabled         bool
-	dacEnabled      bool
-	dutyIndex       uint8
-	volume          uint8
-	timer           uint16
-	envelopeTimer   uint8
-	sweepEnabled    bool
-	sweepTimer      uint8
-	shadowFrequency uint16
+	enabled       bool
+	dacEnabled    bool
+	dutyIndex     uint8
+	volume        uint8
+	timer         uint16
+	envelopeTimer uint8
 }
 
 func (s *square) trigger() {
@@ -40,43 +45,30 @@ func (s *square) trigger() {
 
 	// Volume envelope timer is reloaded with period.
 	s.envelopeTimer = s.envelopeSweep
+	if s.envelopeTimer == 0 {
+		s.envelopeTimer = 8
+	}
 
 	// Channel volume is reloaded from NRx2.
 	s.volume = s.initialVolume
 
-	if s.supportSweep {
+	if s.sweep != nil {
 
 		// Square 1's frequency is copied to the shadow register.
 		s.shadowFrequency = s.frequency
 
 		// The sweep timer is reloaded.
-		s.sweepTimer = s.sweepTime
+		s.sweepTimer = s.sweepPeriod
+		if s.sweepTimer == 0 {
+			s.sweepTimer = 8
+		}
 
 		// The internal enabled flag is set if either the sweep period or shift are non-zero, cleared otherwise.
-		s.sweepEnabled = s.sweepTime > 0 || s.sweepShift > 0
+		s.sweepEnabled = s.sweepPeriod > 0 || s.sweepShift > 0
 
 		// If the sweep shift is non-zero, frequency calculation and the overflow check are performed immediately.
 		if s.sweepShift > 0 {
-
-			// Frequency calculation consists of taking the value in the frequency shadow register ...
-			newFrequency := s.shadowFrequency
-
-			// ... shifting it right by sweep shift ...
-			newFrequency <<= s.sweepShift
-
-			// ... optionally negating the value ...
-			if !s.sweepIncrease {
-				newFrequency = -newFrequency
-			}
-
-			// ... and summing this with the frequency shadow register to produce a new frequency
-			newFrequency = s.shadowFrequency + newFrequency
-
-			// The overflow check simply calculates the new frequency and if this is greater than 2047, square 1 is disabled.
-			if newFrequency > 2047 {
-				s.enabled = false
-			}
-
+			s.calculateFrequency()
 		}
 
 	}
@@ -132,26 +124,35 @@ func (s *square) tickVolumeEnvelope() {
 }
 
 func (s *square) tickSweep() {
-	if s.supportSweep && s.sweepEnabled && s.sweepTime > 0 {
-		newFrequency := s.shadowFrequency
-		newFrequency <<= s.sweepShift
-		if !s.sweepIncrease {
-			newFrequency = -newFrequency
+	if !s.sweepEnabled {
+		return
+	}
+	s.sweepTimer--
+	if s.sweepTimer == 0 {
+		s.sweepTimer = s.sweepPeriod
+		if s.sweepTimer == 0 {
+			s.sweepTimer = 8
 		}
-		newFrequency = s.shadowFrequency + newFrequency
+		newFrequency := s.calculateFrequency()
 		if newFrequency < 2048 && s.sweepShift > 0 {
 			s.frequency = newFrequency
 			s.shadowFrequency = newFrequency
-			newFrequency <<= s.sweepShift
-			if !s.sweepIncrease {
-				newFrequency = -newFrequency
-			}
-			newFrequency = s.shadowFrequency + newFrequency
-			if newFrequency > 2047 {
-				s.enabled = false
-			}
+			s.calculateFrequency()
 		}
 	}
+}
+
+func (s *square) calculateFrequency() uint16 {
+	newFrequency := s.shadowFrequency
+	newFrequency >>= s.sweepShift
+	if !s.sweepIncrease {
+		newFrequency = -newFrequency
+	}
+	newFrequency = s.shadowFrequency + newFrequency
+	if newFrequency > 2047 {
+		s.enabled = false
+	}
+	return newFrequency
 }
 
 func (s *square) takeSample() float32 {

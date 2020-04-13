@@ -34,6 +34,9 @@ func (n *noise) trigger() {
 
 	// Volume envelope timer is reloaded with period.
 	n.envelopeTimer = n.envelopeSweep
+	if n.envelopeTimer == 0 {
+		n.envelopeTimer = 8
+	}
 
 	// Channel volume is reloaded from NRx2.
 	n.volume = n.initialVolume

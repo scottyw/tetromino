@@ -42,15 +42,16 @@ func (a *Audio) WriteNR10(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch1.sweepTime = (value >> 4) & 0x07
-	a.ch1.sweepIncrease = (value>>3)&0x01 > 0
+	// fmt .Printf("\nNR10- 0x%02x\n", value)
+	a.ch1.sweepPeriod = (value >> 4) & 0x07
+	a.ch1.sweepIncrease = (value>>3)&0x01 == 0
 	a.ch1.sweepShift = value & 0x07
 }
 
 // ReadNR10 handles reads from sound register NR10
 func (a *Audio) ReadNR10() uint8 {
-	nr10 := 0x80 | a.ch1.sweepTime<<4 | a.ch1.sweepShift
-	if a.ch1.sweepIncrease {
+	nr10 := 0x80 | a.ch1.sweepPeriod<<4 | a.ch1.sweepShift
+	if !a.ch1.sweepIncrease {
 		nr10 += 0x08
 	}
 	return nr10
@@ -72,6 +73,7 @@ func (a *Audio) WriteNR11(value uint8) {
 	if !a.control.on {
 		return
 	}
+	// fmt .Printf("\nNR11- 0x%02x\n", value)
 	a.ch1.duty = value >> 6
 	a.ch1.length = 64 - (value & 0x3f)
 }
@@ -93,6 +95,7 @@ func (a *Audio) WriteNR12(value uint8) {
 	if !a.control.on {
 		return
 	}
+	// fmt .Printf("\nNR12- 0x%02x\n", value)
 	a.ch1.initialVolume = value >> 4
 	a.ch1.envelopeIncrease = (value>>3)&0x01 > 0
 	a.ch1.envelopeSweep = value & 0x07
@@ -121,6 +124,7 @@ func (a *Audio) WriteNR13(value uint8) {
 	if !a.control.on {
 		return
 	}
+	// fmt .Printf("\nNR13- 0x%02x\n", value)
 	a.ch1.frequency = (a.ch1.frequency & 0x70) | uint16(value) // Update low byte
 	a.ch1.timer = (2048 - a.ch1.frequency) * 4
 }
@@ -142,6 +146,7 @@ func (a *Audio) WriteNR14(value uint8) {
 	if !a.control.on {
 		return
 	}
+	// fmt .Printf("\nNR14- 0x%02x\n", value)
 	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	lengthEnable := (value>>6)&0x01 > 0

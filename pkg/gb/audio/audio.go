@@ -13,11 +13,11 @@ const (
 type Audio struct {
 	l             chan float32
 	r             chan float32
-	ch1           square
-	ch2           square
-	ch3           wave
-	ch4           noise
-	control       control
+	ch1           *square
+	ch2           *square
+	ch3           *wave
+	ch4           *noise
+	control       *control
 	waveram       [16]uint8
 	ticks         uint64
 	frameSeqTicks uint64
@@ -27,6 +27,11 @@ type Audio struct {
 // NewAudio initializes our internal channel for audio data
 func NewAudio() *Audio {
 	audio := Audio{
+		ch1:     &square{sweep: &sweep{}},
+		ch2:     &square{},
+		ch3:     &wave{},
+		ch4:     &noise{},
+		control: &control{},
 		waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA},
 	}
 
@@ -49,10 +54,6 @@ func NewAudio() *Audio {
 	audio.WriteNR50(0x77)
 	audio.WriteNR51(0xf3)
 	audio.WriteNR52(0xf1)
-
-	// Ch 1 supports sweep, ch 2 does not
-	audio.ch1.supportSweep = true
-	audio.ch2.supportSweep = false
 
 	return &audio
 }
