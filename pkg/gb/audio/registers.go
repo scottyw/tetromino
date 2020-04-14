@@ -125,7 +125,7 @@ func (a *Audio) WriteNR13(value uint8) {
 		return
 	}
 	// fmt .Printf("\nNR13- 0x%02x\n", value)
-	a.ch1.frequency = (a.ch1.frequency & 0x70) | uint16(value) // Update low byte
+	a.ch1.frequency = (a.ch1.frequency & 0xff00) | uint16(value) // Update low byte
 	a.ch1.timer = (2048 - a.ch1.frequency) * 4
 }
 
@@ -147,7 +147,7 @@ func (a *Audio) WriteNR14(value uint8) {
 		return
 	}
 	// fmt .Printf("\nNR14- 0x%02x\n", value)
-	a.ch1.frequency = (a.ch1.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
+	a.ch1.frequency = (a.ch1.frequency & 0x00ff) | uint16(value&0x07)<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	lengthEnable := (value>>6)&0x01 > 0
 	if !a.ch1.lengthEnable && lengthEnable && a.ch1.length > 0 && a.frameSeqTicks%2 == 1 {
@@ -237,7 +237,7 @@ func (a *Audio) WriteNR23(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch2.frequency = (a.ch2.frequency & 0x70) | uint16(value) // Update low byte
+	a.ch2.frequency = (a.ch2.frequency & 0xff00) | uint16(value) // Update low byte
 }
 
 // ReadNR23 handles reads from sound register NR23
@@ -257,7 +257,7 @@ func (a *Audio) WriteNR24(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch2.frequency = (a.ch2.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
+	a.ch2.frequency = (a.ch2.frequency & 0x00ff) | uint16(value&0x07)<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	lengthEnable := (value>>6)&0x01 > 0
 	if !a.ch2.lengthEnable && lengthEnable && a.ch2.length > 0 && a.frameSeqTicks%2 == 1 {
@@ -352,7 +352,7 @@ func (a *Audio) WriteNR33(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch3.frequency = (a.ch3.frequency & 0x70) | uint16(value) // Update low byte
+	a.ch3.frequency = (a.ch3.frequency & 0xff00) | uint16(value) // Update low byte
 }
 
 // ReadNR33 handles reads from sound register NR33
@@ -372,7 +372,7 @@ func (a *Audio) WriteNR34(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch3.frequency = (a.ch3.frequency & 0x0f) | uint16((value&0x07))<<8 // Update high byte
+	a.ch3.frequency = (a.ch3.frequency & 0x00ff) | uint16(value&0x07)<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	lengthEnable := (value>>6)&0x01 > 0
 	if !a.ch3.lengthEnable && lengthEnable && a.ch3.length > 0 && a.frameSeqTicks%2 == 1 {
