@@ -18,7 +18,6 @@ type Audio struct {
 	ch3           *wave
 	ch4           *noise
 	control       *control
-	waveram       [16]uint8
 	ticks         uint64
 	frameSeqTicks uint64
 	samplerTicks  float64
@@ -29,10 +28,9 @@ func NewAudio() *Audio {
 	audio := Audio{
 		ch1:     &square{sweep: &sweep{}},
 		ch2:     &square{},
-		ch3:     &wave{},
+		ch3:     &wave{waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA}},
 		ch4:     &noise{},
 		control: &control{},
-		waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA},
 	}
 
 	// Set default values for the NR registers

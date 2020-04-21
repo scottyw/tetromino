@@ -72,9 +72,9 @@ func (n *noise) tickLength() {
 	}
 	if n.length > 0 {
 		n.length--
-	}
-	if n.length == 0 {
-		n.enabled = false
+		if n.length == 0 {
+			n.enabled = false
+		}
 	}
 }
 

@@ -1,17 +1,19 @@
 package audio
 
 type wave struct {
-	length             uint16
-	initialOutputLevel uint8
-	frequency          uint16
-	lengthEnable       bool
+	length       uint16
+	outputLevel  uint8
+	frequency    uint16
+	lengthEnable bool
+	waveram      [16]uint8
 
 	// Internal state
 	enabled     bool
 	dacEnabled  bool
 	timer       uint16
-	outputLevel uint8
+	outputShift uint8
 	position    uint8
+	sample      uint8
 }
 
 func (w *wave) trigger() {
@@ -28,7 +30,11 @@ func (w *wave) trigger() {
 	w.timer = (2048 - w.frequency) * 2
 
 	// Channel volume is reloaded from NRx2.
-	w.outputLevel = w.initialOutputLevel
+	if w.outputLevel == 0 {
+		w.outputShift = 4
+	} else {
+		w.outputShift = w.outputLevel - 1
+	}
 
 	// Wave channel's position is set to 0 but sample buffer is NOT refilled.
 	w.position = 0
@@ -42,7 +48,15 @@ func (w *wave) trigger() {
 
 func (w *wave) tickTimer() {
 	if w.timer == 0 {
-		w.timer = (2048 - w.frequency) * 4
+		w.position++
+		if w.position >= 32 {
+			w.position = 0
+		}
+		if w.position%2 == 0 {
+			w.sample = w.waveram[w.position/2] >> 4
+		} else {
+			w.sample = w.waveram[(w.position-1)/2] & 0x0f
+		}
 	}
 	w.timer--
 }
@@ -53,9 +67,9 @@ func (w *wave) tickLength() {
 	}
 	if w.length > 0 {
 		w.length--
-	}
-	if w.length == 0 {
-		w.enabled = false
+		if w.length == 0 {
+			w.enabled = false
+		}
 	}
 }
 
@@ -65,8 +79,6 @@ func (w *wave) takeSample() float32 {
 		return 0
 	}
 
-	wave := float32(0)
-
-	return wave
+	return float32(w.sample>>w.outputShift) / 15
 
 }

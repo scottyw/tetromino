@@ -336,12 +336,12 @@ func (a *Audio) WriteNR32(value uint8) {
 	if !a.control.on {
 		return
 	}
-	a.ch3.initialOutputLevel = (value >> 5) & 0x03
+	a.ch3.outputLevel = (value >> 5) & 0x03
 }
 
 // ReadNR32 handles reads from sound register NR32
 func (a *Audio) ReadNR32() uint8 {
-	return 0x9f | a.ch3.initialOutputLevel<<5
+	return 0x9f | a.ch3.outputLevel<<5
 }
 
 // FF1D - NR33 - Channel 3 Frequency's lower data (W)
@@ -663,10 +663,10 @@ func (a *Audio) ReadNR52() uint8 {
 
 // WriteWaveRAM updates the audio channel 3 wave RAM
 func (a *Audio) WriteWaveRAM(addr uint16, value uint8) {
-	a.waveram[addr-0xff30] = value
+	a.ch3.waveram[addr-0xff30] = value
 }
 
 // ReadWaveRAM reads the audio channel 3 wave RAM
 func (a *Audio) ReadWaveRAM(addr uint16) uint8 {
-	return a.waveram[addr-0xff30]
+	return a.ch3.waveram[addr-0xff30]
 }
