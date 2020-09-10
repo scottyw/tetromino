@@ -12,7 +12,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 	opts := Options{
 		RomFilename: "testdata/mooneye-gb_hwtests/" + filename,
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	gameboy := NewGameboy(opts)
 	go func() {

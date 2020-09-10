@@ -15,7 +15,7 @@ func runBlarggTest(t *testing.T, filename string) {
 		RomFilename: "testdata/blargg/" + filename,
 		SBWriter:    sbWriter,
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
 	gameboy := NewGameboy(opts)
 	go func() {
