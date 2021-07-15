@@ -132,12 +132,13 @@ func (s *square) tickSweep() {
 		s.sweepTimer = s.sweepPeriod
 		if s.sweepTimer == 0 {
 			s.sweepTimer = 8
-		}
-		newFrequency := s.calculateFrequency()
-		if newFrequency < 2048 && s.sweepShift > 0 {
-			s.frequency = newFrequency
-			s.shadowFrequency = newFrequency
-			s.calculateFrequency()
+		} else {
+			newFrequency := s.calculateFrequency()
+			if newFrequency < 2048 && s.sweepShift > 0 {
+				s.frequency = newFrequency
+				s.shadowFrequency = newFrequency
+				s.calculateFrequency()
+			}
 		}
 	}
 }
