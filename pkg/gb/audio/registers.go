@@ -46,6 +46,10 @@ func (a *Audio) WriteNR10(value uint8) {
 	a.ch1.sweepPeriod = (value >> 4) & 0x07
 	a.ch1.sweepIncrease = (value>>3)&0x01 == 0
 	a.ch1.sweepShift = value & 0x07
+	if a.ch1.sweepIncrease && a.ch1.sweepDescending {
+		a.ch1.enabled = false
+	}
+	a.ch1.sweepDescending = false
 }
 
 // ReadNR10 handles reads from sound register NR10

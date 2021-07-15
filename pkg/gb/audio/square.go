@@ -7,6 +7,7 @@ type sweep struct {
 
 	// Internal state
 	sweepEnabled    bool
+	sweepDescending bool
 	sweepTimer      uint8
 	shadowFrequency uint16
 }
@@ -148,6 +149,7 @@ func (s *square) calculateFrequency() uint16 {
 	newFrequency >>= s.sweepShift
 	if !s.sweepIncrease {
 		newFrequency = -newFrequency
+		s.sweepDescending = true
 	}
 	newFrequency = s.shadowFrequency + newFrequency
 	if newFrequency > 2047 {

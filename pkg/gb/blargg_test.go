@@ -76,9 +76,9 @@ func TestBlarggDMGSound04(t *testing.T) {
 	runBlarggTest(t, "dmg_sound/rom_singles/04-sweep.gb")
 }
 
-// func TestBlarggDMGSound05(t *testing.T) {
-// 	runBlarggTest(t, "dmg_sound/rom_singles/05-sweep details.gb")
-// }
+func TestBlarggDMGSound05(t *testing.T) {
+	runBlarggTest(t, "dmg_sound/rom_singles/05-sweep details.gb")
+}
 
 func TestBlarggDMGSound06(t *testing.T) {
 	runBlarggTest(t, "dmg_sound/rom_singles/06-overflow on trigger.gb")
