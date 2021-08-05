@@ -74,18 +74,17 @@ func (a *Audio) ReadNR10() uint8 {
 
 // WriteNR11 handles writes to sound register NR11
 func (a *Audio) WriteNR11(value uint8) {
-	if !a.control.on {
-		return
-	}
 	// fmt.Printf("> NR11 - 0x%02x - %+v\n", value, a.ch1)
-	a.ch1.duty = value >> 6
+	if a.control.on {
+		a.ch1.duty = value >> 6
+	}
 	a.ch1.length = 64 - (value & 0x3f)
 }
 
 // ReadNR11 handles reads from sound register NR11
 func (a *Audio) ReadNR11() uint8 {
 	nr11 := 0x3f | a.ch1.duty<<6
-	// fmt.Printf("< NR11 - 0x%02x - %+v\n", nr11, a.ch1)
+	// fmt.Printf("< NR11 - 0x%02x - %v - %+v\n", nr11, a.control.on, a.ch1)
 	return nr11
 }
 
@@ -197,10 +196,9 @@ func (a *Audio) ReadNR14() uint8 {
 
 // WriteNR21 handles writes to sound register NR21
 func (a *Audio) WriteNR21(value uint8) {
-	if !a.control.on {
-		return
+	if a.control.on {
+		a.ch2.duty = value >> 6
 	}
-	a.ch2.duty = value >> 6
 	a.ch2.length = 64 - (value & 0x3f)
 }
 
@@ -323,9 +321,6 @@ func (a *Audio) ReadNR30() uint8 {
 
 // WriteNR31 handles writes to sound register NR31
 func (a *Audio) WriteNR31(value uint8) {
-	if !a.control.on {
-		return
-	}
 	a.ch3.length = 256 - uint16(value)
 }
 
@@ -416,9 +411,6 @@ func (a *Audio) ReadNR34() uint8 {
 
 // WriteNR41 handles writes to sound register NR41
 func (a *Audio) WriteNR41(value uint8) {
-	if !a.control.on {
-		return
-	}
 	a.ch4.length = 64 - (value & 0x3f)
 }
 
@@ -629,25 +621,23 @@ func (a *Audio) WriteNR52(value uint8) {
 	if (value >> 7) == 0 {
 		a.control.on = true
 		a.WriteNR10(0x00)
-		a.WriteNR11(0x00)
 		a.WriteNR12(0x00)
 		a.WriteNR13(0x00)
 		a.WriteNR14(0x00)
-		a.WriteNR21(0x00)
 		a.WriteNR22(0x00)
 		a.WriteNR23(0x00)
 		a.WriteNR24(0x00)
 		a.WriteNR30(0x00)
-		a.WriteNR31(0x00)
 		a.WriteNR32(0x00)
 		a.WriteNR33(0x00)
 		a.WriteNR34(0x00)
-		a.WriteNR41(0x00)
 		a.WriteNR42(0x00)
 		a.WriteNR43(0x00)
 		a.WriteNR44(0x00)
 		a.WriteNR50(0x00)
 		a.WriteNR51(0x00)
+		a.ch1.duty = 0
+		a.ch2.duty = 0
 		a.control.on = false
 	} else {
 		if !a.control.on {
