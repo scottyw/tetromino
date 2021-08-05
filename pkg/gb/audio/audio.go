@@ -31,6 +31,7 @@ func NewAudio() *Audio {
 		ch3:     &wave{waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA}},
 		ch4:     &noise{},
 		control: &control{},
+		ticks:   1,
 	}
 
 	// Set default values for the NR registers
@@ -78,8 +79,8 @@ func (a *Audio) EndMachineCycle() {
 }
 
 func (a *Audio) tickClock() {
-	if a.ticks >= 4194304 {
-		a.ticks = 0
+	if a.ticks > 4194304 {
+		a.ticks = 1
 		a.frameSeqTicks = 0
 		a.samplerTicks = 0
 	}

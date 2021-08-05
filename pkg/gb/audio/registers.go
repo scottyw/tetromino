@@ -14,7 +14,6 @@ type control struct {
 	volumeLeft     uint8
 	vinRightEnable bool
 	volumeRight    uint8
-	highNibble     uint8
 }
 
 // FF10 - NR10 - Channel 1 Sweep register (R/W)
@@ -42,7 +41,7 @@ func (a *Audio) WriteNR10(value uint8) {
 	if !a.control.on {
 		return
 	}
-	// fmt .Printf("\nNR10- 0x%02x\n", value)
+	// fmt.Printf("> NR10 - 0x%02x - %+v\n", value, a.ch1)
 	a.ch1.sweepPeriod = (value >> 4) & 0x07
 	a.ch1.sweepIncrease = (value>>3)&0x01 == 0
 	a.ch1.sweepShift = value & 0x07
@@ -58,6 +57,7 @@ func (a *Audio) ReadNR10() uint8 {
 	if !a.ch1.sweepIncrease {
 		nr10 += 0x08
 	}
+	// fmt.Printf("< NR10 - 0x%02x - %+v\n", nr10, a.ch1)
 	return nr10
 }
 
@@ -77,14 +77,16 @@ func (a *Audio) WriteNR11(value uint8) {
 	if !a.control.on {
 		return
 	}
-	// fmt .Printf("\nNR11- 0x%02x\n", value)
+	// fmt.Printf("> NR11 - 0x%02x - %+v\n", value, a.ch1)
 	a.ch1.duty = value >> 6
 	a.ch1.length = 64 - (value & 0x3f)
 }
 
 // ReadNR11 handles reads from sound register NR11
 func (a *Audio) ReadNR11() uint8 {
-	return 0x3f | a.ch1.duty<<6
+	nr11 := 0x3f | a.ch1.duty<<6
+	// fmt.Printf("< NR11 - 0x%02x - %+v\n", nr11, a.ch1)
+	return nr11
 }
 
 // FF12 - NR12 - Channel 1 Volume Envelope (R/W)
@@ -99,7 +101,7 @@ func (a *Audio) WriteNR12(value uint8) {
 	if !a.control.on {
 		return
 	}
-	// fmt .Printf("\nNR12- 0x%02x\n", value)
+	// fmt.Printf("> NR12 - 0x%02x - %+v\n", value, a.ch1)
 	a.ch1.initialVolume = value >> 4
 	a.ch1.envelopeIncrease = (value>>3)&0x01 > 0
 	a.ch1.envelopeSweep = value & 0x07
@@ -115,6 +117,7 @@ func (a *Audio) ReadNR12() uint8 {
 	if a.ch1.envelopeIncrease {
 		nr12 += 0x08
 	}
+	// fmt.Printf("< NR12 - 0x%02x - %+v\n", nr12, a.ch1)
 	return nr12
 }
 
@@ -128,13 +131,15 @@ func (a *Audio) WriteNR13(value uint8) {
 	if !a.control.on {
 		return
 	}
-	// fmt .Printf("\nNR13- 0x%02x\n", value)
+	// fmt.Printf("> NR13 - 0x%02x - %+v\n", value, a.ch1)
+	// fmt .Printf("NR13- 0x%02x\n", value)
 	a.ch1.frequency = (a.ch1.frequency & 0xff00) | uint16(value) // Update low byte
 	a.ch1.timer = (2048 - a.ch1.frequency) * 4
 }
 
 // ReadNR13 handles reads from sound register NR13
 func (a *Audio) ReadNR13() uint8 {
+	// fmt.Printf("< NR13 - 0xff - %+v\n", a.ch1)
 	return 0xff
 }
 
@@ -150,7 +155,7 @@ func (a *Audio) WriteNR14(value uint8) {
 	if !a.control.on {
 		return
 	}
-	// fmt .Printf("\nNR14- 0x%02x\n", value)
+	// fmt.Printf("> NR14 - 0x%02x - %+v\n", value, a.ch1)
 	a.ch1.frequency = (a.ch1.frequency & 0x00ff) | uint16(value&0x07)<<8 // Update high byte
 	trigger := (value>>7)&0x01 > 0
 	lengthEnable := (value>>6)&0x01 > 0
@@ -172,8 +177,10 @@ func (a *Audio) WriteNR14(value uint8) {
 // ReadNR14 handles reads from sound register NR14
 func (a *Audio) ReadNR14() uint8 {
 	if a.ch1.lengthEnable {
+		// fmt.Printf("< NR14 - 0xff - %+v\n", a.ch1)
 		return 0xff
 	}
+	// fmt.Printf("< NR14 - 0xbf - %+v\n", a.ch1)
 	return 0xbf
 }
 
@@ -618,7 +625,7 @@ func (a *Audio) ReadNR51() uint8 {
 
 // WriteNR52 handles writes to sound register NR52
 func (a *Audio) WriteNR52(value uint8) {
-	a.control.highNibble = (value & 0xf0)
+	// fmt.Printf("> NR52 - 0x%02x\n", value)
 	if (value >> 7) == 0 {
 		a.control.on = true
 		a.WriteNR10(0x00)
@@ -643,13 +650,19 @@ func (a *Audio) WriteNR52(value uint8) {
 		a.WriteNR51(0x00)
 		a.control.on = false
 	} else {
+		if !a.control.on {
+			a.frameSeqTicks = 0
+		}
 		a.control.on = true
 	}
 }
 
 // ReadNR52 handles reads from sound register NR52
 func (a *Audio) ReadNR52() uint8 {
-	nr52 := a.control.highNibble
+	nr52 := uint8(0x70)
+	if a.control.on {
+		nr52 += 0x80
+	}
 	if a.ch4.enabled {
 		nr52 += 0x08
 	}
@@ -662,7 +675,8 @@ func (a *Audio) ReadNR52() uint8 {
 	if a.ch1.enabled {
 		nr52 += 0x01
 	}
-	return 0x70 | nr52
+	// fmt.Printf("< NR52 - 0x%02x\n", nr52)
+	return nr52
 }
 
 // WriteWaveRAM updates the audio channel 3 wave RAM
