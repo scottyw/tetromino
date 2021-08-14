@@ -10,9 +10,9 @@ import (
 
 func runMooneyeTest(t *testing.T, filename string) {
 	opts := Options{
-		RomFilename: "testdata/mooneye-gb_hwtests/" + filename,
+		RomFilename: filename,
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	gameboy := NewGameboy(opts)
 	go func() {
@@ -26,170 +26,277 @@ func runMooneyeTest(t *testing.T, filename string) {
 					return
 				}
 			}
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 	}()
 	gameboy.Run(ctx)
 	<-ctx.Done()
-	screenshotFilename := fmt.Sprintf("testresults/%s.png", strings.Replace(filename, "/", "_", -1))
+	screenshotFilename := fmt.Sprintf(
+		"testresults/%s.png",
+		strings.Replace(
+			strings.TrimPrefix(filename, "testdata/mooneye-gb_hwtests/"),
+			"/", "_", -1),
+	)
 	gameboy.lcd.Screenshot(screenshotFilename)
 	if gameboy.dispatch.TestA() != 0 || !gameboy.dispatch.Mooneye {
 		t.Errorf("Test ROM failed: %s", filename)
-		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
+		// fmt.Printf("| :boom: fail | %s | [pic](%s) |\n", filename, screenshotFilename)
 	} else {
-		// fmt.Printf("| :green_heart: pass | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
+		// fmt.Printf("| :green_heart: pass | %s | [pic](%s) |\n", filename, screenshotFilename)
 	}
 
 }
 
-func TestMooneye00(t *testing.T) { runMooneyeTest(t, "acceptance/add_sp_e_timing.gb") }
-
-func TestMooneye01(t *testing.T) { runMooneyeTest(t, "acceptance/bits/mem_oam.gb") }
-
-func TestMooneye02(t *testing.T) { runMooneyeTest(t, "acceptance/bits/reg_f.gb") }
-
-func TestMooneye03(t *testing.T) { runMooneyeTest(t, "acceptance/bits/unused_hwio-GS.gb") }
-
-func TestMooneye06(t *testing.T) { runMooneyeTest(t, "acceptance/boot_div-dmgABCmgb.gb") }
-
-// func TestMooneye10(t *testing.T) { runMooneyeTest(t, "acceptance/boot_hwio-dmgABCmgb.gb") }
-
-func TestMooneye12(t *testing.T) { runMooneyeTest(t, "acceptance/boot_regs-dmgABC.gb") }
-
-func TestMooneye16(t *testing.T) { runMooneyeTest(t, "acceptance/call_cc_timing.gb") }
-
-// func TestMooneye17(t *testing.T) { runMooneyeTest(t, "acceptance/call_cc_timing2.gb") }
-
-func TestMooneye18(t *testing.T) { runMooneyeTest(t, "acceptance/call_timing.gb") }
-
-// func TestMooneye19(t *testing.T) { runMooneyeTest(t, "acceptance/call_timing2.gb") }
-
-// func TestMooneye20(t *testing.T) { runMooneyeTest(t, "acceptance/di_timing-GS.gb") }
-
-func TestMooneye21(t *testing.T) { runMooneyeTest(t, "acceptance/div_timing.gb") }
-
-// func TestMooneye22(t *testing.T) { runMooneyeTest(t, "acceptance/ei_sequence.gb") }
-
-// func TestMooneye23(t *testing.T) { runMooneyeTest(t, "acceptance/ei_timing.gb") }
-
-func TestMooneye24(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime0_ei.gb") }
-
-func TestMooneye25(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime0_nointr_timing.gb") }
-
-func TestMooneye26(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime1_timing.gb") }
-
-// func TestMooneye27(t *testing.T) { runMooneyeTest(t, "acceptance/halt_ime1_timing2-GS.gb") }
-
-// func TestMooneye28(t *testing.T) { runMooneyeTest(t, "acceptance/if_ie_registers.gb") }
-
-func TestMooneye29(t *testing.T) { runMooneyeTest(t, "acceptance/instr/daa.gb") }
-
-// func TestMooneye30(t *testing.T) { runMooneyeTest(t, "acceptance/interrupts/ie_push.gb") }
-
-func TestMooneye31(t *testing.T) { runMooneyeTest(t, "acceptance/intr_timing.gb") }
-
-func TestMooneye32(t *testing.T) { runMooneyeTest(t, "acceptance/jp_cc_timing.gb") }
-
-func TestMooneye33(t *testing.T) { runMooneyeTest(t, "acceptance/jp_timing.gb") }
-
-// func TestMooneye34(t *testing.T) { runMooneyeTest(t, "acceptance/ld_hl_sp_e_timing.gb") }
-
-func TestMooneye35(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/basic.gb") }
-
-func TestMooneye36(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/reg_read.gb") }
-
-func TestMooneye37(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma/sources-dmgABCmgbS.gb") }
-
-func TestMooneye38(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_restart.gb") }
-
-// func TestMooneye39(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_start.gb") }
-
-func TestMooneye40(t *testing.T) { runMooneyeTest(t, "acceptance/oam_dma_timing.gb") }
-
-func TestMooneye41(t *testing.T) { runMooneyeTest(t, "acceptance/pop_timing.gb") }
-
-// func TestMooneye42(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/hblank_ly_scx_timing-GS.gb") }
-
-// func TestMooneye43(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/intr_1_2_timing-GS.gb") }
-
-// func TestMooneye44(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/intr_2_0_timing.gb") }
-
-// func TestMooneye45(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/intr_2_mode0_timing.gb") }
-
-// func TestMooneye46(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/intr_2_mode0_timing_sprites.gb") }
-
-// func TestMooneye47(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/intr_2_mode3_timing.gb") }
-
-// func TestMooneye48(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/intr_2_oam_ok_timing.gb") }
-
-// func TestMooneye49(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/lcdon_timing-dmgABCmgbS.gb") }
-
-// func TestMooneye50(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/lcdon_write_timing-GS.gb") }
-
-// func TestMooneye51(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/stat_irq_blocking.gb") }
-
-// func TestMooneye52(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/stat_lyc_onoff.gb") }
-
-// func TestMooneye53(t *testing.T) { runMooneyeTest(t, "acceptance/ppu/vblank_stat_intr-GS.gb") }
-
-// func TestMooneye54(t *testing.T) { runMooneyeTest(t, "acceptance/push_timing.gb") }
-
-// func TestMooneye55(t *testing.T) { runMooneyeTest(t, "acceptance/rapid_di_ei.gb") }
-
-func TestMooneye56(t *testing.T) { runMooneyeTest(t, "acceptance/ret_cc_timing.gb") }
-
-func TestMooneye57(t *testing.T) { runMooneyeTest(t, "acceptance/ret_timing.gb") }
-
-// func TestMooneye58(t *testing.T) { runMooneyeTest(t, "acceptance/reti_intr_timing.gb") }
-
-func TestMooneye59(t *testing.T) { runMooneyeTest(t, "acceptance/reti_timing.gb") }
-
-// func TestMooneye60(t *testing.T) { runMooneyeTest(t, "acceptance/rst_timing.gb") }
-
-// func TestMooneye61(t *testing.T) { runMooneyeTest(t, "acceptance/serial/boot_sclk_align-dmgABCmgb.gb") }
-
-func TestMooneye62(t *testing.T) { runMooneyeTest(t, "acceptance/timer/div_write.gb") }
-
-func TestMooneye63(t *testing.T) { runMooneyeTest(t, "acceptance/timer/rapid_toggle.gb") }
-
-func TestMooneye64(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim00.gb") }
-
-func TestMooneye65(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim00_div_trigger.gb") }
-
-func TestMooneye66(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim01.gb") }
-
-func TestMooneye67(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim01_div_trigger.gb") }
-
-func TestMooneye68(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim10.gb") }
-
-func TestMooneye69(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim10_div_trigger.gb") }
-
-func TestMooneye70(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim11.gb") }
-
-func TestMooneye71(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tim11_div_trigger.gb") }
-
-func TestMooneye72(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_reload.gb") }
-
-func TestMooneye73(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tima_write_reloading.gb") }
-
-func TestMooneye74(t *testing.T) { runMooneyeTest(t, "acceptance/timer/tma_write_reloading.gb") }
-
-func TestMooneye75(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/bits_ram_en.gb") }
-
-// func TestMooneye76(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/multicart_rom_8Mb.gb") }
-
-func TestMooneye77(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/ram_256Kb.gb") }
-
-func TestMooneye78(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/ram_64Kb.gb") }
-
-func TestMooneye79(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_16Mb.gb") }
-
-func TestMooneye80(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_1Mb.gb") }
-
-func TestMooneye81(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_2Mb.gb") }
-
-func TestMooneye82(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_4Mb.gb") }
-
-func TestMooneye83(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_512Kb.gb") }
-
-func TestMooneye84(t *testing.T) { runMooneyeTest(t, "emulator-only/mbc1/rom_8Mb.gb") }
+func TestMooneyeBoot(t *testing.T) {
+
+	for _, filename := range []string{
+		// "testdata/mooneye-gb_hwtests/acceptance/boot_div-dmg0.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_div-dmgABCmgb.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_div-S.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_div2-S.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_hwio-dmg0.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_hwio-dmgABCmgb.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_hwio-S.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-dmg0.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-dmgABC.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-mgb.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-sgb.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-sgb2.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeTiming(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/add_sp_e_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/call_cc_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/call_cc_timing2.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/call_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/call_timing2.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/di_timing-GS.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/div_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ei_sequence.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ei_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/halt_ime0_ei.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/halt_ime0_nointr_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/halt_ime1_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/halt_ime1_timing2-GS.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/if_ie_registers.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/intr_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/jp_cc_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/jp_timing.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/ld_hl_sp_e_timing.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/pop_timing.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/push_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/rapid_di_ei.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ret_cc_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ret_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/reti_intr_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/reti_timing.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/rst_timing.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeBits(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/bits/mem_oam.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/bits/reg_f.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/bits/unused_hwio-GS.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeDAA(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/instr/daa.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeInterrupts(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/interrupts/ie_push.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeOAMDMA(t *testing.T) {
+
+	for _, filename := range []string{
+		// "testdata/mooneye-gb_hwtests/acceptance/oam_dma_restart.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/oam_dma_start.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/oam_dma_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/oam_dma/basic.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/oam_dma/reg_read.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/oam_dma/sources-GS.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyePPU(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/hblank_ly_scx_timing-GS.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/ppu/intr_1_2_timing-GS.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/intr_2_0_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/intr_2_mode0_timing_sprites.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/intr_2_mode0_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/intr_2_mode3_timing.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/intr_2_oam_ok_timing.gb",
+		// "testdata/mooneye-gb_hwtests/acceptance/ppu/lcdon_timing-GS.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/lcdon_write_timing-GS.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/stat_irq_blocking.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/stat_lyc_onoff.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/ppu/vblank_stat_intr-GS.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeSerial(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/serial/boot_sclk_align-dmgABCmgb.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeTimer(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/acceptance/timer/div_write.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/rapid_toggle.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim00_div_trigger.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim00.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim01_div_trigger.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim01.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim10_div_trigger.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim10.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim11_div_trigger.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tim11.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tima_reload.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tima_write_reloading.gb",
+		"testdata/mooneye-gb_hwtests/acceptance/timer/tma_write_reloading.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeMBC1(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/bits_bank1.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/bits_bank2.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/bits_mode.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/bits_ramg.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/multicart_rom_8Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/ram_256Kb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/ram_64Kb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_16Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_1Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_2Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_4Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_512Kb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_8Mb.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeMBC2(t *testing.T) {
+
+	for _, filename := range []string{
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/bits_ramg.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/bits_romb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/bits_unused.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/ram.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/rom_1Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/rom_2Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc2/rom_512kb.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeMBC5(t *testing.T) {
+
+	for _, filename := range []string{
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_16Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_1Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_2Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_32Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_4Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_512kb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_64Mb.gb",
+		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_8Mb.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
+
+func TestMooneyeMisc(t *testing.T) {
+
+	for _, filename := range []string{
+		"testdata/mooneye-gb_hwtests/misc/bits/unused_hwio-C.gb",
+		"testdata/mooneye-gb_hwtests/misc/boot_div-A.gb",
+		"testdata/mooneye-gb_hwtests/misc/boot_div-cgb0.gb",
+		"testdata/mooneye-gb_hwtests/misc/boot_div-cgbABCDE.gb",
+		"testdata/mooneye-gb_hwtests/misc/boot_hwio-C.gb",
+		"testdata/mooneye-gb_hwtests/misc/boot_regs-A.gb",
+		"testdata/mooneye-gb_hwtests/misc/boot_regs-cgb.gb",
+		"testdata/mooneye-gb_hwtests/misc/ppu/vblank_stat_intr-C.gb",
+	} {
+		t.Run(filename, func(t *testing.T) {
+			runMooneyeTest(t, filename)
+		})
+	}
+
+}
