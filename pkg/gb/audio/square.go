@@ -29,9 +29,12 @@ type square struct {
 	volume        uint8
 	timer         uint16
 	envelopeTimer uint8
+	triggered     bool
 }
 
 func (s *square) trigger() {
+
+	s.triggered = true
 
 	// Channel is enabled (see length counter).
 	s.enabled = true

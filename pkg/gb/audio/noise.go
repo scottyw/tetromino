@@ -17,9 +17,12 @@ type noise struct {
 	timer         uint16
 	envelopeTimer uint8
 	lfsr          uint16
+	triggered     bool
 }
 
 func (n *noise) trigger() {
+
+	n.triggered = true
 
 	// Channel is enabled (see length counter).
 	n.enabled = true

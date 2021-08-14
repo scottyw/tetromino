@@ -8,15 +8,20 @@ type wave struct {
 	waveram      [16]uint8
 
 	// Internal state
-	enabled     bool
-	dacEnabled  bool
-	timer       uint16
-	outputShift uint8
-	position    uint8
-	sample      uint8
+	enabled      bool
+	dacEnabled   bool
+	timer        uint16
+	outputShift  uint8
+	position     uint8
+	lastAccessed uint8
+	sampleBuffer uint8
+	sampleTimer  uint8
+	triggered    bool
 }
 
 func (w *wave) trigger() {
+
+	w.triggered = true
 
 	// Channel is enabled (see length counter).
 	w.enabled = true
@@ -47,18 +52,25 @@ func (w *wave) trigger() {
 }
 
 func (w *wave) tickTimer() {
+	if !w.enabled {
+		return
+	}
 	if w.timer == 0 {
+		w.timer = (2048 - w.frequency) * 2
 		w.position++
 		if w.position >= 32 {
 			w.position = 0
 		}
+		w.lastAccessed = w.position / 2
 		if w.position%2 == 0 {
-			w.sample = w.waveram[w.position/2] >> 4
+			w.sampleBuffer = w.waveram[w.lastAccessed] >> 4
 		} else {
-			w.sample = w.waveram[(w.position-1)/2] & 0x0f
+			w.sampleBuffer = w.waveram[w.lastAccessed] & 0x0f
 		}
+		w.sampleTimer = 0
 	}
 	w.timer--
+	w.sampleTimer++
 }
 
 func (w *wave) tickLength() {
@@ -74,11 +86,8 @@ func (w *wave) tickLength() {
 }
 
 func (w *wave) takeSample() float32 {
-
 	if !w.enabled {
 		return 0
 	}
-
-	return float32(w.sample>>w.outputShift) / 15
-
+	return float32(w.sampleBuffer>>w.outputShift) / 15
 }

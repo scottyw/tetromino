@@ -39,7 +39,7 @@ func runBlarggTest(t *testing.T, filename string) {
 				}
 			}
 			// Check every 100ms for a result
-			time.Sleep(100 * time.Millisecond)
+			time.Sleep(1000 * time.Millisecond)
 		}
 	}()
 	gameboy.Run(ctx)
@@ -77,9 +77,9 @@ func TestBlarggDMGSound(t *testing.T) {
 		"testdata/blargg/dmg_sound/rom_singles/06-overflow on trigger.gb",
 		"testdata/blargg/dmg_sound/rom_singles/07-len sweep period sync.gb",
 		"testdata/blargg/dmg_sound/rom_singles/08-len ctr during power.gb",
-		// "testdata/blargg/dmg_sound/rom_singles/09-wave read while on.gb",
+		"testdata/blargg/dmg_sound/rom_singles/09-wave read while on.gb",
 		// "testdata/blargg/dmg_sound/rom_singles/10-wave trigger while on.gb",
-		// "testdata/blargg/dmg_sound/rom_singles/11-regs after power.gb",
+		"testdata/blargg/dmg_sound/rom_singles/11-regs after power.gb",
 		// "testdata/blargg/dmg_sound/rom_singles/12-wave write while on.gb",
 	} {
 		t.Run(filename, func(t *testing.T) {

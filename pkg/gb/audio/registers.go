@@ -671,10 +671,21 @@ func (a *Audio) ReadNR52() uint8 {
 
 // WriteWaveRAM updates the audio channel 3 wave RAM
 func (a *Audio) WriteWaveRAM(addr uint16, value uint8) {
+	if a.ch3.enabled {
+		if a.ch3.sampleTimer <= 2 {
+			a.ch3.waveram[a.ch3.lastAccessed] = value
+		}
+	}
 	a.ch3.waveram[addr-0xff30] = value
 }
 
 // ReadWaveRAM reads the audio channel 3 wave RAM
 func (a *Audio) ReadWaveRAM(addr uint16) uint8 {
+	if a.ch3.enabled {
+		if a.ch3.sampleTimer <= 2 {
+			return a.ch3.waveram[a.ch3.lastAccessed]
+		}
+		return 0xff
+	}
 	return a.ch3.waveram[addr-0xff30]
 }

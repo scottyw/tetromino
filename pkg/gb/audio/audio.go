@@ -26,9 +26,11 @@ type Audio struct {
 // NewAudio initializes our internal channel for audio data
 func NewAudio() *Audio {
 	audio := Audio{
-		ch1:     &square{sweep: &sweep{}},
-		ch2:     &square{},
-		ch3:     &wave{waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA}},
+		ch1: &square{sweep: &sweep{}},
+		ch2: &square{},
+		ch3: &wave{
+			waveram: [16]uint8{0x84, 0x40, 0x43, 0xAA, 0x2D, 0x78, 0x92, 0x3C, 0x60, 0x59, 0x59, 0xB0, 0x34, 0xB8, 0x2E, 0xDA},
+		},
 		ch4:     &noise{},
 		control: &control{},
 		ticks:   1,
@@ -76,6 +78,10 @@ func (a *Audio) EndMachineCycle() {
 	a.tickClock()
 	a.tickClock()
 	a.tickClock()
+	a.ch1.triggered = false
+	a.ch2.triggered = false
+	a.ch3.triggered = false
+	a.ch4.triggered = false
 }
 
 func (a *Audio) tickClock() {
@@ -106,10 +112,18 @@ func (a *Audio) tickClock() {
 }
 
 func (a *Audio) tickTimer() {
-	a.ch1.tickTimer()
-	a.ch2.tickTimer()
-	a.ch3.tickTimer()
-	a.ch4.tickTimer()
+	if !a.ch1.triggered {
+		a.ch1.tickTimer()
+	}
+	if !a.ch2.triggered {
+		a.ch2.tickTimer()
+	}
+	if !a.ch3.triggered {
+		a.ch3.tickTimer()
+	}
+	if !a.ch4.triggered {
+		a.ch4.tickTimer()
+	}
 }
 
 func (a *Audio) tickFrameSequencer() {
