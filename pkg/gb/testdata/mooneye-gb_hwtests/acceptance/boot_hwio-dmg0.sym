@@ -1,38 +1,43 @@
-; this file was created with wlalink by ville helin <vhelin@iki.fi>.
+; this file was created with wlalink by ville helin <ville.helin@iki.fi>.
 ; wla symbolic information for "acceptance/boot_hwio-dmg0.gb".
 
 [labels]
-01:4836 clear_vram
-01:4804 disable_lcd_safe
-01:480a _wait_ly_0
-01:484a memcpy
-01:4853 memset
-01:4813 print_hex4
-01:4840 print_hex8
-01:4863 print_inline_string
-01:481f print_load_font
-01:482b print_newline
-01:485c print_string
-01:47f0 reset_screen
+01:48c5 clear_vram
+01:4884 disable_lcd_safe
+01:488a disable_lcd_safe@wait_ly_0
+01:48d9 memcpy
+01:48e2 memset
+01:48a2 print_hex4
+01:48cf print_hex8
+01:48f2 print_inline_string
+01:48ae print_load_font
+01:48ba print_newline
+01:48eb print_string
+01:47f0 quit
+01:4805 quit@cb_return
+01:480a quit@wait_ly_1
+01:4810 quit@wait_ly_2
+01:4816 quit@wait_ly_3
+01:481c quit@wait_ly_4
+01:4826 quit@success
+01:484d quit@failure
+01:486c quit@halt
+01:486d quit@halt_execution_0
+01:4870 reset_screen
+01:4893 serial_send_byte
 01:4000 font
-00:01e7 _wait_ly_3
-00:01ed _wait_ly_4
-00:0203 _print_results_halt_1
-00:0207 _test_ok_cb_0
-00:0215 mismatch
-00:0239 _wait_ly_5
-00:023f _wait_ly_6
-00:0255 _print_results_halt_2
-00:0259 mismatch_cb
-00:02a8 hwio_data
-00:c000 mismatch_addr
-00:c002 mismatch_data
-00:c003 mismatch_mem
+00:0150 main
+00:01d9 main@quit_inline_1
+00:01ea mismatch
+00:0200 mismatch@quit_inline_2
+00:024f hwio_data
+00:ff80 mismatch_addr
+00:ff82 mismatch_data
+00:ff83 mismatch_mem
 
 [definitions]
 0000000a _sizeof_clear_vram
-00000006 _sizeof_disable_lcd_safe
-00000009 _sizeof__wait_ly_0
+0000000f _sizeof_disable_lcd_safe
 00000009 _sizeof_memcpy
 00000009 _sizeof_memset
 0000000c _sizeof_print_hex4
@@ -41,17 +46,12 @@
 0000000c _sizeof_print_load_font
 0000000b _sizeof_print_newline
 00000007 _sizeof_print_string
+00000080 _sizeof_quit
 00000014 _sizeof_reset_screen
+0000000f _sizeof_serial_send_byte
 000007f0 _sizeof_font
 00000002 _sizeof_mismatch_addr
 00000001 _sizeof_mismatch_data
 00000001 _sizeof_mismatch_mem
-00000006 _sizeof__wait_ly_3
-00000016 _sizeof__wait_ly_4
-00000004 _sizeof__print_results_halt_1
-0000000e _sizeof__test_ok_cb_0
-00000024 _sizeof_mismatch
-00000006 _sizeof__wait_ly_5
-00000016 _sizeof__wait_ly_6
-00000004 _sizeof__print_results_halt_2
-0000004f _sizeof_mismatch_cb
+0000009a _sizeof_main
+00000065 _sizeof_mismatch
