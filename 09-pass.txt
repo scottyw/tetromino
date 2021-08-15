@@ -1,0 +1,138 @@
+TRIGGER : false - 0 - 00
+READ FF : true - 204 - 00 - 00ff
+TRIGGER : false - 2 - 03
+READ FF : true - 206 - 03 - 00ff
+TRIGGER : false - 4 - 03
+READ LA : true - 2 - 00 - 0000
+TRIGGER : false - 2 - 0f
+READ FF : true - 4 - 00 - 00ff
+TRIGGER : false - 4 - 09
+READ LA : true - 2 - 01 - 0011
+TRIGGER : false - 2 - 01
+READ FF : true - 4 - 01 - 00ff
+TRIGGER : false - 4 - 0a
+READ LA : true - 2 - 01 - 0011
+TRIGGER : false - 2 - 06
+READ FF : true - 4 - 01 - 00ff
+TRIGGER : false - 4 - 00
+READ LA : true - 2 - 02 - 0022
+TRIGGER : false - 2 - 0a
+READ FF : true - 4 - 02 - 00ff
+TRIGGER : false - 4 - 0a
+READ LA : true - 2 - 02 - 0022
+TRIGGER : false - 2 - 02
+READ FF : true - 4 - 02 - 00ff
+TRIGGER : false - 4 - 03
+READ LA : true - 2 - 03 - 0033
+TRIGGER : false - 2 - 03
+READ FF : true - 4 - 03 - 00ff
+TRIGGER : false - 4 - 02
+READ LA : true - 2 - 03 - 0033
+TRIGGER : false - 2 - 02
+READ FF : true - 4 - 03 - 00ff
+TRIGGER : false - 4 - 0d
+READ LA : true - 2 - 04 - 0044
+TRIGGER : false - 2 - 0d
+READ FF : true - 4 - 04 - 00ff
+TRIGGER : false - 4 - 0b
+READ LA : true - 2 - 04 - 0044
+TRIGGER : false - 2 - 0d
+READ FF : true - 4 - 04 - 00ff
+TRIGGER : false - 4 - 04
+READ LA : true - 2 - 05 - 0055
+TRIGGER : false - 2 - 0a
+READ FF : true - 4 - 05 - 00ff
+TRIGGER : false - 4 - 04
+READ LA : true - 2 - 05 - 0055
+TRIGGER : false - 2 - 0c
+READ FF : true - 4 - 05 - 00ff
+TRIGGER : false - 4 - 06
+READ LA : true - 2 - 06 - 0066
+TRIGGER : false - 2 - 06
+READ FF : true - 4 - 06 - 00ff
+TRIGGER : false - 4 - 0d
+READ LA : true - 2 - 06 - 0066
+TRIGGER : false - 2 - 0f
+READ FF : true - 4 - 06 - 00ff
+TRIGGER : false - 4 - 05
+READ LA : true - 2 - 07 - 0077
+TRIGGER : false - 2 - 04
+READ FF : true - 4 - 07 - 00ff
+TRIGGER : false - 4 - 0f
+READ LA : true - 2 - 07 - 0077
+TRIGGER : false - 2 - 01
+READ FF : true - 4 - 07 - 00ff
+TRIGGER : false - 4 - 01
+READ LA : true - 2 - 08 - 0088
+TRIGGER : false - 2 - 08
+READ FF : true - 4 - 08 - 00ff
+TRIGGER : false - 4 - 0f
+READ LA : true - 2 - 08 - 0088
+TRIGGER : false - 2 - 0e
+READ FF : true - 4 - 08 - 00ff
+TRIGGER : false - 4 - 08
+READ LA : true - 2 - 09 - 0099
+TRIGGER : false - 2 - 02
+READ FF : true - 4 - 09 - 00ff
+TRIGGER : false - 4 - 02
+READ LA : true - 2 - 09 - 0099
+TRIGGER : false - 2 - 09
+READ FF : true - 4 - 09 - 00ff
+TRIGGER : false - 4 - 0a
+READ LA : true - 2 - 0a - 00aa
+TRIGGER : false - 2 - 0b
+READ FF : true - 4 - 0a - 00ff
+TRIGGER : false - 4 - 07
+READ LA : true - 2 - 0a - 00aa
+TRIGGER : false - 2 - 01
+READ FF : true - 4 - 0a - 00ff
+TRIGGER : false - 4 - 0c
+READ LA : true - 2 - 0b - 00bb
+TRIGGER : false - 2 - 0d
+READ FF : true - 4 - 0b - 00ff
+TRIGGER : false - 4 - 05
+READ LA : true - 2 - 0b - 00bb
+TRIGGER : false - 2 - 0c
+READ FF : true - 4 - 0b - 00ff
+TRIGGER : false - 4 - 0b
+READ LA : true - 2 - 0c - 00cc
+TRIGGER : false - 2 - 01
+READ FF : true - 4 - 0c - 00ff
+TRIGGER : false - 4 - 09
+READ LA : true - 2 - 0c - 00cc
+TRIGGER : false - 2 - 07
+READ FF : true - 4 - 0c - 00ff
+TRIGGER : false - 4 - 0d
+READ LA : true - 2 - 0d - 00dd
+TRIGGER : false - 2 - 06
+READ FF : true - 4 - 0d - 00ff
+TRIGGER : false - 4 - 0d
+READ LA : true - 2 - 0d - 00dd
+TRIGGER : false - 2 - 06
+READ FF : true - 4 - 0d - 00ff
+TRIGGER : false - 4 - 0b
+READ LA : true - 2 - 0e - 00ee
+TRIGGER : false - 2 - 07
+READ FF : true - 4 - 0e - 00ff
+TRIGGER : false - 4 - 05
+READ LA : true - 2 - 0e - 00ee
+TRIGGER : false - 2 - 07
+READ FF : true - 4 - 0e - 00ff
+TRIGGER : false - 4 - 08
+READ LA : true - 2 - 0f - 00ff
+TRIGGER : false - 2 - 00
+READ FF : true - 4 - 0f - 00ff
+TRIGGER : false - 4 - 01
+READ LA : true - 2 - 0f - 00ff
+TRIGGER : false - 2 - 06
+READ FF : true - 4 - 0f - 00ff
+TRIGGER : false - 4 - 01
+READ LA : true - 2 - 00 - 0000
+TRIGGER : false - 2 - 07
+READ FF : true - 4 - 00 - 00ff
+TRIGGER : false - 4 - 00
+READ LA : true - 2 - 00 - 0000
+TRIGGER : false - 2 - 09
+READ FF : true - 4 - 00 - 00ff
+TRIGGER : false - 4 - 0a
+READ LA : true - 2 - 01 - 0011
