@@ -21,7 +21,13 @@ type wave struct {
 
 func (w *wave) trigger() {
 
-	w.triggered = true
+	if w.enabled {
+		if w.timer == 0 {
+			w.corruptWaveRAM()
+		}
+	} else {
+		w.triggered = true
+	}
 
 	// Channel is enabled (see length counter).
 	w.enabled = true
@@ -90,4 +96,39 @@ func (w *wave) takeSample() float32 {
 		return 0
 	}
 	return float32(w.sampleBuffer>>w.outputShift) / 15
+}
+
+func (w *wave) corruptWaveRAM() {
+
+	addr := ((w.position + 1) % 32) / 2
+
+	switch {
+
+	case addr < 4:
+
+		w.waveram[0] = w.waveram[addr]
+
+	case addr < 8:
+
+		w.waveram[0] = w.waveram[4]
+		w.waveram[1] = w.waveram[5]
+		w.waveram[2] = w.waveram[6]
+		w.waveram[3] = w.waveram[7]
+
+	case addr < 12:
+
+		w.waveram[0] = w.waveram[8]
+		w.waveram[1] = w.waveram[9]
+		w.waveram[2] = w.waveram[10]
+		w.waveram[3] = w.waveram[11]
+
+	default:
+
+		w.waveram[0] = w.waveram[12]
+		w.waveram[1] = w.waveram[13]
+		w.waveram[2] = w.waveram[14]
+		w.waveram[3] = w.waveram[15]
+
+	}
+
 }

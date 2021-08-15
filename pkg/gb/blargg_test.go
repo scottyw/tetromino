@@ -78,7 +78,7 @@ func TestBlarggDMGSound(t *testing.T) {
 		"testdata/blargg/dmg_sound/rom_singles/07-len sweep period sync.gb",
 		"testdata/blargg/dmg_sound/rom_singles/08-len ctr during power.gb",
 		"testdata/blargg/dmg_sound/rom_singles/09-wave read while on.gb",
-		// "testdata/blargg/dmg_sound/rom_singles/10-wave trigger while on.gb",
+		"testdata/blargg/dmg_sound/rom_singles/10-wave trigger while on.gb",
 		"testdata/blargg/dmg_sound/rom_singles/11-regs after power.gb",
 		// "testdata/blargg/dmg_sound/rom_singles/12-wave write while on.gb",
 	} {
