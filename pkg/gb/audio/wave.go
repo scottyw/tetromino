@@ -57,7 +57,7 @@ func (w *wave) trigger() {
 		fmt.Printf("AFTER : %v - %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.ticks, w.lastAccessed, w.waveram)
 
 	} else {
-		fmt.Printf("TRIGGER : %v - %v- %v - %02x\n", w.enabled, w.sampleTimer, w.ticks, w.lastAccessed)
+		fmt.Printf("TRIGGER : %v - %v - %v - %02x\n", w.enabled, w.sampleTimer, w.ticks, w.lastAccessed)
 	}
 
 	w.triggered = true
