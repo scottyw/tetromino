@@ -19,12 +19,13 @@ type wave struct {
 	sampleBuffer uint8
 	sampleTimer  uint8
 	triggered    bool
+	ticks        int
 }
 
 func (w *wave) trigger() {
 
 	if w.enabled && w.sampleTimer < 4 {
-		fmt.Printf("BEFORE : %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.lastAccessed, w.waveram)
+		fmt.Printf("BEFORE : %v - %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.ticks, w.lastAccessed, w.waveram)
 		switch {
 
 		case w.lastAccessed < 4:
@@ -53,10 +54,10 @@ func (w *wave) trigger() {
 			w.waveram[3] = w.waveram[15]
 
 		}
-		fmt.Printf("AFTER : %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.lastAccessed, w.waveram)
+		fmt.Printf("AFTER : %v - %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.ticks, w.lastAccessed, w.waveram)
 
 	} else {
-		fmt.Printf("TRIGGER : %v - %v - %02x\n", w.enabled, w.sampleTimer, w.lastAccessed)
+		fmt.Printf("TRIGGER : %v - %v- %v - %02x\n", w.enabled, w.sampleTimer, w.ticks, w.lastAccessed)
 	}
 
 	w.triggered = true
@@ -91,6 +92,7 @@ func (w *wave) trigger() {
 
 func (w *wave) tickTimer() {
 	if !w.enabled {
+		w.ticks = 0
 		return
 	}
 	if w.timer == 0 {
@@ -107,6 +109,7 @@ func (w *wave) tickTimer() {
 		}
 		w.sampleTimer = 0
 	}
+	w.ticks++
 	w.timer--
 	w.sampleTimer++
 }

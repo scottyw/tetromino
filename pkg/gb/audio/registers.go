@@ -685,12 +685,12 @@ func (a *Audio) WriteWaveRAM(addr uint16, value uint8) {
 func (a *Audio) ReadWaveRAM(addr uint16) uint8 {
 	if a.ch3.enabled {
 		if a.ch3.sampleTimer < 4 {
-			fmt.Printf("READ LA : %v - %v - %02x - %04x\n", a.ch3.enabled, a.ch3.sampleTimer, a.ch3.lastAccessed, a.ch3.waveram[a.ch3.lastAccessed])
+			fmt.Printf("READ LA : %v - %v- %v - %02x - %04x\n", a.ch3.enabled, a.ch3.sampleTimer, a.ch3.ticks, a.ch3.lastAccessed, a.ch3.waveram[a.ch3.lastAccessed])
 			return a.ch3.waveram[a.ch3.lastAccessed]
 		}
-		fmt.Printf("READ FF : %v - %v - %02x - %04x\n", a.ch3.enabled, a.ch3.sampleTimer, a.ch3.lastAccessed, 0xff)
+		fmt.Printf("READ FF : %v - %v- %v - %02x - %04x\n", a.ch3.enabled, a.ch3.sampleTimer, a.ch3.ticks, a.ch3.lastAccessed, 0xff)
 		return 0xff
 	}
-	fmt.Printf("READ NO : %v - %v - %02x - %04x\n", a.ch3.enabled, a.ch3.sampleTimer, a.ch3.lastAccessed, a.ch3.waveram[addr-0xff30])
+	fmt.Printf("READ NO : %v - %v- %v - %02x - %04x\n", a.ch3.enabled, a.ch3.sampleTimer, a.ch3.ticks, a.ch3.lastAccessed, a.ch3.waveram[addr-0xff30])
 	return a.ch3.waveram[addr-0xff30]
 }
