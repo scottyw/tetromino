@@ -1,5 +1,7 @@
 package audio
 
+import "fmt"
+
 type wave struct {
 	length       uint16
 	outputLevel  uint8
@@ -20,6 +22,42 @@ type wave struct {
 }
 
 func (w *wave) trigger() {
+
+	if w.enabled && w.sampleTimer < 4 {
+		fmt.Printf("BEFORE : %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.lastAccessed, w.waveram)
+		switch {
+
+		case w.lastAccessed < 4:
+
+			w.waveram[0] = w.waveram[w.lastAccessed]
+
+		case w.lastAccessed < 8:
+
+			w.waveram[0] = w.waveram[4]
+			w.waveram[1] = w.waveram[5]
+			w.waveram[2] = w.waveram[6]
+			w.waveram[3] = w.waveram[7]
+
+		case w.lastAccessed < 12:
+
+			w.waveram[0] = w.waveram[8]
+			w.waveram[1] = w.waveram[9]
+			w.waveram[2] = w.waveram[10]
+			w.waveram[3] = w.waveram[11]
+
+		default:
+
+			w.waveram[0] = w.waveram[12]
+			w.waveram[1] = w.waveram[13]
+			w.waveram[2] = w.waveram[14]
+			w.waveram[3] = w.waveram[15]
+
+		}
+		fmt.Printf("AFTER : %v - %v - %02x - %+v\n", w.enabled, w.sampleTimer, w.lastAccessed, w.waveram)
+
+	} else {
+		fmt.Printf("TRIGGER : %v - %v - %02x\n", w.enabled, w.sampleTimer, w.lastAccessed)
+	}
 
 	w.triggered = true
 
