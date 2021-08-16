@@ -1,12 +1,8 @@
 package audio
 
-import (
-	"math"
-)
-
 const (
-	frameSeqTicks = 4194304 / 512      // 512Hz
-	samplerPeriod = 95.108934240362812 // 44100 Hz
+	frameSeqPeriod = 4194304 / 512   // 512Hz
+	samplerPeriod  = 4194304 / 44100 // 44100 Hz
 )
 
 // Audio stream
@@ -20,7 +16,6 @@ type Audio struct {
 	control       *control
 	ticks         uint64
 	frameSeqTicks uint64
-	samplerTicks  float64
 }
 
 // NewAudio initializes our internal channel for audio data
@@ -88,14 +83,13 @@ func (a *Audio) tickClock() {
 	if a.ticks > 4194304 {
 		a.ticks = 1
 		a.frameSeqTicks = 0
-		a.samplerTicks = 0
 	}
 
 	// Tick every clock cycle
 	a.tickTimer()
 
 	// Tick the frame sequencer at 512 Hz
-	if a.ticks%frameSeqTicks == 0 {
+	if a.ticks%frameSeqPeriod == 0 {
 		a.tickFrameSequencer()
 		if a.frameSeqTicks >= 512 {
 			a.frameSeqTicks = 0
@@ -103,7 +97,7 @@ func (a *Audio) tickClock() {
 	}
 
 	// Tick this function at 44100 Hz
-	if a.ticks == uint64(math.Round(a.samplerTicks*samplerPeriod)) {
+	if a.ticks%samplerPeriod == 0 {
 		a.tickSampler()
 	}
 
@@ -164,5 +158,4 @@ func (a *Audio) tickFrameSequencer() {
 
 func (a *Audio) tickSampler() {
 	a.takeSample()
-	a.samplerTicks++
 }
