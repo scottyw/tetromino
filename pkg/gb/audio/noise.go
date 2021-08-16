@@ -14,7 +14,7 @@ type noise struct {
 	enabled       bool
 	dacEnabled    bool
 	volume        uint8
-	timer         uint16
+	timer         uint8
 	envelopeTimer uint8
 	lfsr          uint16
 	triggered     bool
@@ -33,7 +33,10 @@ func (n *noise) trigger() {
 	}
 
 	// Frequency timer is reloaded with period.
-	n.timer = 8 << n.divisor
+	n.timer = n.divisor * 16
+	if n.timer == 0 {
+		n.timer = 8
+	}
 
 	// Volume envelope timer is reloaded with period.
 	n.envelopeTimer = n.envelopeSweep
@@ -56,7 +59,10 @@ func (n *noise) trigger() {
 
 func (n *noise) tickTimer() {
 	if n.timer == 0 {
-		n.timer = 8 << n.divisor
+		n.timer = n.divisor * 16
+		if n.timer == 0 {
+			n.timer = 8
+		}
 		b0 := n.lfsr & 0x01
 		b1 := (n.lfsr >> 1) & 0x01
 		new := b0 ^ b1
@@ -82,19 +88,30 @@ func (n *noise) tickLength() {
 }
 
 func (n *noise) tickVolumeEnvelope() {
-
+	if n.envelopeSweep == 0 {
+		return
+	}
+	if n.envelopeTimer == 0 {
+		if n.envelopeIncrease {
+			if n.volume < 15 {
+				n.volume++
+				n.envelopeTimer = n.envelopeSweep
+			}
+		} else {
+			if n.volume > 0 {
+				n.volume--
+				n.envelopeTimer = n.envelopeSweep
+			}
+		}
+	}
+	n.envelopeTimer--
 }
 
 func (n *noise) takeSample() float32 {
-
 	if !n.enabled || !n.dacEnabled {
 		return 0
 	}
-
 	wave := float32(1 - (n.lfsr & 0x01))
-
 	wave *= float32(n.volume) / 8
-
 	return wave
-
 }
