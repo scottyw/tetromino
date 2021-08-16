@@ -675,8 +675,9 @@ func (a *Audio) WriteWaveRAM(addr uint16, value uint8) {
 		if a.ch3.sampleTimer < 4 {
 			a.ch3.waveram[a.ch3.lastAccessed] = value
 		}
+	} else {
+		a.ch3.waveram[addr-0xff30] = value
 	}
-	a.ch3.waveram[addr-0xff30] = value
 }
 
 // ReadWaveRAM reads the audio channel 3 wave RAM

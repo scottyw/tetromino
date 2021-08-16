@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func runBlarggTest(t *testing.T, filename string) {
+func runBlarggTest(t *testing.T, filename string, checkRAM bool) {
 	sbWriter := &bytes.Buffer{}
 	opts := Options{
 		RomFilename: filename,
@@ -20,11 +20,8 @@ func runBlarggTest(t *testing.T, filename string) {
 	gameboy := NewGameboy(opts)
 	var result string
 	go func() {
-		// The main test ROMs write to serial but we need to directly check RAM for singles
-		checkRAM := strings.Contains(filename, "rom_singles") ||
-			strings.Contains(filename, "halt_bug") ||
-			strings.Contains(filename, "mem_timing-2")
 		for {
+			// Some ROMs write results to serial but for some we need to directly check RAM
 			if checkRAM {
 				result = string(gameboy.memory.CartRAM()[0][:])
 			} else {
@@ -52,7 +49,7 @@ func runBlarggTest(t *testing.T, filename string) {
 	)
 	gameboy.lcd.Screenshot(screenshotFilename)
 	if !strings.Contains(result, "Passed") {
-		t.Errorf("--------\n%s--------\n%s--------\n", filename, result)
+		t.Errorf("\n--------\n%s\n--------\n%s\n--------\n", filename, result)
 		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
 	} else {
 		// fmt.Printf("| :green_heart: pass | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
@@ -60,49 +57,27 @@ func runBlarggTest(t *testing.T, filename string) {
 }
 
 func TestBlarggCPUInstrs(t *testing.T) {
-	runBlarggTest(t, "testdata/blargg/cpu_instrs/cpu_instrs.gb")
+	runBlarggTest(t, "testdata/blargg/cpu_instrs/cpu_instrs.gb", false)
 }
 
 func TestBlarggDMGSound(t *testing.T) {
-
-	// runBlarggTest(t, "testdata/blargg/dmg_sound/dmg_sound.gb")
-
-	for _, filename := range []string{
-		// Test individual sound ROMs until they are all passing
-		"testdata/blargg/dmg_sound/rom_singles/01-registers.gb",
-		"testdata/blargg/dmg_sound/rom_singles/02-len ctr.gb",
-		"testdata/blargg/dmg_sound/rom_singles/03-trigger.gb",
-		"testdata/blargg/dmg_sound/rom_singles/04-sweep.gb",
-		"testdata/blargg/dmg_sound/rom_singles/05-sweep details.gb",
-		"testdata/blargg/dmg_sound/rom_singles/06-overflow on trigger.gb",
-		"testdata/blargg/dmg_sound/rom_singles/07-len sweep period sync.gb",
-		"testdata/blargg/dmg_sound/rom_singles/08-len ctr during power.gb",
-		"testdata/blargg/dmg_sound/rom_singles/09-wave read while on.gb",
-		"testdata/blargg/dmg_sound/rom_singles/10-wave trigger while on.gb",
-		"testdata/blargg/dmg_sound/rom_singles/11-regs after power.gb",
-		// "testdata/blargg/dmg_sound/rom_singles/12-wave write while on.gb",
-	} {
-		t.Run(filename, func(t *testing.T) {
-			runBlarggTest(t, filename)
-		})
-	}
-
+	runBlarggTest(t, "testdata/blargg/dmg_sound/dmg_sound.gb", true)
 }
 
 func TestBlarggHaltBug(t *testing.T) {
-	runBlarggTest(t, "testdata/blargg/halt_bug.gb")
+	runBlarggTest(t, "testdata/blargg/halt_bug.gb", true)
 }
 
 func TestBlarggInstrTiming(t *testing.T) {
-	runBlarggTest(t, "testdata/blargg/instr_timing/instr_timing.gb")
+	runBlarggTest(t, "testdata/blargg/instr_timing/instr_timing.gb", false)
 }
 
 func TestBlarggMemTiming(t *testing.T) {
-	runBlarggTest(t, "testdata/blargg/mem_timing/mem_timing.gb")
+	runBlarggTest(t, "testdata/blargg/mem_timing/mem_timing.gb", false)
 }
 
 func TestBlarggMemTiming2(t *testing.T) {
-	runBlarggTest(t, "testdata/blargg/mem_timing-2/mem_timing.gb")
+	runBlarggTest(t, "testdata/blargg/mem_timing-2/mem_timing.gb", true)
 }
 
 func TestBlarggOAMBug(t *testing.T) {
@@ -121,7 +96,7 @@ func TestBlarggOAMBug(t *testing.T) {
 		// "testdata/blargg/oam_bug/rom_singles/8-instr_effect.gb",
 	} {
 		t.Run(filename, func(t *testing.T) {
-			runBlarggTest(t, filename)
+			runBlarggTest(t, filename, false)
 		})
 	}
 
