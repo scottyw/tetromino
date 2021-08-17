@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 
 	"github.com/scottyw/tetromino/pkg/gb/audio"
+	"github.com/scottyw/tetromino/pkg/gb/controller"
 	"github.com/scottyw/tetromino/pkg/gb/timer"
 )
 
@@ -91,8 +92,7 @@ type Memory struct {
 	oamCycle          uint16
 	oamBaseAddr       uint16
 	oamRead           uint8
-	DirectionInput    uint8 // JOYP
-	ButtonInput       uint8 // JOYP
+	controller        *controller.Controller
 	timer             *timer.Timer
 	audio             *audio.Audio
 	sbWriter          io.Writer
@@ -104,7 +104,7 @@ type WriteNotification interface {
 }
 
 // NewMemory creates the memory struct and initializes it with ROM contents and default values
-func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer, audio *audio.Audio) *Memory {
+func NewMemory(rom []byte, sbWriter io.Writer, controller *controller.Controller, timer *timer.Timer, audio *audio.Audio) *Memory {
 	if sbWriter == nil {
 		sbWriter = ioutil.Discard
 	}
@@ -121,7 +121,6 @@ func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer, audio *audio.
 		STAT: 0x00,
 		WX:   0x00,
 		WY:   0x00,
-		JOYP: 0x0f,
 		SB:   0x00,
 		SC:   0x7e,
 		BGP:  0xfc,
@@ -129,12 +128,11 @@ func NewMemory(rom []byte, sbWriter io.Writer, timer *timer.Timer, audio *audio.
 		OBP1: 0xff,
 
 		// Implementation
-		mbc:            newMBC(rom),
-		DirectionInput: 0x0f,
-		ButtonInput:    0x0f,
-		timer:          timer,
-		audio:          audio,
-		sbWriter:       sbWriter,
+		mbc:        newMBC(rom),
+		controller: controller,
+		timer:      timer,
+		audio:      audio,
+		sbWriter:   sbWriter,
 	}
 }
 
@@ -165,18 +163,6 @@ func (m *Memory) startOAM(value uint8) {
 	}
 }
 
-func (m *Memory) readJOYP() uint8 {
-	// Bit 5 - P15 Select Button Keys      (0=Select)
-	// Bit 4 - P14 Select Direction Keys   (0=Select)
-	if m.JOYP&0x10 == 0 {
-		return m.JOYP&0xf0 | m.DirectionInput&0x0f
-	}
-	if m.JOYP&0x20 == 0 {
-		return m.JOYP&0xf0 | m.ButtonInput&0x0f
-	}
-	return m.JOYP | 0x0f
-}
-
 // Read a byte from the chosen memory location
 func (m *Memory) Read(addr uint16) byte {
 	switch {
@@ -199,8 +185,7 @@ func (m *Memory) Read(addr uint16) byte {
 		// Unusable region
 		return 0
 	case addr == JOYP:
-		// First 2 bits are always high
-		return m.readJOYP() | 0xc0
+		return m.controller.ReadJOYP()
 	case addr == SB:
 		return m.SB
 	case addr == SC:
@@ -322,7 +307,7 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr < 0xff00:
 		// Unusable region
 	case addr == JOYP:
-		m.JOYP = value
+		m.controller.WriteJOYP(value)
 	case addr == SB:
 		_, err := m.sbWriter.Write([]byte{value})
 		if err != nil {

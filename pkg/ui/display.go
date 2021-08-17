@@ -8,6 +8,7 @@ import (
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
 	"github.com/scottyw/tetromino/pkg/gb"
+	"github.com/scottyw/tetromino/pkg/gb/controller"
 )
 
 // GLDisplay implements the LCD display using GL
@@ -53,7 +54,7 @@ func NewGLDisplay(gameboy *gb.Gameboy, cancelFunc context.CancelFunc) (*GLDispla
 		return nil, err
 	}
 	gl.Enable(gl.TEXTURE_2D)
-	window.SetKeyCallback(onKeyFunc(gameboy))
+	window.SetKeyCallback(onKeyFunc(gameboy.Controller()))
 	display := &GLDisplay{
 		cancelFunc: cancelFunc,
 		window:     window,
@@ -83,31 +84,31 @@ func (d *GLDisplay) DisplayFrame(image *image.RGBA) {
 	}
 }
 
-func onKeyFunc(gameboy *gb.Gameboy) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(c *controller.Controller) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		if action != glfw.Press && action != glfw.Release {
 			return
 		}
 		switch key {
 		case glfw.KeyA:
-			gameboy.ButtonAction(gb.Start, action == glfw.Press)
+			c.ButtonAction(controller.Start, action == glfw.Press)
 		case glfw.KeyS:
-			gameboy.ButtonAction(gb.Select, action == glfw.Press)
+			c.ButtonAction(controller.Select, action == glfw.Press)
 		case glfw.KeyZ:
-			gameboy.ButtonAction(gb.B, action == glfw.Press)
+			c.ButtonAction(controller.B, action == glfw.Press)
 		case glfw.KeyX:
-			gameboy.ButtonAction(gb.A, action == glfw.Press)
+			c.ButtonAction(controller.A, action == glfw.Press)
 		case glfw.KeyUp:
-			gameboy.ButtonAction(gb.Up, action == glfw.Press)
+			c.ButtonAction(controller.Up, action == glfw.Press)
 		case glfw.KeyDown:
-			gameboy.ButtonAction(gb.Down, action == glfw.Press)
+			c.ButtonAction(controller.Down, action == glfw.Press)
 		case glfw.KeyLeft:
-			gameboy.ButtonAction(gb.Left, action == glfw.Press)
+			c.ButtonAction(controller.Left, action == glfw.Press)
 		case glfw.KeyRight:
-			gameboy.ButtonAction(gb.Right, action == glfw.Press)
+			c.ButtonAction(controller.Right, action == glfw.Press)
 		case glfw.KeyT:
 			if action == glfw.Press {
-				gameboy.EmulatorAction(gb.TakeScreenshot)
+				c.EmulatorAction(controller.TakeScreenshot)
 			}
 		}
 	}
