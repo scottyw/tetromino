@@ -1,7 +1,7 @@
 package cpu
 
 import (
-	"github.com/scottyw/tetromino/pkg/gb/mem"
+	"github.com/scottyw/tetromino/gameboy/mem"
 )
 
 func (cpu *CPU) adcM(mem *mem.Memory) func() {

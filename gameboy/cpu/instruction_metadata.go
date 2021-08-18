@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/scottyw/tetromino/pkg/gb/mem"
+	"github.com/scottyw/tetromino/gameboy/mem"
 )
 
 type metadata struct {

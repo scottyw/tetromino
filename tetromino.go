@@ -8,8 +8,9 @@ import (
 	"os"
 	"runtime/pprof"
 
-	"github.com/scottyw/tetromino/pkg/gb"
-	"github.com/scottyw/tetromino/pkg/ui"
+	"github.com/scottyw/tetromino/gameboy"
+	"github.com/scottyw/tetromino/gameboy/display"
+	"github.com/scottyw/tetromino/gameboy/speakers"
 )
 
 func main() {
@@ -43,7 +44,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	opts := gb.Options{
+	opts := gameboy.Options{
 		RomFilename: rom,
 		DebugCPU:    *debugCPU,
 		DebugLCD:    *debugLCD,
@@ -53,10 +54,10 @@ func main() {
 	ctx, cancelFunc := context.WithCancel(context.Background())
 
 	// Create the Gameboy emulator
-	gameboy := gb.NewGameboy(opts)
+	gameboy := gameboy.NewGameboy(opts)
 
 	// Create a display
-	display, err := ui.NewGLDisplay(gameboy, cancelFunc)
+	display, err := display.NewGLDisplay(gameboy, cancelFunc)
 	if err != nil {
 		log.Printf("Failed to create display: %v", err)
 		return
@@ -66,7 +67,7 @@ func main() {
 
 	// Create speakers if we are not running in fast mode
 	if !*fast {
-		speakers, err := ui.NewPortaudioSpeakers()
+		speakers, err := speakers.NewPortaudioSpeakers()
 		if err != nil {
 			log.Printf("Failed to create speakers: %v", err)
 			return

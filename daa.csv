@@ -2047,4 +2047,4 @@
 0xfe,0x70,0x98,0x50
 0xff,0x70,0x99,0x50
 PASS
-ok  	github.com/scottyw/tetromino/pkg/gb/cpu	0.019s
+ok  	github.com/scottyw/tetromino/gameboy/cpu	0.019s

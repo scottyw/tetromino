@@ -1,4 +1,4 @@
-package ui
+package display
 
 import (
 	"context"
@@ -7,8 +7,8 @@ import (
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	"github.com/scottyw/tetromino/pkg/gb"
-	"github.com/scottyw/tetromino/pkg/gb/controller"
+	gb "github.com/scottyw/tetromino/gameboy"
+	"github.com/scottyw/tetromino/gameboy/controller"
 )
 
 // GLDisplay implements the LCD display using GL

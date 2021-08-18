@@ -1,4 +1,4 @@
-package gb
+package gameboy
 
 import (
 	"context"
@@ -7,12 +7,12 @@ import (
 	"io/ioutil"
 	"time"
 
-	"github.com/scottyw/tetromino/pkg/gb/audio"
-	"github.com/scottyw/tetromino/pkg/gb/controller"
-	"github.com/scottyw/tetromino/pkg/gb/cpu"
-	"github.com/scottyw/tetromino/pkg/gb/lcd"
-	"github.com/scottyw/tetromino/pkg/gb/mem"
-	"github.com/scottyw/tetromino/pkg/gb/timer"
+	"github.com/scottyw/tetromino/gameboy/audio"
+	"github.com/scottyw/tetromino/gameboy/controller"
+	"github.com/scottyw/tetromino/gameboy/cpu"
+	"github.com/scottyw/tetromino/gameboy/lcd"
+	"github.com/scottyw/tetromino/gameboy/mem"
+	"github.com/scottyw/tetromino/gameboy/timer"
 )
 
 // Options control emulator behaviour

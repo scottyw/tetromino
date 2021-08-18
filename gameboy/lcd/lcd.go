@@ -8,7 +8,7 @@ import (
 	"image/png"
 	"os"
 
-	"github.com/scottyw/tetromino/pkg/gb/mem"
+	"github.com/scottyw/tetromino/gameboy/mem"
 )
 
 const (

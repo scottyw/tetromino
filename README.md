@@ -19,19 +19,23 @@ Tetromino has some fun LCD debugging that uses colour to differentiate sprites (
 
 ![Debugging Mario](https://github.com/scottyw/tetromino/blob/master/screenshots/mario-debug/Large%20GIF%20(766x434).gif)
 
-### Running
+### Building and Running
 
-You'll need a ROM file which you can specify like this:
+Build Tetromino like this. You may need to install some OS-specific packages to support video and sound - see below for details.
 
-    go run cmd/tetromino/main.go /roms/tetris.gb
+    go build
+
+To run, you'll need a ROM file which you can specify like this:
+
+    tetromino tetris.gb
 
 Other options exist including enabling debug. List them like this:
 
-    go run cmd/tetromino/main.go -help
+    tetromino --help
 
-Note that flag parsing follows the Go language rules and so flags must be specified before the ROM filename e.g.
+Flags must be specified before the ROM filename e.g.
 
-    go run cmd/tetromino/main.go --debuglcd /roms/tetris.gb
+    tetromino --debuglcd /roms/tetris.gb
 
 ### Controls
 
@@ -44,7 +48,7 @@ T : Take screenshot
 
 ### Tests
 
-Tetromino has accurate CPU, timer and MBC1 implementations but sound support is incomplete. There is also no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority).
+Tetromino has accurate CPU, timer, sound and MBC1 implementations. There is also no support for other MBCs and sprite support is minimal (no large sprites, palettes or priority).
 
 | Result             | Blargg test                  | Screenshot                                                 |
 | ------------------ | ---------------------------- | ---------------------------------------------------------- |
@@ -137,15 +141,9 @@ Tetromino has accurate CPU, timer and MBC1 implementations but sound support is 
 
 ### Dependencies
 
-Tetromino uses Go modules and requires Go 1.11 or later. You may need to enable module support like this:
+Tetromino uses [GLFW](http://www.glfw.org) for video and [PortAudio](http://www.portaudio.com) for sound so you might need to install some OS-specific packages.
 
-    export GO111MODULE=on
-
-When you run Tetromino or the tests, the dependencies will be fetched automatically.
-
-#### GLFW dependencies
-
-Tetromino uses [GLFW](http://www.glfw.org) for graphics so you might need to install some OS-specific packages.
+#### GLFW
 
 > * GLFW C library source is included and built automatically as part of the Go package. But you need to make sure you have dependencies of GLFW:
 > 	* On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
@@ -153,6 +151,10 @@ Tetromino uses [GLFW](http://www.glfw.org) for graphics so you might need to ins
 > 	* On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel` packages.
 
 See [this page](https://github.com/go-gl/glfw) if those instructions don't work for you.
+
+#### PortAudio
+
+On macOS: `brew install portaudio`
 
 ### References and Thanks
 

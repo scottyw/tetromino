@@ -5,9 +5,9 @@ import (
 	"io"
 	"io/ioutil"
 
-	"github.com/scottyw/tetromino/pkg/gb/audio"
-	"github.com/scottyw/tetromino/pkg/gb/controller"
-	"github.com/scottyw/tetromino/pkg/gb/timer"
+	"github.com/scottyw/tetromino/gameboy/audio"
+	"github.com/scottyw/tetromino/gameboy/controller"
+	"github.com/scottyw/tetromino/gameboy/timer"
 )
 
 const (
