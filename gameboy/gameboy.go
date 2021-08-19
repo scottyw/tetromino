@@ -5,59 +5,90 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"time"
 
 	"github.com/scottyw/tetromino/gameboy/audio"
 	"github.com/scottyw/tetromino/gameboy/controller"
 	"github.com/scottyw/tetromino/gameboy/cpu"
+	"github.com/scottyw/tetromino/gameboy/display"
 	"github.com/scottyw/tetromino/gameboy/lcd"
 	"github.com/scottyw/tetromino/gameboy/mem"
+	"github.com/scottyw/tetromino/gameboy/speakers"
 	"github.com/scottyw/tetromino/gameboy/timer"
 )
 
-// Options control emulator behaviour
-type Options struct {
-	RomFilename string
-	DebugCPU    bool
-	DebugLCD    bool
-	SBWriter    io.Writer
+// Config control emulator behaviour
+type Config struct {
+	RomFilename        string
+	DisableVideoOutput bool
+	DisableAudioOutput bool
+	DebugCPU           bool
+	DebugLCD           bool
+	SerialWriter       io.Writer
 }
 
 // Gameboy represents the Gameboy itself
 type Gameboy struct {
-	dispatch   *cpu.Dispatch
-	memory     *mem.Memory
-	controller *controller.Controller
-	timer      *timer.Timer
-	lcd        *lcd.LCD
 	audio      *audio.Audio
-	opts       Options
-	frame      int
+	config     Config
+	controller *controller.Controller
+	dispatch   *cpu.Dispatch
+	display    *display.Display
+	lcd        *lcd.LCD
+	memory     *mem.Memory
+	speakers   *speakers.Speakers
+	timer      *timer.Timer
 }
 
 // NewGameboy returns a new Gameboy
-func NewGameboy(opts Options) *Gameboy {
+func New(config Config) *Gameboy {
 	var rom []byte
-	if opts.RomFilename == "" {
+	if config.RomFilename == "" {
 		rom = make([]byte, 0x8000)
 	} else {
-		rom = readRomFile(opts.RomFilename)
+		rom = readRomFile(config.RomFilename)
 	}
-	c := cpu.NewCPU(opts.DebugCPU)
-	controller := controller.NewController()
-	timer := timer.NewTimer()
-	audio := audio.NewAudio()
-	memory := mem.NewMemory(rom, opts.SBWriter, controller, timer, audio)
+	c := cpu.New(config.DebugCPU)
+	controller := controller.New(c.Restart)
+
+	// Create a display
+	var d *display.Display
+	if !config.DisableVideoOutput {
+		d = display.New(controller, config.DebugLCD)
+	}
+
+	// Create speakers
+	var a *audio.Audio
+	var s *speakers.Speakers
+	if !config.DisableAudioOutput {
+		s = speakers.New()
+		a = audio.New(s.Left(), s.Right())
+	} else {
+		a = audio.New(nil, nil)
+	}
+
+	timer := timer.New()
+	memory := mem.New(rom, config.SerialWriter, controller, timer, a)
 	dispatch := cpu.NewDispatch(c, memory)
-	lcd := lcd.NewLCD(memory, opts.DebugLCD)
+	lcd := lcd.New(memory, config.DebugLCD)
 	return &Gameboy{
-		dispatch:   dispatch,
-		memory:     memory,
+		audio:      a,
+		config:     config,
 		controller: controller,
-		timer:      timer,
+		dispatch:   dispatch,
+		display:    d,
 		lcd:        lcd,
-		audio:      audio,
-		opts:       opts,
+		memory:     memory,
+		speakers:   s,
+		timer:      timer,
+	}
+}
+
+func (gb *Gameboy) Cleanup() {
+	if gb.speakers != nil {
+		gb.speakers.Cleanup()
+	}
+	if gb.display != nil {
+		gb.display.Cleanup()
 	}
 }
 
@@ -73,7 +104,7 @@ func readRomFile(romFilename string) []byte {
 	return rom
 }
 
-func (gb *Gameboy) runFrame() {
+func (gb *Gameboy) runFrame(ctx context.Context) bool {
 	// The Game Boy clock runs at 4.194304MHz
 	// Each loop iteration below represents one machine cycle
 	// One machine cycle is 4 clock cycles
@@ -88,8 +119,11 @@ func (gb *Gameboy) runFrame() {
 			gb.memory.IF |= 0x04
 		}
 	}
-	gb.lcd.FrameEnd()
-	gb.frame++
+	frame := gb.lcd.FrameEnd()
+	if gb.display != nil {
+		return gb.display.RenderFrame(frame)
+	}
+	return false
 
 	// The emulator can run a frame much faster than a real Gameboy when running on a modern computer.
 	// There is no need to sleep now between frames however, because the audio subsystem consumes
@@ -104,51 +138,15 @@ func (gb *Gameboy) runFrame() {
 
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context) {
+	defer gb.Cleanup()
 	for {
 		select {
 		case <-ctx.Done():
 			return
 		default:
-			gb.runFrame()
-		}
-	}
-}
-
-// Time the Gameboy as it runs
-func (gb *Gameboy) Time(ctx context.Context) {
-	for {
-		// There are just under 60 frames per second (59.7275) so let's time in blocks of 60 frames
-		// On a real Gameboy this would take 1 second
-		t0 := time.Now()
-		for i := 0; i < 60; i++ {
-			select {
-			case <-ctx.Done():
+			if gb.runFrame(ctx) {
 				return
-			default:
-				gb.runFrame()
 			}
 		}
-		t1 := time.Now()
-		fmt.Println("=========> ", t1.Sub(t0))
 	}
-}
-
-// Debug enabled for the UI
-func (gb *Gameboy) Debug() bool {
-	return gb.opts.DebugLCD
-}
-
-// RegisterDisplay registers a real-world display implementation with the LCD subsystem
-func (gb *Gameboy) RegisterDisplay(display lcd.Display) {
-	gb.lcd.RegisterDisplay(display)
-}
-
-// RegisterSpeakers registers a real-world audio implementation with the audio subsystem
-func (gb *Gameboy) RegisterSpeakers(speakers audio.Speakers) {
-	gb.audio.RegisterSpeakers(speakers)
-}
-
-// RegisterSpeakers registers a real-world audio implementation with the audio subsystem
-func (gb *Gameboy) Controller() *controller.Controller {
-	return gb.controller
 }

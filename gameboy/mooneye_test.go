@@ -9,12 +9,14 @@ import (
 )
 
 func runMooneyeTest(t *testing.T, filename string) {
-	opts := Options{
-		RomFilename: filename,
+	config := Config{
+		RomFilename:        filename,
+		DisableVideoOutput: true,
+		DisableAudioOutput: true,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
-	gameboy := NewGameboy(opts)
+	gameboy := New(config)
 	go func() {
 		for {
 			select {

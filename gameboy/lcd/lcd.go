@@ -1,7 +1,6 @@
 package lcd
 
 import (
-	"encoding/gob"
 	"fmt"
 	"image"
 	"image/color"
@@ -52,14 +51,8 @@ var (
 	}
 )
 
-// Display abstracts over a real-world implementation of the LCD display
-type Display interface {
-	DisplayFrame(*image.RGBA)
-}
-
 // LCD represents the LCD display of the Gameboy
 type LCD struct {
-	display        Display
 	memory         *mem.Memory
 	videoRAM       *[0x2000]byte
 	oam            *[0xa0]byte
@@ -75,7 +68,7 @@ type LCD struct {
 }
 
 // NewLCD returns the configured LCD
-func NewLCD(memory *mem.Memory, debug bool) *LCD {
+func New(memory *mem.Memory, debug bool) *LCD {
 	lcd := LCD{
 		videoRAM: &memory.VideoRAM,
 		oam:      &memory.OAM,
@@ -156,38 +149,6 @@ func (lcd *LCD) EndMachineCycle() {
 		} else {
 			lcd.memory.STAT &^= 0x04
 		}
-	}
-}
-
-// TakeSnapshot writes the current contents of LCD to a file
-func (lcd *LCD) TakeSnapshot() {
-	file, err := os.Create("snapshot.gob")
-	if err != nil {
-		fmt.Printf("Failed to save LCD snapshot: %v\n", err)
-		return
-	}
-	defer file.Close()
-	encoder := gob.NewEncoder(file)
-	err = encoder.Encode(lcd)
-	if err != nil {
-		fmt.Printf("Failed to encode LCD snapshot: %v\n", err)
-		return
-	}
-}
-
-// LoadSnapshot updates the current LCD based on the file contents
-func (lcd *LCD) LoadSnapshot(filename string) {
-	file, err := os.Open(filename)
-	if err != nil {
-		fmt.Printf("Failed to load LCD snapshot: %v\n", err)
-		return
-	}
-	defer file.Close()
-	decoder := gob.NewDecoder(file)
-	err = decoder.Decode(lcd)
-	if err != nil {
-		fmt.Printf("Failed to decode LCD snapshot: %v\n", err)
-		return
 	}
 }
 
@@ -390,15 +351,13 @@ func (lcd *LCD) updateLcdLine(y uint8) {
 }
 
 // FrameEnd writes any remaining VRAM lines to the GUI for debugging
-func (lcd *LCD) FrameEnd() {
+func (lcd *LCD) FrameEnd() *image.RGBA {
 	if lcd.debug {
 		for y := lcd.memory.SCY + 144; y < lcd.memory.SCY || y >= lcd.memory.SCY+144; y++ {
 			lcd.updateLcdLine(y)
 		}
 	}
-	if lcd.display != nil {
-		lcd.display.DisplayFrame(lcd.frame)
-	}
+	return lcd.frame
 }
 
 // Screenshot writes a screenshot to file
@@ -412,9 +371,4 @@ func (lcd *LCD) Screenshot(filename string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-// RegisterDisplay associates real-world display output with the LCD subsystem
-func (lcd *LCD) RegisterDisplay(display Display) {
-	lcd.display = display
 }

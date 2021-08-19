@@ -33,11 +33,6 @@ func (d *Dispatch) TestA() uint8 {
 	return d.cpu.a
 }
 
-// Start the CPU again on button press
-func (d *Dispatch) Start() {
-	d.cpu.stopped = false
-}
-
 func nop() {
 	// Do nothing
 }

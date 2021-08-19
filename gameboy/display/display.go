@@ -1,35 +1,33 @@
 package display
 
 import (
-	"context"
+	"fmt"
 	"image"
 	"runtime"
 
 	"github.com/go-gl/gl/v2.1/gl"
 	"github.com/go-gl/glfw/v3.1/glfw"
-	gb "github.com/scottyw/tetromino/gameboy"
 	"github.com/scottyw/tetromino/gameboy/controller"
 )
 
-// GLDisplay implements the LCD display using GL
-type GLDisplay struct {
-	cancelFunc context.CancelFunc
-	window     *glfw.Window
-	texture    uint32
-	width      float32
-	height     float32
+// Display implements the LCD display using GL
+type Display struct {
+	window  *glfw.Window
+	texture uint32
+	width   float32
+	height  float32
 }
 
-// NewGLDisplay implements an LCD display in GL
-func NewGLDisplay(gameboy *gb.Gameboy, cancelFunc context.CancelFunc) (*GLDisplay, error) {
+// New implements an LCD display in GL
+func New(controller *controller.Controller, debug bool) *Display {
 	// initialize glfw
 	if err := glfw.Init(); err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Failed to create display: %v", err))
 	}
 	// define window width
 	var width float32
 	var height float32
-	if gameboy.Debug() {
+	if debug {
 		width = 256
 		height = 256
 	} else {
@@ -42,7 +40,7 @@ func NewGLDisplay(gameboy *gb.Gameboy, cancelFunc context.CancelFunc) (*GLDispla
 	glfw.WindowHint(glfw.Resizable, 0)
 	window, err := glfw.CreateWindow(int(width*3), int(height*3), "Tetromino", nil, nil)
 	if err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Failed to create display: %v", err))
 	}
 	window.MakeContextCurrent()
 
@@ -51,27 +49,26 @@ func NewGLDisplay(gameboy *gb.Gameboy, cancelFunc context.CancelFunc) (*GLDispla
 
 	// initialize gl
 	if err := gl.Init(); err != nil {
-		return nil, err
+		panic(fmt.Sprintf("Failed to create display: %v", err))
 	}
 	gl.Enable(gl.TEXTURE_2D)
-	window.SetKeyCallback(onKeyFunc(gameboy.Controller()))
-	display := &GLDisplay{
-		cancelFunc: cancelFunc,
-		window:     window,
-		texture:    createTexture(),
-		width:      width,
-		height:     height,
+	window.SetKeyCallback(onKeyFunc(controller))
+	display := &Display{
+		window:  window,
+		texture: createTexture(),
+		width:   width,
+		height:  height,
 	}
-	return display, nil
+	return display
 }
 
 // Cleanup returns resources to the OS
-func (d *GLDisplay) Cleanup() {
+func (d *Display) Cleanup() {
 	glfw.Terminate()
 }
 
-// DisplayFrame draws a frame to the GL window and returns user input
-func (d *GLDisplay) DisplayFrame(image *image.RGBA) {
+// RenderFrame draws a frame to the GL window and returns user input
+func (d *Display) RenderFrame(image *image.RGBA) bool {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, d.texture)
 	setTexture(image)
@@ -79,9 +76,7 @@ func (d *GLDisplay) DisplayFrame(image *image.RGBA) {
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	d.window.SwapBuffers()
 	glfw.PollEvents()
-	if d.window.ShouldClose() {
-		d.cancelFunc()
-	}
+	return d.window.ShouldClose()
 }
 
 func onKeyFunc(c *controller.Controller) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {

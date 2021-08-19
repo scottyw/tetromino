@@ -10,14 +10,16 @@ import (
 )
 
 func runBlarggTest(t *testing.T, filename string, checkRAM bool) {
-	sbWriter := &bytes.Buffer{}
-	opts := Options{
-		RomFilename: filename,
-		SBWriter:    sbWriter,
+	serialWriter := &bytes.Buffer{}
+	config := Config{
+		RomFilename:        filename,
+		DisableVideoOutput: true,
+		DisableAudioOutput: true,
+		SerialWriter:       serialWriter,
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
 	defer cancel()
-	gameboy := NewGameboy(opts)
+	gameboy := New(config)
 	var result string
 	go func() {
 		for {
@@ -25,7 +27,7 @@ func runBlarggTest(t *testing.T, filename string, checkRAM bool) {
 			if checkRAM {
 				result = string(gameboy.memory.CartRAM()[0][:])
 			} else {
-				result = sbWriter.String()
+				result = serialWriter.String()
 			}
 			select {
 			case <-ctx.Done():

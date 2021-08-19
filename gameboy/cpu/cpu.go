@@ -53,7 +53,7 @@ type CPU struct {
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
-func NewCPU(debugCPU bool) *CPU {
+func New(debugCPU bool) *CPU {
 	return &CPU{
 		debugCPU: debugCPU,
 		ime:      true,
@@ -68,6 +68,11 @@ func NewCPU(debugCPU bool) *CPU {
 		sp:       0xfffe,
 		pc:       0x0100,
 	}
+}
+
+// Restart the CPU again on button press
+func (cpu *CPU) Restart() {
+	cpu.stopped = false
 }
 
 func (cpu *CPU) bc() uint16 {

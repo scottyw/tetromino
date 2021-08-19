@@ -104,7 +104,7 @@ type WriteNotification interface {
 }
 
 // NewMemory creates the memory struct and initializes it with ROM contents and default values
-func NewMemory(rom []byte, sbWriter io.Writer, controller *controller.Controller, timer *timer.Timer, audio *audio.Audio) *Memory {
+func New(rom []byte, sbWriter io.Writer, controller *controller.Controller, timer *timer.Timer, audio *audio.Audio) *Memory {
 	if sbWriter == nil {
 		sbWriter = ioutil.Discard
 	}

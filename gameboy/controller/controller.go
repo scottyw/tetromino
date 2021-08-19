@@ -36,13 +36,15 @@ const (
 )
 
 type Controller struct {
+	restartCPU     func()
 	joyp           uint8
 	directionInput uint8
 	buttonInput    uint8
 }
 
-func NewController() *Controller {
+func New(restartCPU func()) *Controller {
 	return &Controller{
+		restartCPU:     restartCPU,
 		joyp:           0x0f,
 		directionInput: 0x0f,
 		buttonInput:    0x0f,
@@ -70,7 +72,7 @@ func (c *Controller) WriteJOYP(value uint8) {
 func (c *Controller) ButtonAction(button Button, pressed bool) {
 
 	// Start the CPU in case it was stopped waiting for input
-	// gb.dispatch.Start() //FIXME
+	c.restartCPU()
 
 	// Bit 3 - P13 Input Down  or Start    (0=Pressed) (Read Only)
 	// Bit 2 - P12 Input Up    or Select   (0=Pressed) (Read Only)

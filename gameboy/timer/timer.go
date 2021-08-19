@@ -22,7 +22,7 @@ type Timer struct {
 }
 
 // NewTimer creates an initialized timer
-func NewTimer() *Timer {
+func New() *Timer {
 	return &Timer{
 		counter: 0xabcc,
 	}

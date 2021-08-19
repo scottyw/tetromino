@@ -19,8 +19,10 @@ type Audio struct {
 }
 
 // NewAudio initializes our internal channel for audio data
-func NewAudio() *Audio {
+func New(l, r chan float32) *Audio {
 	audio := Audio{
+		l:   l,
+		r:   r,
 		ch1: &square{sweep: &sweep{}},
 		ch2: &square{},
 		ch3: &wave{
@@ -52,18 +54,6 @@ func NewAudio() *Audio {
 	audio.WriteNR52(0xf1)
 
 	return &audio
-}
-
-// Speakers abstracts over a real-world implementation of the Gameboy speakers
-type Speakers interface {
-	Left() chan float32
-	Right() chan float32
-}
-
-// RegisterSpeakers associates real-world audio output with the audio subsystem
-func (a *Audio) RegisterSpeakers(speakers Speakers) {
-	a.l = speakers.Left()
-	a.r = speakers.Right()
 }
 
 // EndMachineCycle emulates the audio hardware at the end of a machine cycle
