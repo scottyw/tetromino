@@ -39,7 +39,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 			strings.TrimPrefix(filename, "testdata/mooneye-gb_hwtests/"),
 			"/", "_", -1),
 	)
-	gameboy.lcd.Screenshot(screenshotFilename)
+	gameboy.ppu.Screenshot(screenshotFilename)
 	if gameboy.dispatch.TestA() != 0 || !gameboy.dispatch.Mooneye {
 		t.Errorf("Test ROM failed: %s", filename)
 		// fmt.Printf("| :boom: fail | %s | [pic](%s) |\n", filename, screenshotFilename)

@@ -1,12 +1,13 @@
-package mem
+package memory
 
 import (
 	"fmt"
-	"io"
-	"io/ioutil"
 
 	"github.com/scottyw/tetromino/gameboy/audio"
 	"github.com/scottyw/tetromino/gameboy/controller"
+	"github.com/scottyw/tetromino/gameboy/interrupts"
+	"github.com/scottyw/tetromino/gameboy/ppu"
+	"github.com/scottyw/tetromino/gameboy/serial"
 	"github.com/scottyw/tetromino/gameboy/timer"
 )
 
@@ -61,115 +62,50 @@ const (
 )
 
 // Memory allows read and write access to memory
-type Memory struct {
-
-	// HW registers
-	IE   byte
-	IF   byte
-	LCDC byte
-	LY   byte
-	LYC  byte
-	SCX  byte
-	SCY  byte
-	STAT byte
-	WX   byte
-	WY   byte
-	JOYP byte
-	SB   byte
-	SC   byte
-	BGP  byte
-	OBP0 byte
-	OBP1 byte
-
-	// Implementation
-	mbc               *mbc
-	VideoRAM          [0x2000]byte
-	internalRAM       [0x2000]byte
-	OAM               [0xa0]byte
-	zeroPage          [0x8f]byte
-	WriteNotification WriteNotification
-	oamRunning        bool
-	oamCycle          uint16
-	oamBaseAddr       uint16
-	oamRead           uint8
-	controller        *controller.Controller
-	timer             *timer.Timer
-	audio             *audio.Audio
-	sbWriter          io.Writer
-}
-
-// WriteNotification provides a mechanism to notify other subsystems about memory writes
-type WriteNotification interface {
-	WriteToVideoRAM(addr uint16)
+type Mapper struct {
+	internalRAM [0x2000]byte
+	zeroPage    [0x8f]byte
+	oam         *[0xa0]byte
+	audio       *audio.Audio
+	controller  *controller.Controller
+	interrupts  *interrupts.Interrupts
+	mbc         *mbc
+	ppu         *ppu.PPU
+	serial      *serial.Serial
+	timer       *timer.Timer
+	dmaRunning  bool
+	dmaCycle    uint16
+	dmaBaseAddr uint16
+	dmaRead     uint8
 }
 
 // NewMemory creates the memory struct and initializes it with ROM contents and default values
-func New(rom []byte, sbWriter io.Writer, controller *controller.Controller, timer *timer.Timer, audio *audio.Audio) *Memory {
-	if sbWriter == nil {
-		sbWriter = ioutil.Discard
-	}
-	return &Memory{
-
-		// HW register defaults
-		IE:   0x00,
-		IF:   0x01,
-		LCDC: 0x91,
-		LY:   0x00,
-		LYC:  0x00,
-		SCX:  0x00,
-		SCY:  0x00,
-		STAT: 0x00,
-		WX:   0x00,
-		WY:   0x00,
-		SB:   0x00,
-		SC:   0x7e,
-		BGP:  0xfc,
-		OBP0: 0xff,
-		OBP1: 0xff,
-
-		// Implementation
+func New(rom []byte, oam *[0xa0]byte, interrupts *interrupts.Interrupts, ppu *ppu.PPU, controller *controller.Controller, serial *serial.Serial, timer *timer.Timer, audio *audio.Audio) *Mapper {
+	return &Mapper{
 		mbc:        newMBC(rom),
+		oam:        oam,
+		interrupts: interrupts,
+		ppu:        ppu,
 		controller: controller,
+		serial:     serial,
 		timer:      timer,
 		audio:      audio,
-		sbWriter:   sbWriter,
 	}
 }
 
-// ExecuteMachineCycle updates the OAM after a machine cycle
-func (m *Memory) ExecuteMachineCycle() {
-	if m.oamRunning {
-		if m.oamCycle == 0 {
-			// Setup
-		} else if m.oamCycle == 1 {
-			m.oamRead = m.Read(m.oamBaseAddr)
-		} else if m.oamCycle == 161 {
-			m.OAM[159] = m.oamRead
-			m.oamRunning = false
-		} else {
-			m.OAM[m.oamCycle-2] = m.oamRead
-			m.oamRead = m.Read(m.oamBaseAddr + m.oamCycle - 1)
-		}
-		m.oamCycle++
-	}
-}
-
-func (m *Memory) startOAM(value uint8) {
-	m.oamRunning = true
-	m.oamCycle = 0
-	m.oamBaseAddr = uint16(value) << 8
-	if m.oamBaseAddr >= 0xe000 {
-		m.oamBaseAddr -= 0x2000
+func (m *Mapper) EndMachineCycle() {
+	if m.dmaRunning {
+		m.runDMA()
 	}
 }
 
 // Read a byte from the chosen memory location
-func (m *Memory) Read(addr uint16) byte {
+func (m *Mapper) Read(addr uint16) byte {
 	switch {
 	case addr < 0x8000:
 		return m.mbc.read(addr)
 	case addr < 0xa000:
-		return m.VideoRAM[addr-0x8000]
+		return m.ppu.ReadVideoRAM(addr)
 	case addr < 0xc000:
 		return m.mbc.read(addr)
 	case addr < 0xe000:
@@ -177,31 +113,26 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr < 0xfe00:
 		return m.internalRAM[addr-0xe000]
 	case addr < 0xfea0:
-		if m.oamRunning {
-			return 0xff
-		}
-		return m.OAM[addr-0xfe00]
+		return m.readOAM(addr)
 	case addr < 0xff00:
 		// Unusable region
 		return 0
 	case addr == JOYP:
 		return m.controller.ReadJOYP()
 	case addr == SB:
-		return m.SB
+		return m.serial.ReadSB()
 	case addr == SC:
-		return m.SC
+		return m.serial.ReadSC()
 	case addr == DIV:
-		return m.timer.DIV()
+		return m.timer.ReadDIV()
 	case addr == TIMA:
-		return m.timer.TIMA()
+		return m.timer.ReadTIMA()
 	case addr == TMA:
-		return m.timer.TMA()
+		return m.timer.ReadTMA()
 	case addr == TAC:
-		// First 5 bits are always high
-		return m.timer.TAC() | 0xf8
+		return m.timer.ReadTAC()
 	case addr == IF:
-		// Top 3 bits are always high
-		return m.IF | 0xe0
+		return m.interrupts.ReadIF()
 	case addr == NR10:
 		return m.audio.ReadNR10()
 	case addr == NR11:
@@ -250,52 +181,48 @@ func (m *Memory) Read(addr uint16) byte {
 	case addr < 0xff40:
 		return m.audio.ReadWaveRAM(addr)
 	case addr == LCDC:
-		return m.LCDC
+		return m.ppu.ReadLCDC()
 	case addr == STAT:
-		// First bit is always high
-		return m.STAT | 0x80
+		return m.ppu.ReadSTAT()
 	case addr == SCY:
-		return m.SCY
+		return m.ppu.ReadSCY()
 	case addr == SCX:
-		return m.SCX
+		return m.ppu.ReadSCX()
 	case addr == LY:
-		return m.LY
+		return m.ppu.ReadLY()
 	case addr == LYC:
-		return m.LYC
+		return m.ppu.ReadLYC()
 	case addr == DMA:
-		return uint8(m.oamBaseAddr >> 8)
+		return m.readDMA()
 	case addr == BGP:
-		return m.BGP
+		return m.ppu.ReadBGP()
 	case addr == OBP0:
-		return m.OBP0
+		return m.ppu.ReadOBP0()
 	case addr == OBP1:
-		return m.OBP1
+		return m.ppu.ReadOBP1()
 	case addr == WY:
-		return m.WY
+		return m.ppu.ReadWY()
 	case addr == WX:
-		return m.WX
+		return m.ppu.ReadWX()
 	case addr < 0xff80:
 		// Default if a non-hardware register is read
 		return 0xff
 	case addr < 0xffff:
 		return m.zeroPage[addr-0xff80]
 	case addr == IE:
-		return m.IE
+		return m.interrupts.ReadIE()
 	default:
 		panic(fmt.Sprintf("Read failed: 0x%04x", addr))
 	}
 }
 
 // Write a byte to the chosen memory location
-func (m *Memory) Write(addr uint16, value byte) {
+func (m *Mapper) Write(addr uint16, value byte) {
 	switch {
 	case addr < 0x8000:
 		m.mbc.write(addr, value)
 	case addr < 0xa000:
-		if m.WriteNotification != nil {
-			m.WriteNotification.WriteToVideoRAM(addr)
-		}
-		m.VideoRAM[addr-0x8000] = value
+		m.ppu.WriteVideoRAM(addr, value)
 	case addr < 0xc000:
 		m.mbc.write(addr, value)
 	case addr < 0xe000:
@@ -303,20 +230,17 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr < 0xfe00:
 		m.internalRAM[addr-0xe000] = value
 	case addr < 0xfea0:
-		m.OAM[addr-0xfe00] = value
+		m.writeOAM(addr, value)
 	case addr < 0xff00:
 		// Unusable region
 	case addr == JOYP:
 		m.controller.WriteJOYP(value)
 	case addr == SB:
-		_, err := m.sbWriter.Write([]byte{value})
-		if err != nil {
-			panic(fmt.Sprintf("Write to SB failed: %v", err))
-		}
+		m.serial.WriteSB(value)
 	case addr == SC:
-		// FIXME serial bus support
+		m.serial.WriteSC(value)
 	case addr == DIV:
-		m.timer.Reset()
+		m.timer.WriteDIV(value)
 	case addr == TIMA:
 		m.timer.WriteTIMA(value)
 	case addr == TMA:
@@ -324,7 +248,7 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr == TAC:
 		m.timer.WriteTAC(value)
 	case addr == IF:
-		m.IF = value
+		m.interrupts.WriteIF(value)
 	case addr == NR10:
 		m.audio.WriteNR10(value)
 	case addr == NR11:
@@ -372,41 +296,109 @@ func (m *Memory) Write(addr uint16, value byte) {
 	case addr < 0xff40:
 		m.audio.WriteWaveRAM(addr, value)
 	case addr == LCDC:
-		m.LCDC = value
+		m.ppu.WriteLCDC(value)
 	case addr == STAT:
-		m.STAT = value
+		m.ppu.WriteSTAT(value)
 	case addr == SCY:
-		m.SCY = value
+		m.ppu.WriteSCY(value)
 	case addr == SCX:
-		m.SCX = value
+		m.ppu.WriteSCX(value)
 	case addr == LY:
-		m.LY = value
+		m.ppu.WriteLY(value)
 	case addr == LYC:
-		m.LYC = value
+		m.ppu.WriteLYC(value)
 	case addr == DMA:
-		m.startOAM(value)
+		m.writeDMA(value)
 	case addr == BGP:
-		// FIXME palette support
+		m.ppu.WriteBGP(value)
 	case addr == OBP0:
-		// FIXME sprite palette support
+		m.ppu.WriteOBP0(value)
 	case addr == OBP1:
-		// FIXME sprite palette support
+		m.ppu.WriteOBP1(value)
 	case addr == WY:
-		m.WY = value
+		m.ppu.WriteWY(value)
 	case addr == WX:
-		m.WX = value
+		m.ppu.WriteWX(value)
 	case addr < 0xff80:
 		// Do nothing if a non-hardware register is written
 	case addr < 0xffff:
 		m.zeroPage[addr-0xff80] = value
 	case addr == IE:
-		m.IE = value
+		m.interrupts.WriteIE(value)
 	default:
 		panic(fmt.Sprintf("Write failed: 0x%04x", addr))
 	}
 }
 
 // CartRAM returns the contents of cartridge RAM, which is useful for verifing test results
-func (m *Memory) CartRAM() [][0x2000]byte {
+func (m *Mapper) CartRAM() [][0x2000]byte {
 	return m.mbc.ram
+}
+
+func (m *Mapper) readOAM(addr uint16) uint8 {
+	if m.dmaRunning {
+		return 0xff
+	}
+	return m.oam[addr-0xfe00]
+}
+
+func (m *Mapper) writeOAM(addr uint16, value uint8) {
+	m.oam[addr-0xfe00] = value
+}
+
+// ExecuteMachineCycle updates the OAM after a machine cycle
+func (m *Mapper) runDMA() {
+	if m.dmaCycle == 0 {
+		// Setup
+	} else if m.dmaCycle == 1 {
+		m.dmaRead = m.Read(m.dmaBaseAddr)
+	} else if m.dmaCycle == 161 {
+		m.oam[159] = m.dmaRead
+		m.dmaRunning = false
+	} else {
+		m.oam[m.dmaCycle-2] = m.dmaRead
+		m.dmaRead = m.Read(m.dmaBaseAddr + m.dmaCycle - 1)
+	}
+	m.dmaCycle++
+}
+
+func (m *Mapper) startDMA(value uint8) {
+	m.dmaRunning = true
+	m.dmaCycle = 0
+	m.dmaBaseAddr = uint16(value) << 8
+	if m.dmaBaseAddr >= 0xe000 {
+		m.dmaBaseAddr -= 0x2000
+	}
+}
+
+// FF46 - DMA - DMA Transfer and Start Address (W)
+// Writing to this register launches a DMA transfer from ROM or RAM to OAM memory
+// (sprite attribute table). The written value specifies the transfer source
+// address divided by 100h, ie. source & destination are:
+// Source:      XX00-XX9F   ;XX in range from 00-F1h
+// Destination: FE00-FE9F
+// It takes 160 microseconds until the transfer has completed (80 microseconds in
+// CGB Double Speed Mode), during this time the CPU can access only HRAM (memory
+// at FF80-FFFE). For this reason, the programmer must copy a short procedure
+// into HRAM, and use this procedure to start the transfer from inside HRAM, and
+// wait until the transfer has finished:
+//  ld  (0FF46h),a ;start DMA transfer, a=start address/100h
+//  ld  a,28h      ;delay...
+// wait:           ;total 5x40 cycles, approx 200ms
+//  dec a          ;1 cycle
+//  jr  nz,wait    ;4 cycles
+// Most programs are executing this procedure from inside of their VBlank
+// procedure, but it is possible to execute it during display redraw also,
+// allowing to display more than 40 sprites on the screen (ie. for example 40
+// sprites in upper half, and other 40 sprites in lower half of the screen).
+
+func (m *Mapper) writeDMA(value uint8) {
+	// fmt.Printf("> DMA - 0x%02x\n", value)
+	m.startDMA(value)
+}
+
+func (m *Mapper) readDMA() uint8 {
+	dma := uint8(m.dmaBaseAddr >> 8)
+	// fmt.Printf("< DMA - 0x%02x\n", dma )
+	return dma
 }

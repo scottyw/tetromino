@@ -21,23 +21,23 @@ func assertCounter(t *testing.T, timer *Timer, counter uint16) {
 }
 
 func assertDiv(t *testing.T, timer *Timer, div uint8) {
-	if timer.DIV() != div {
+	if timer.ReadDIV() != div {
 		_, line, file, _ := runtime.Caller(1)
-		t.Errorf("\n%s:%d: Wrong DIV: 0x%02x", line, file, timer.DIV())
+		t.Errorf("\n%s:%d: Wrong DIV: 0x%02x", line, file, timer.ReadDIV())
 	}
 }
 
 func assertTac(t *testing.T, timer *Timer, tac uint8) {
-	if timer.TAC() != tac {
+	if timer.ReadTAC() != tac|0xf8 {
 		_, line, file, _ := runtime.Caller(1)
-		t.Errorf("\n%s:%d: Wrong TAC: 0x%02x", line, file, timer.TAC())
+		t.Errorf("\n%s:%d: Wrong TAC: 0x%02x", line, file, timer.ReadTAC())
 	}
 }
 
 func assertTima(t *testing.T, timer *Timer, tima uint8) {
-	if timer.TIMA() != tima {
+	if timer.ReadTIMA() != tima {
 		_, line, file, _ := runtime.Caller(1)
-		t.Errorf("\n%s:%d: Wrong TIMA: 0x%02x", line, file, timer.TIMA())
+		t.Errorf("\n%s:%d: Wrong TIMA: 0x%02x", line, file, timer.ReadTIMA())
 	}
 }
 

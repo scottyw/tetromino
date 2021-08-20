@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"strconv"
 
-	"github.com/scottyw/tetromino/gameboy/mem"
+	"github.com/scottyw/tetromino/gameboy/memory"
 )
 
 type metadata struct {
@@ -19,7 +19,7 @@ type metadata struct {
 	Prefixed         bool
 	MachineCycles    int
 	AltMachineCycles int
-	Func             func(*CPU, *mem.Memory, string, string, uint8, uint16) map[string]bool
+	Func             func(*CPU, *memory.Mapper, string, string, uint8, uint16) map[string]bool
 }
 
 type metadataContainer struct {

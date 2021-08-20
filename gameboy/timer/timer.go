@@ -71,31 +71,37 @@ func (t *Timer) Reset() {
 }
 
 // DIV returns the value of the DIV register
-func (t *Timer) DIV() uint8 {
+func (t *Timer) ReadDIV() uint8 {
 	return uint8(t.counter >> 8)
 }
 
 // TAC returns the value of the TAC register
-func (t *Timer) TAC() uint8 {
-	return t.tac
+func (t *Timer) ReadTAC() uint8 {
+	// First 5 bits are always high
+	return t.tac | 0xf8
 }
 
 // TIMA returns the value of the TIMA register
-func (t *Timer) TIMA() uint8 {
+func (t *Timer) ReadTIMA() uint8 {
 	return t.tima
 }
 
 // TMA returns the value of the TMA register
-func (t *Timer) TMA() uint8 {
+func (t *Timer) ReadTMA() uint8 {
 	return t.tma
 }
 
-// WriteTAC returns the value of the TAC register
+// WriteDIV is called on writes to the DIV register
+func (t *Timer) WriteDIV(value uint8) {
+	t.Reset()
+}
+
+// WriteTAC is called on writes to the TAC register
 func (t *Timer) WriteTAC(value uint8) {
 	t.tac = value
 }
 
-// WriteTIMA returns the value of the TIMA register
+// WriteTIMA is called on writes to the TIMA register
 func (t *Timer) WriteTIMA(value uint8) {
 	if t.counter != t.endCycleB-4 {
 		t.tima = value
@@ -103,7 +109,7 @@ func (t *Timer) WriteTIMA(value uint8) {
 	}
 }
 
-// WriteTMA returns the value of the TMA register
+// WriteTMA is called on writes to the TMA register
 func (t *Timer) WriteTMA(value uint8) {
 	t.tma = value
 	t.tmaWrite = true

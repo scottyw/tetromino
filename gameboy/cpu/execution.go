@@ -6,47 +6,46 @@ import (
 
 func (d *Dispatch) handleInterrupt() func() {
 	cpu := d.cpu
-	memory := d.memory
+	mapper := d.mapper
 	return func() {
 		if cpu.ime {
-			interrupts := memory.IE & memory.IF & 0x1f
+			interrupts := cpu.interrupts.IE & cpu.interrupts.IF & 0x1f
 			cpu.ime = false
 
 			switch {
 			case interrupts&bit0 > 0:
 				// 0040 Vertical Blank Interrupt Start Address
 				cpu.rst(0x0040)()
-				memory.IF &^= bit0
+				cpu.interrupts.IF &^= bit0
 			case interrupts&bit1 > 0:
 				// 0048 LCDC Status Interrupt Start Address
 				cpu.rst(0x0048)()
-				memory.IF &^= bit1
+				cpu.interrupts.IF &^= bit1
 			case interrupts&bit2 > 0:
 				// 0050 Timer OverflowInterrupt Start Address
 				cpu.rst(0x0050)()
-				memory.IF &^= bit2
+				cpu.interrupts.IF &^= bit2
 			case interrupts&bit3 > 0:
 				// 0058 Serial Transfer Completion Interrupt Start Address
 				cpu.rst(0x0058)()
-				memory.IF &^= bit3
+				cpu.interrupts.IF &^= bit3
 			case interrupts&bit4 > 0:
 				// 0060 High-to-Low of P10-P13 Interrupt Start Address
 				cpu.rst(0x0060)()
-				memory.IF &^= bit4
+				cpu.interrupts.IF &^= bit4
 			}
 
 			// Now push the PC
-			cpu.push(memory, &cpu.m8b)()
-			cpu.push(memory, &cpu.m8a)()
+			cpu.push(mapper, &cpu.m8b)()
+			cpu.push(mapper, &cpu.m8a)()
 		}
 	}
 }
 
 func (d *Dispatch) checkInterrupts() *[]func() {
 	cpu := d.cpu
-	memory := d.memory
 	var length int
-	interrupts := memory.IE & memory.IF & 0x1f
+	interrupts := cpu.interrupts.IE & cpu.interrupts.IF & 0x1f
 	if interrupts > 0 {
 		if cpu.halted {
 			cpu.halted = false
@@ -106,8 +105,8 @@ func (d *Dispatch) useAltMachineCycles(instruction uint8) bool {
 // Every instruction is implemented as a list of steps that take one machine cycle each
 func (d *Dispatch) peek() *[]func() {
 	cpu := d.cpu
-	memory := d.memory
-	instructionByte := memory.Read(cpu.pc)
+	mapper := d.mapper
+	instructionByte := mapper.Read(cpu.pc)
 	// Mooneye uses the 0x40 instruction as a magic breakpoint
 	// to indicate that a test rom has completed
 	if instructionByte == 0x40 {
@@ -118,7 +117,7 @@ func (d *Dispatch) peek() *[]func() {
 		panic(fmt.Sprintf("Unknown instruction opcode: %v", md))
 	}
 	if instructionByte == 0xcb {
-		instructionByte = memory.Read(cpu.pc + 1)
+		instructionByte = mapper.Read(cpu.pc + 1)
 		md = prefixedInstructionMetadata[instructionByte]
 	}
 	pc := cpu.pc
@@ -136,10 +135,10 @@ func (d *Dispatch) peek() *[]func() {
 		if cpu.debugCPU {
 			switch md.Length {
 			case 2:
-				u8 := memory.Read(cpu.pc + 1)
+				u8 := mapper.Read(cpu.pc + 1)
 				value = fmt.Sprintf("%02x", u8)
 			case 3:
-				u16 := uint16(memory.Read(cpu.pc+1)) | uint16(memory.Read(cpu.pc+2))<<8
+				u16 := uint16(mapper.Read(cpu.pc+1)) | uint16(mapper.Read(cpu.pc+2))<<8
 				value = fmt.Sprintf("%04x", u16)
 			}
 		}

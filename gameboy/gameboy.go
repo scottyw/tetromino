@@ -10,8 +10,10 @@ import (
 	"github.com/scottyw/tetromino/gameboy/controller"
 	"github.com/scottyw/tetromino/gameboy/cpu"
 	"github.com/scottyw/tetromino/gameboy/display"
-	"github.com/scottyw/tetromino/gameboy/lcd"
-	"github.com/scottyw/tetromino/gameboy/mem"
+	"github.com/scottyw/tetromino/gameboy/interrupts"
+	"github.com/scottyw/tetromino/gameboy/memory"
+	"github.com/scottyw/tetromino/gameboy/ppu"
+	"github.com/scottyw/tetromino/gameboy/serial"
 	"github.com/scottyw/tetromino/gameboy/speakers"
 	"github.com/scottyw/tetromino/gameboy/timer"
 )
@@ -33,21 +35,23 @@ type Gameboy struct {
 	controller *controller.Controller
 	dispatch   *cpu.Dispatch
 	display    *display.Display
-	lcd        *lcd.LCD
-	memory     *mem.Memory
+	interrupts *interrupts.Interrupts
+	ppu        *ppu.PPU
+	mapper     *memory.Mapper
 	speakers   *speakers.Speakers
 	timer      *timer.Timer
 }
 
 // NewGameboy returns a new Gameboy
 func New(config Config) *Gameboy {
-	var rom []byte
-	if config.RomFilename == "" {
-		rom = make([]byte, 0x8000)
-	} else {
-		rom = readRomFile(config.RomFilename)
-	}
-	c := cpu.New(config.DebugCPU)
+
+	// Create interrrupts subsystem
+	i := interrupts.New()
+
+	// Create CPU
+	c := cpu.New(i, config.DebugCPU)
+
+	// Create controller
 	controller := controller.New(c.Restart)
 
 	// Create a display
@@ -66,18 +70,34 @@ func New(config Config) *Gameboy {
 		a = audio.New(nil, nil)
 	}
 
+	// Create OAM memory
+	oam := [0xa0]byte{}
+
+	// Create the PPU
+	ppu := ppu.New(&oam, i, config.DebugLCD)
+
+	// Create the serial bus subsystem
+	serial := serial.New(config.SerialWriter)
+
+	// Create the timer subsystem
 	timer := timer.New()
-	memory := mem.New(rom, config.SerialWriter, controller, timer, a)
-	dispatch := cpu.NewDispatch(c, memory)
-	lcd := lcd.New(memory, config.DebugLCD)
+
+	// Load the ROM file
+	rom := readRomFile(config.RomFilename)
+
+	mapper := memory.New(rom, &oam, i, ppu, controller, serial, timer, a)
+
+	dispatch := cpu.NewDispatch(c, mapper)
+
 	return &Gameboy{
 		audio:      a,
 		config:     config,
 		controller: controller,
 		dispatch:   dispatch,
 		display:    d,
-		lcd:        lcd,
-		memory:     memory,
+		interrupts: i,
+		ppu:        ppu,
+		mapper:     mapper,
 		speakers:   s,
 		timer:      timer,
 	}
@@ -111,15 +131,15 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 	// Each LCD frame is 17556 machine cycles
 	for mtick := 0; mtick < 17556; mtick++ {
 		gb.dispatch.ExecuteMachineCycle()
-		gb.memory.ExecuteMachineCycle()
-		gb.lcd.EndMachineCycle()
+		gb.ppu.EndMachineCycle()
+		gb.mapper.EndMachineCycle()
 		gb.audio.EndMachineCycle()
 		timerInterruptRequested := gb.timer.EndMachineCycle()
 		if timerInterruptRequested {
-			gb.memory.IF |= 0x04
+			gb.interrupts.IF |= 0x04
 		}
 	}
-	frame := gb.lcd.FrameEnd()
+	frame := gb.ppu.Frame()
 	if gb.display != nil {
 		return gb.display.RenderFrame(frame)
 	}

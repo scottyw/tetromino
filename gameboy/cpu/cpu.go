@@ -1,5 +1,7 @@
 package cpu
 
+import "github.com/scottyw/tetromino/gameboy/interrupts"
+
 const (
 	bit0 uint8 = 1 << iota
 	bit1 uint8 = 1 << iota
@@ -35,12 +37,13 @@ type CPU struct {
 	l uint8
 
 	// State
-	sp      uint16
-	pc      uint16
-	ime     bool
-	halted  bool
-	haltbug bool
-	stopped bool
+	sp         uint16
+	pc         uint16
+	ime        bool
+	halted     bool
+	haltbug    bool
+	stopped    bool
+	interrupts *interrupts.Interrupts
 
 	// Context
 	u8a uint8 // 8-bit instruction argument
@@ -53,20 +56,21 @@ type CPU struct {
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
-func New(debugCPU bool) *CPU {
+func New(interrupts *interrupts.Interrupts, debugCPU bool) *CPU {
 	return &CPU{
-		debugCPU: debugCPU,
-		ime:      true,
-		a:        0x01,
-		f:        0xb0,
-		b:        0x00,
-		c:        0x13,
-		d:        0x00,
-		e:        0xd8,
-		h:        0x01,
-		l:        0x4d,
-		sp:       0xfffe,
-		pc:       0x0100,
+		interrupts: interrupts,
+		debugCPU:   debugCPU,
+		ime:        true,
+		a:          0x01,
+		f:          0xb0,
+		b:          0x00,
+		c:          0x13,
+		d:          0x00,
+		e:          0xd8,
+		h:          0x01,
+		l:          0x4d,
+		sp:         0xfffe,
+		pc:         0x0100,
 	}
 }
 
