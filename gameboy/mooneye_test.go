@@ -52,18 +52,9 @@ func runMooneyeTest(t *testing.T, filename string) {
 func TestMooneyeBoot(t *testing.T) {
 
 	for _, filename := range []string{
-		// "testdata/mooneye-gb_hwtests/acceptance/boot_div-dmg0.gb",
 		"testdata/mooneye-gb_hwtests/acceptance/boot_div-dmgABCmgb.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_div-S.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_div2-S.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_hwio-dmg0.gb",
 		"testdata/mooneye-gb_hwtests/acceptance/boot_hwio-dmgABCmgb.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_hwio-S.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-dmg0.gb",
 		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-dmgABC.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-mgb.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-sgb.gb",
-		"testdata/mooneye-gb_hwtests/acceptance/boot_regs-sgb2.gb",
 	} {
 		t.Run(filename, func(t *testing.T) {
 			runMooneyeTest(t, filename)
@@ -287,13 +278,9 @@ func TestMooneyeMBC5(t *testing.T) {
 func TestMooneyeMisc(t *testing.T) {
 
 	for _, filename := range []string{
-		"testdata/mooneye-gb_hwtests/misc/bits/unused_hwio-C.gb",
 		"testdata/mooneye-gb_hwtests/misc/boot_div-A.gb",
-		"testdata/mooneye-gb_hwtests/misc/boot_div-cgb0.gb",
-		"testdata/mooneye-gb_hwtests/misc/boot_div-cgbABCDE.gb",
 		"testdata/mooneye-gb_hwtests/misc/boot_hwio-C.gb",
 		"testdata/mooneye-gb_hwtests/misc/boot_regs-A.gb",
-		"testdata/mooneye-gb_hwtests/misc/boot_regs-cgb.gb",
 		"testdata/mooneye-gb_hwtests/misc/ppu/vblank_stat_intr-C.gb",
 	} {
 		t.Run(filename, func(t *testing.T) {
