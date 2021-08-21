@@ -226,12 +226,19 @@ func (ppu *PPU) ReadWX() uint8 {
 // WriteBGP handles writes to register BGP
 func (ppu *PPU) WriteBGP(value uint8) {
 	// fmt.Printf("> BGP - 0x%02x\n", value)
-	ppu.bgp = value
+	ppu.colour3 = (value >> 6) & 0x03
+	ppu.colour2 = (value >> 4) & 0x03
+	ppu.colour1 = (value >> 2) & 0x03
+	ppu.colour0 = value & 0x03
 }
 
 // ReadBGP handles reads from register BGP
 func (ppu *PPU) ReadBGP() uint8 {
-	bgp := ppu.bgp
+	var bgp uint8
+	bgp += ppu.colour3 << 6
+	bgp += ppu.colour2 << 4
+	bgp += ppu.colour1 << 2
+	bgp += ppu.colour0
 	// fmt.Printf("< BGP - 0x%02x\n", bgp )
 	return bgp
 }

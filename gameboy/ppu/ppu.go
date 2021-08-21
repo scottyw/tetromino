@@ -26,6 +26,12 @@ type PPU struct {
 	coincidence          bool
 	mode                 uint8
 
+	// BGP
+	colour0 uint8
+	colour1 uint8
+	colour2 uint8
+	colour3 uint8
+
 	// Unstructured registers
 	ly   uint8
 	lyc  uint8
@@ -33,7 +39,6 @@ type PPU struct {
 	scy  uint8
 	wx   uint8
 	wy   uint8
-	bgp  uint8
 	obp0 uint8
 	obp1 uint8
 
