@@ -71,54 +71,47 @@ func (ppu *PPU) EndMachineCycle() {
 	switch {
 	case x == 0 && ppu.ly == 144:
 		// v-blank period starts
-		ppu.stat = (ppu.stat & 0xfc) | 0x01
-
-		// v-blank interrupt
+		ppu.mode = 1
+		// v-blank interrupt always occurs
 		ppu.interrupts.IF |= 0x01
-		// is lcd stat interrupt enabled?
-		if ppu.stat&0x10 > 0 {
+		// if the vblank interrupt is also enabled in stat
+		// then the stat interrupt occurs too
+		if ppu.vblankInterrupt {
 			ppu.interrupts.IF |= 0x02
 		}
-
 	case x == 0 && ppu.ly < 144:
 		// oam period starts
-		ppu.stat = (ppu.stat & 0xfc) | 0x02
-
-		// is lcd stat interrupt enabled?
-		if ppu.stat&0x20 > 0 {
+		ppu.mode = 2
+		// if the oam interrupt is enabled in stat
+		// then the stat interrupt occurs
+		if ppu.oamInterrupt {
 			ppu.interrupts.IF |= 0x02
 		}
-
 	case x == 20 && ppu.ly < 144:
 		// lcd data transfer period starts
-		ppu.stat = (ppu.stat & 0xfc) | 0x03
+		ppu.mode = 3
 	case x == 63 && ppu.ly < 144:
 		// h-blank period starts
-		ppu.stat = (ppu.stat & 0xfc)
-
-		// is lcd stat interrupt enabled?
-		if ppu.stat&0x08 > 0 {
+		ppu.mode = 0
+		// if the hblank interrupt is enabled in stat
+		// then the stat interrupt occurs
+		if ppu.hlankInterrupt {
 			ppu.interrupts.IF |= 0x02
 		}
-
 		// render lcd line
 		ppu.updateLcdLine(ppu.ly)
 	}
 
 	// check coincidence flag
 	if x == 0 {
-		if ppu.ly == ppu.lyc {
-			ppu.stat |= 0x04
-
-			// is lcd stat interrupt enabled?
-			if ppu.stat&0x40 > 0 {
-				ppu.interrupts.IF |= 0x02
-			}
-
-		} else {
-			ppu.stat &^= 0x04
+		ppu.coincidence = ppu.ly == ppu.lyc
+		// if the coincidence interrupt is enabled in stat
+		// then the stat interrupt occurs
+		if ppu.coincidence && ppu.coincidenceInterrupt {
+			ppu.interrupts.IF |= 0x02
 		}
 	}
+
 }
 
 func (ppu *PPU) readTile(tileNumber uint16) (*[8][8]uint8, bool) {

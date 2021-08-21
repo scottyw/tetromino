@@ -18,17 +18,26 @@ type PPU struct {
 	spritesEnabled    bool
 	bgEnabled         bool
 
+	// STAT
+	coincidenceInterrupt bool
+	oamInterrupt         bool
+	vblankInterrupt      bool
+	hlankInterrupt       bool
+	coincidence          bool
+	mode                 uint8
+
+	// Unstructured registers
 	ly   uint8
 	lyc  uint8
 	scx  uint8
 	scy  uint8
-	stat uint8
 	wx   uint8
 	wy   uint8
 	bgp  uint8
 	obp0 uint8
 	obp1 uint8
 
+	// Internal state
 	interrupts *interrupts.Interrupts
 	videoRAM   [0x2000]byte
 	oam        *[0xa0]byte

@@ -72,13 +72,32 @@ func (ppu *PPU) ReadLCDC() uint8 {
 // WriteSTAT handles writes to register STAT
 func (ppu *PPU) WriteSTAT(value uint8) {
 	// fmt.Printf("> STAT - 0x%02x\n", value)
-	ppu.stat = value
+	ppu.coincidenceInterrupt = value&0x40 > 0
+	ppu.oamInterrupt = value&0x20 > 0
+	ppu.vblankInterrupt = value&0x10 > 0
+	ppu.hlankInterrupt = value&0x08 > 0
 }
 
 // ReadSTAT handles reads from register STAT
 func (ppu *PPU) ReadSTAT() uint8 {
 	// First bit is always high
-	stat := ppu.stat | 0x80
+	stat := uint8(0x80)
+	if ppu.coincidenceInterrupt {
+		stat += 0x40
+	}
+	if ppu.oamInterrupt {
+		stat += 0x20
+	}
+	if ppu.vblankInterrupt {
+		stat += 0x10
+	}
+	if ppu.hlankInterrupt {
+		stat += 0x08
+	}
+	if ppu.coincidence {
+		stat += 0x04
+	}
+	stat += ppu.mode
 	// fmt.Printf("< STAT - 0x%02x\n", stat )
 	return stat
 }
