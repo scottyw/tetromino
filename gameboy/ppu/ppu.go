@@ -27,20 +27,28 @@ type PPU struct {
 	mode                 uint8
 
 	// BGP
-	colour0 uint8
-	colour1 uint8
-	colour2 uint8
-	colour3 uint8
+	bgpColour0 uint8
+	bgpColour1 uint8
+	bgpColour2 uint8
+	bgpColour3 uint8
 
-	// Unstructured registers
-	ly   uint8
-	lyc  uint8
-	scx  uint8
-	scy  uint8
-	wx   uint8
-	wy   uint8
-	obp0 uint8
-	obp1 uint8
+	// OBP0
+	obp0Colour1 uint8
+	obp0Colour2 uint8
+	obp0Colour3 uint8
+
+	// OBP1
+	obp1Colour1 uint8
+	obp1Colour2 uint8
+	obp1Colour3 uint8
+
+	// Single-value registers
+	ly  uint8
+	lyc uint8
+	scx uint8
+	scy uint8
+	wx  uint8
+	wy  uint8
 
 	// Internal state
 	interrupts *interrupts.Interrupts
@@ -49,7 +57,7 @@ type PPU struct {
 	tick       int
 	debug      bool
 
-	// LCD
+	// Internal LCD state
 	tileCache      [384]*[8][8]uint8
 	previousBg     [32][32]uint16
 	previousWindow [32][32]uint16

@@ -399,6 +399,6 @@ func (m *Mapper) writeDMA(value uint8) {
 
 func (m *Mapper) readDMA() uint8 {
 	dma := uint8(m.dmaBaseAddr >> 8)
-	// fmt.Printf("< DMA - 0x%02x\n", dma )
+	// fmt.Printf("< DMA - 0x%02x\n", dma)
 	return dma
 }

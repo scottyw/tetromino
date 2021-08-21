@@ -50,7 +50,7 @@ func (ppu *PPU) ReadLCDC() uint8 {
 	if ppu.bgEnabled {
 		lcdc += 0x01
 	}
-	// fmt.Printf("< LCDC - 0x%02x\n", lcdc )
+	// fmt.Printf("< LCDC - 0x%02x\n", lcdc)
 	return lcdc
 }
 
@@ -98,7 +98,7 @@ func (ppu *PPU) ReadSTAT() uint8 {
 		stat += 0x04
 	}
 	stat += ppu.mode
-	// fmt.Printf("< STAT - 0x%02x\n", stat )
+	// fmt.Printf("< STAT - 0x%02x\n", stat)
 	return stat
 }
 
@@ -119,7 +119,7 @@ func (ppu *PPU) WriteSCY(value uint8) {
 // ReadSCY handles reads from register SCY
 func (ppu *PPU) ReadSCY() uint8 {
 	scy := ppu.scy
-	// fmt.Printf("< SCY - 0x%02x\n", scy )
+	// fmt.Printf("< SCY - 0x%02x\n", scy)
 	return scy
 }
 
@@ -132,7 +132,7 @@ func (ppu *PPU) WriteSCX(value uint8) {
 // ReadSCX handles reads from register SCX
 func (ppu *PPU) ReadSCX() uint8 {
 	scx := ppu.scx
-	// fmt.Printf("< SCX - 0x%02x\n", scx )
+	// fmt.Printf("< SCX - 0x%02x\n", scx)
 	return scx
 }
 
@@ -151,7 +151,7 @@ func (ppu *PPU) WriteLY(value uint8) {
 // ReadLY handles reads from register LY
 func (ppu *PPU) ReadLY() uint8 {
 	ly := ppu.ly
-	// fmt.Printf("< LY - 0x%02x\n", ly )
+	// fmt.Printf("< LY - 0x%02x\n", ly)
 	return ly
 }
 
@@ -169,7 +169,7 @@ func (ppu *PPU) WriteLYC(value uint8) {
 // ReadLYC handles reads from register LYC
 func (ppu *PPU) ReadLYC() uint8 {
 	lyc := ppu.lyc
-	// fmt.Printf("< LYC - 0x%02x\n", lyc )
+	// fmt.Printf("< LYC - 0x%02x\n", lyc)
 	return lyc
 }
 
@@ -192,7 +192,7 @@ func (ppu *PPU) WriteWY(value uint8) {
 // ReadWY handles reads from register WY
 func (ppu *PPU) ReadWY() uint8 {
 	wy := ppu.wy
-	// fmt.Printf("< WY - 0x%02x\n", wy )
+	// fmt.Printf("< WY - 0x%02x\n", wy)
 	return wy
 }
 
@@ -205,7 +205,7 @@ func (ppu *PPU) WriteWX(value uint8) {
 // ReadWX handles reads from register WX
 func (ppu *PPU) ReadWX() uint8 {
 	wx := ppu.wx
-	// fmt.Printf("< WX - 0x%02x\n", wx )
+	// fmt.Printf("< WX - 0x%02x\n", wx)
 	return wx
 }
 
@@ -226,20 +226,20 @@ func (ppu *PPU) ReadWX() uint8 {
 // WriteBGP handles writes to register BGP
 func (ppu *PPU) WriteBGP(value uint8) {
 	// fmt.Printf("> BGP - 0x%02x\n", value)
-	ppu.colour3 = (value >> 6) & 0x03
-	ppu.colour2 = (value >> 4) & 0x03
-	ppu.colour1 = (value >> 2) & 0x03
-	ppu.colour0 = value & 0x03
+	ppu.bgpColour3 = (value >> 6) & 0x03
+	ppu.bgpColour2 = (value >> 4) & 0x03
+	ppu.bgpColour1 = (value >> 2) & 0x03
+	ppu.bgpColour0 = value & 0x03
 }
 
 // ReadBGP handles reads from register BGP
 func (ppu *PPU) ReadBGP() uint8 {
 	var bgp uint8
-	bgp += ppu.colour3 << 6
-	bgp += ppu.colour2 << 4
-	bgp += ppu.colour1 << 2
-	bgp += ppu.colour0
-	// fmt.Printf("< BGP - 0x%02x\n", bgp )
+	bgp += ppu.bgpColour3 << 6
+	bgp += ppu.bgpColour2 << 4
+	bgp += ppu.bgpColour1 << 2
+	bgp += ppu.bgpColour0
+	// fmt.Printf("< BGP - 0x%02x\n", bgp)
 	return bgp
 }
 
@@ -251,13 +251,18 @@ func (ppu *PPU) ReadBGP() uint8 {
 // WriteOBP0 handles writes to register OBP0
 func (ppu *PPU) WriteOBP0(value uint8) {
 	// fmt.Printf("> OBP0 - 0x%02x\n", value)
-	ppu.obp0 = value
+	ppu.obp0Colour3 = (value >> 6) & 0x03
+	ppu.obp0Colour2 = (value >> 4) & 0x03
+	ppu.obp0Colour1 = (value >> 2) & 0x03
 }
 
 // ReadOBP0 handles reads from register OBP0
 func (ppu *PPU) ReadOBP0() uint8 {
-	obp0 := ppu.obp0
-	// fmt.Printf("< OBP0 - 0x%02x\n", obp0 )
+	var obp0 uint8
+	obp0 += ppu.obp0Colour3 << 6
+	obp0 += ppu.obp0Colour2 << 4
+	obp0 += ppu.obp0Colour1 << 2
+	// fmt.Printf("< OBP0 - 0x%02x\n", obp0)
 	return obp0
 }
 
@@ -269,12 +274,17 @@ func (ppu *PPU) ReadOBP0() uint8 {
 // WriteOBP1 handles writes to register OBP1
 func (ppu *PPU) WriteOBP1(value uint8) {
 	// fmt.Printf("> OBP1 - 0x%02x\n", value)
-	ppu.obp1 = value
+	ppu.obp1Colour3 = (value >> 6) & 0x03
+	ppu.obp1Colour2 = (value >> 4) & 0x03
+	ppu.obp1Colour1 = (value >> 2) & 0x03
 }
 
 // ReadOBP1 handles reads from register OBP1
 func (ppu *PPU) ReadOBP1() uint8 {
-	obp1 := ppu.obp1
-	// fmt.Printf("< OBP1 - 0x%02x\n", obp1 )
+	var obp1 uint8
+	obp1 += ppu.obp1Colour3 << 6
+	obp1 += ppu.obp1Colour2 << 4
+	obp1 += ppu.obp1Colour1 << 2
+	// fmt.Printf("< OBP1 - 0x%02x\n", obp1)
 	return obp1
 }
