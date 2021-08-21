@@ -136,7 +136,7 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 		gb.audio.EndMachineCycle()
 		timerInterruptRequested := gb.timer.EndMachineCycle()
 		if timerInterruptRequested {
-			gb.interrupts.IF |= 0x04
+			gb.interrupts.RequestTimer()
 		}
 	}
 	frame := gb.ppu.Frame()

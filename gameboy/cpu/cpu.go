@@ -39,7 +39,6 @@ type CPU struct {
 	// State
 	sp         uint16
 	pc         uint16
-	ime        bool
 	halted     bool
 	haltbug    bool
 	stopped    bool
@@ -60,7 +59,6 @@ func New(interrupts *interrupts.Interrupts, debugCPU bool) *CPU {
 	return &CPU{
 		interrupts: interrupts,
 		debugCPU:   debugCPU,
-		ime:        true,
 		a:          0x01,
 		f:          0xb0,
 		b:          0x00,

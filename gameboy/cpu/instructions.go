@@ -280,20 +280,19 @@ func (cpu *CPU) decSP() {
 }
 
 func (cpu *CPU) di() {
-	cpu.ime = false
+	cpu.interrupts.Disable()
 }
 
 func (cpu *CPU) ei() {
-	cpu.ime = true
+	cpu.interrupts.Enable()
 }
 
 func (cpu *CPU) halt() func() {
 	return func() {
-		if cpu.ime {
+		if cpu.interrupts.Enabled() {
 			cpu.halted = true
 		} else {
-			interrupts := cpu.interrupts.IE & cpu.interrupts.IF & 0x1f
-			if interrupts == 0 {
+			if !cpu.interrupts.Pending() {
 				cpu.halted = true
 			} else {
 				cpu.haltbug = true

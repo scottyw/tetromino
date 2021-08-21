@@ -73,11 +73,11 @@ func (ppu *PPU) EndMachineCycle() {
 		// v-blank period starts
 		ppu.mode = 1
 		// v-blank interrupt always occurs
-		ppu.interrupts.IF |= 0x01
+		ppu.interrupts.RequestVblank()
 		// if the vblank interrupt is also enabled in stat
 		// then the stat interrupt occurs too
 		if ppu.vblankInterrupt {
-			ppu.interrupts.IF |= 0x02
+			ppu.interrupts.RequestStat()
 		}
 	case x == 0 && ppu.ly < 144:
 		// oam period starts
@@ -85,7 +85,7 @@ func (ppu *PPU) EndMachineCycle() {
 		// if the oam interrupt is enabled in stat
 		// then the stat interrupt occurs
 		if ppu.oamInterrupt {
-			ppu.interrupts.IF |= 0x02
+			ppu.interrupts.RequestStat()
 		}
 	case x == 20 && ppu.ly < 144:
 		// lcd data transfer period starts
@@ -96,7 +96,7 @@ func (ppu *PPU) EndMachineCycle() {
 		// if the hblank interrupt is enabled in stat
 		// then the stat interrupt occurs
 		if ppu.hlankInterrupt {
-			ppu.interrupts.IF |= 0x02
+			ppu.interrupts.RequestStat()
 		}
 		// render lcd line
 		ppu.updateLcdLine(ppu.ly)
@@ -108,7 +108,7 @@ func (ppu *PPU) EndMachineCycle() {
 		// if the coincidence interrupt is enabled in stat
 		// then the stat interrupt occurs
 		if ppu.coincidence && ppu.coincidenceInterrupt {
-			ppu.interrupts.IF |= 0x02
+			ppu.interrupts.RequestStat()
 		}
 	}
 

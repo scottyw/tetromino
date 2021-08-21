@@ -8,31 +8,29 @@ func (d *Dispatch) handleInterrupt() func() {
 	cpu := d.cpu
 	mapper := d.mapper
 	return func() {
-		if cpu.ime {
-			interrupts := cpu.interrupts.IE & cpu.interrupts.IF & 0x1f
-			cpu.ime = false
-
+		if cpu.interrupts.Enabled() {
+			cpu.interrupts.Disable()
 			switch {
-			case interrupts&bit0 > 0:
+			case cpu.interrupts.VblankPending():
 				// 0040 Vertical Blank Interrupt Start Address
 				cpu.rst(0x0040)()
-				cpu.interrupts.IF &^= bit0
-			case interrupts&bit1 > 0:
+				cpu.interrupts.ResetVblank()
+			case cpu.interrupts.StatPending():
 				// 0048 LCDC Status Interrupt Start Address
 				cpu.rst(0x0048)()
-				cpu.interrupts.IF &^= bit1
-			case interrupts&bit2 > 0:
+				cpu.interrupts.ResetStat()
+			case cpu.interrupts.TimerPending():
 				// 0050 Timer OverflowInterrupt Start Address
 				cpu.rst(0x0050)()
-				cpu.interrupts.IF &^= bit2
-			case interrupts&bit3 > 0:
+				cpu.interrupts.ResetTimer()
+			case cpu.interrupts.SerialPending():
 				// 0058 Serial Transfer Completion Interrupt Start Address
 				cpu.rst(0x0058)()
-				cpu.interrupts.IF &^= bit3
-			case interrupts&bit4 > 0:
+				cpu.interrupts.ResetSerial()
+			case cpu.interrupts.JoypadPending():
 				// 0060 High-to-Low of P10-P13 Interrupt Start Address
 				cpu.rst(0x0060)()
-				cpu.interrupts.IF &^= bit4
+				cpu.interrupts.ResetJoypad()
 			}
 
 			// Now push the PC
@@ -45,13 +43,12 @@ func (d *Dispatch) handleInterrupt() func() {
 func (d *Dispatch) checkInterrupts() *[]func() {
 	cpu := d.cpu
 	var length int
-	interrupts := cpu.interrupts.IE & cpu.interrupts.IF & 0x1f
-	if interrupts > 0 {
+	if cpu.interrupts.Pending() {
 		if cpu.halted {
 			cpu.halted = false
 			length++
 		}
-		if cpu.ime {
+		if cpu.interrupts.Enabled() {
 			length += 5
 		}
 	}
