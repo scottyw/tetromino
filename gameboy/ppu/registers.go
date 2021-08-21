@@ -145,7 +145,7 @@ func (ppu *PPU) ReadSCX() uint8 {
 // WriteLY handles writes to register LY
 func (ppu *PPU) WriteLY(value uint8) {
 	// fmt.Printf("> LY - 0x%02x\n", value)
-	ppu.ly = value
+	ppu.ly = 0
 }
 
 // ReadLY handles reads from register LY
