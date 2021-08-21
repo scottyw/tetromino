@@ -4,6 +4,7 @@ import (
 	"image"
 
 	"github.com/scottyw/tetromino/gameboy/interrupts"
+	"github.com/scottyw/tetromino/gameboy/oam"
 )
 
 type PPU struct {
@@ -52,8 +53,8 @@ type PPU struct {
 
 	// Internal state
 	interrupts *interrupts.Interrupts
+	oam        *oam.OAM
 	videoRAM   [0x2000]byte
-	oam        *[0xa0]byte
 	tick       int
 	debug      bool
 
@@ -67,10 +68,10 @@ type PPU struct {
 	frame          *image.RGBA
 }
 
-func New(oam *[0xa0]byte, interrupts *interrupts.Interrupts, debug bool) *PPU {
+func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debug bool) *PPU {
 	ppu := &PPU{
-		oam:        oam,
 		interrupts: interrupts,
+		oam:        oam,
 		frame:      image.NewRGBA(image.Rect(0, 0, 256, 256)),
 		debug:      debug,
 	}

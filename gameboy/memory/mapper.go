@@ -6,6 +6,7 @@ import (
 	"github.com/scottyw/tetromino/gameboy/audio"
 	"github.com/scottyw/tetromino/gameboy/controller"
 	"github.com/scottyw/tetromino/gameboy/interrupts"
+	"github.com/scottyw/tetromino/gameboy/oam"
 	"github.com/scottyw/tetromino/gameboy/ppu"
 	"github.com/scottyw/tetromino/gameboy/serial"
 	"github.com/scottyw/tetromino/gameboy/timer"
@@ -65,22 +66,18 @@ const (
 type Mapper struct {
 	internalRAM [0x2000]byte
 	zeroPage    [0x8f]byte
-	oam         *[0xa0]byte
 	audio       *audio.Audio
 	controller  *controller.Controller
 	interrupts  *interrupts.Interrupts
+	oam         *oam.OAM
 	mbc         *mbc
 	ppu         *ppu.PPU
 	serial      *serial.Serial
 	timer       *timer.Timer
-	dmaRunning  bool
-	dmaCycle    uint16
-	dmaBaseAddr uint16
-	dmaRead     uint8
 }
 
 // NewMemory creates the memory struct and initializes it with ROM contents and default values
-func New(rom []byte, oam *[0xa0]byte, interrupts *interrupts.Interrupts, ppu *ppu.PPU, controller *controller.Controller, serial *serial.Serial, timer *timer.Timer, audio *audio.Audio) *Mapper {
+func New(rom []byte, interrupts *interrupts.Interrupts, oam *oam.OAM, ppu *ppu.PPU, controller *controller.Controller, serial *serial.Serial, timer *timer.Timer, audio *audio.Audio) *Mapper {
 	return &Mapper{
 		mbc:        newMBC(rom),
 		oam:        oam,
@@ -94,9 +91,7 @@ func New(rom []byte, oam *[0xa0]byte, interrupts *interrupts.Interrupts, ppu *pp
 }
 
 func (m *Mapper) EndMachineCycle() {
-	if m.dmaRunning {
-		m.runDMA()
-	}
+	m.oam.TickDMA(m.Read)
 }
 
 // Read a byte from the chosen memory location
@@ -113,7 +108,7 @@ func (m *Mapper) Read(addr uint16) byte {
 	case addr < 0xfe00:
 		return m.internalRAM[addr-0xe000]
 	case addr < 0xfea0:
-		return m.readOAM(addr)
+		return m.oam.ReadOAM(addr)
 	case addr < 0xff00:
 		// Unusable region
 		return 0
@@ -193,7 +188,7 @@ func (m *Mapper) Read(addr uint16) byte {
 	case addr == LYC:
 		return m.ppu.ReadLYC()
 	case addr == DMA:
-		return m.readDMA()
+		return m.oam.ReadDMA()
 	case addr == BGP:
 		return m.ppu.ReadBGP()
 	case addr == OBP0:
@@ -230,7 +225,7 @@ func (m *Mapper) Write(addr uint16, value byte) {
 	case addr < 0xfe00:
 		m.internalRAM[addr-0xe000] = value
 	case addr < 0xfea0:
-		m.writeOAM(addr, value)
+		m.oam.WriteOAM(addr, value)
 	case addr < 0xff00:
 		// Unusable region
 	case addr == JOYP:
@@ -308,7 +303,7 @@ func (m *Mapper) Write(addr uint16, value byte) {
 	case addr == LYC:
 		m.ppu.WriteLYC(value)
 	case addr == DMA:
-		m.writeDMA(value)
+		m.oam.WriteDMA(value)
 	case addr == BGP:
 		m.ppu.WriteBGP(value)
 	case addr == OBP0:
@@ -333,72 +328,4 @@ func (m *Mapper) Write(addr uint16, value byte) {
 // CartRAM returns the contents of cartridge RAM, which is useful for verifing test results
 func (m *Mapper) CartRAM() [][0x2000]byte {
 	return m.mbc.ram
-}
-
-func (m *Mapper) readOAM(addr uint16) uint8 {
-	if m.dmaRunning {
-		return 0xff
-	}
-	return m.oam[addr-0xfe00]
-}
-
-func (m *Mapper) writeOAM(addr uint16, value uint8) {
-	m.oam[addr-0xfe00] = value
-}
-
-// ExecuteMachineCycle updates the OAM after a machine cycle
-func (m *Mapper) runDMA() {
-	if m.dmaCycle == 0 {
-		// Setup
-	} else if m.dmaCycle == 1 {
-		m.dmaRead = m.Read(m.dmaBaseAddr)
-	} else if m.dmaCycle == 161 {
-		m.oam[159] = m.dmaRead
-		m.dmaRunning = false
-	} else {
-		m.oam[m.dmaCycle-2] = m.dmaRead
-		m.dmaRead = m.Read(m.dmaBaseAddr + m.dmaCycle - 1)
-	}
-	m.dmaCycle++
-}
-
-func (m *Mapper) startDMA(value uint8) {
-	m.dmaRunning = true
-	m.dmaCycle = 0
-	m.dmaBaseAddr = uint16(value) << 8
-	if m.dmaBaseAddr >= 0xe000 {
-		m.dmaBaseAddr -= 0x2000
-	}
-}
-
-// FF46 - DMA - DMA Transfer and Start Address (W)
-// Writing to this register launches a DMA transfer from ROM or RAM to OAM memory
-// (sprite attribute table). The written value specifies the transfer source
-// address divided by 100h, ie. source & destination are:
-// Source:      XX00-XX9F   ;XX in range from 00-F1h
-// Destination: FE00-FE9F
-// It takes 160 microseconds until the transfer has completed (80 microseconds in
-// CGB Double Speed Mode), during this time the CPU can access only HRAM (memory
-// at FF80-FFFE). For this reason, the programmer must copy a short procedure
-// into HRAM, and use this procedure to start the transfer from inside HRAM, and
-// wait until the transfer has finished:
-//  ld  (0FF46h),a ;start DMA transfer, a=start address/100h
-//  ld  a,28h      ;delay...
-// wait:           ;total 5x40 cycles, approx 200ms
-//  dec a          ;1 cycle
-//  jr  nz,wait    ;4 cycles
-// Most programs are executing this procedure from inside of their VBlank
-// procedure, but it is possible to execute it during display redraw also,
-// allowing to display more than 40 sprites on the screen (ie. for example 40
-// sprites in upper half, and other 40 sprites in lower half of the screen).
-
-func (m *Mapper) writeDMA(value uint8) {
-	// fmt.Printf("> DMA - 0x%02x\n", value)
-	m.startDMA(value)
-}
-
-func (m *Mapper) readDMA() uint8 {
-	dma := uint8(m.dmaBaseAddr >> 8)
-	// fmt.Printf("< DMA - 0x%02x\n", dma)
-	return dma
 }

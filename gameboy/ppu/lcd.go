@@ -219,17 +219,17 @@ func (ppu *PPU) updateSprites(lcdY uint8) {
 	}
 	ppu.sprites[lcdY] = [160]uint8{}
 	for sprite := 0; sprite < 40; sprite++ {
-		spriteAddr := uint16(sprite * 4)
-		startY := ppu.oam[spriteAddr]
+		spriteAddr := 0xfe00 + uint16(sprite*4)
+		startY := ppu.oam.ReadOAM(spriteAddr)
 		if startY == 0 || lcdY < startY-16 || lcdY >= startY-8 {
 			continue
 		}
-		startX := ppu.oam[spriteAddr+1]
+		startX := ppu.oam.ReadOAM(spriteAddr + 1)
 		if startX == 0 || startX >= 168 {
 			continue
 		}
-		tileNumber := ppu.oam[spriteAddr+2]
-		attributes := ppu.oam[spriteAddr+3]
+		tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
+		attributes := ppu.oam.ReadOAM(spriteAddr + 3)
 		tile := ppu.readSpriteTile(uint16(tileNumber), attributes)
 		spriteX := startX - 8
 		for tileX := uint8(0); tileX < 8; tileX++ {

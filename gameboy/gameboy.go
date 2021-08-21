@@ -12,6 +12,7 @@ import (
 	"github.com/scottyw/tetromino/gameboy/display"
 	"github.com/scottyw/tetromino/gameboy/interrupts"
 	"github.com/scottyw/tetromino/gameboy/memory"
+	"github.com/scottyw/tetromino/gameboy/oam"
 	"github.com/scottyw/tetromino/gameboy/ppu"
 	"github.com/scottyw/tetromino/gameboy/serial"
 	"github.com/scottyw/tetromino/gameboy/speakers"
@@ -71,10 +72,10 @@ func New(config Config) *Gameboy {
 	}
 
 	// Create OAM memory
-	oam := [0xa0]byte{}
+	oam := oam.New()
 
 	// Create the PPU
-	ppu := ppu.New(&oam, i, config.DebugLCD)
+	ppu := ppu.New(i, oam, config.DebugLCD)
 
 	// Create the serial bus subsystem
 	serial := serial.New(config.SerialWriter)
@@ -85,7 +86,7 @@ func New(config Config) *Gameboy {
 	// Load the ROM file
 	rom := readRomFile(config.RomFilename)
 
-	mapper := memory.New(rom, &oam, i, ppu, controller, serial, timer, a)
+	mapper := memory.New(rom, i, oam, ppu, controller, serial, timer, a)
 
 	dispatch := cpu.NewDispatch(c, mapper)
 
