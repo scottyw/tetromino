@@ -53,7 +53,7 @@ var (
 func (ppu *PPU) EndMachineCycle() {
 
 	// is the lcd enabled?
-	if ppu.lcdc&0x80 == 0 {
+	if !ppu.enabled {
 		ppu.ly = 0
 		ppu.tick = 0
 		return
@@ -147,16 +147,15 @@ func (ppu *PPU) readTile(tileNumber uint16) (*[8][8]uint8, bool) {
 }
 
 func (ppu *PPU) updateTiles(lcdY uint8, offsetAddr uint16, layer *[256][256]uint8, previousTiles *[32][32]uint16) {
-	lowTileData := ppu.lowTileDataSelect()
 	tileY := lcdY / 8
 	for tileX := 0; tileX < 32; tileX++ {
 		var tileNumber uint16
 		tileAddr := 32*uint16(tileY) + uint16(tileX)
 		tileByte := ppu.ReadVideoRAM(offsetAddr + tileAddr)
-		if !lowTileData {
-			tileNumber = uint16(256 + int(int8(tileByte)))
-		} else {
+		if ppu.lowTileData {
 			tileNumber = uint16(tileByte)
+		} else {
+			tileNumber = uint16(256 + int(int8(tileByte)))
 		}
 		tile, cacheHit := ppu.readTile(tileNumber)
 		if !cacheHit || tileNumber != previousTiles[tileY][tileX] {
@@ -172,11 +171,11 @@ func (ppu *PPU) updateTiles(lcdY uint8, offsetAddr uint16, layer *[256][256]uint
 }
 
 func (ppu *PPU) updateBG(lcdY, scy uint8) {
-	if !ppu.bgDisplayEnable() {
+	if !ppu.bgEnabled {
 		return
 	}
 	var offsetAddr uint16
-	if ppu.highBgTileMapDisplaySelect() {
+	if ppu.highBgTileMap {
 		offsetAddr = 0x9c00
 	} else {
 		offsetAddr = 0x9800
@@ -185,11 +184,11 @@ func (ppu *PPU) updateBG(lcdY, scy uint8) {
 }
 
 func (ppu *PPU) updateWindow(lcdY uint8) {
-	if !ppu.windowDisplayEnable() {
+	if !ppu.windowEnabled {
 		return
 	}
 	var offsetAddr uint16
-	if ppu.highWindowTileMapDisplaySelect() {
+	if ppu.highWindowTileMap {
 		offsetAddr = 0x9c00
 	} else {
 		offsetAddr = 0x9800
@@ -222,7 +221,7 @@ func (ppu *PPU) updateSprites(lcdY uint8) {
 	if lcdY >= 144 {
 		return
 	}
-	if ppu.largeSprites() {
+	if ppu.spritesLarge {
 		panic(fmt.Sprintf("Large sprites are not supported"))
 	}
 	ppu.sprites[lcdY] = [160]uint8{}
@@ -250,7 +249,7 @@ func (ppu *PPU) updateSprites(lcdY uint8) {
 }
 
 func (ppu *PPU) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA {
-	if ppu.spriteDisplayEnable() {
+	if ppu.spritesEnabled {
 		if x < 160 && y < 144 {
 			pixel := ppu.sprites[y][x]
 			if pixel > 0 {
@@ -268,7 +267,7 @@ func (ppu *PPU) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA
 	// 	return color.RGBA{0xff, 0, 0, 0xff}
 	// }
 
-	if ppu.windowDisplayEnable() {
+	if ppu.windowEnabled {
 		// Use WX/WY to shift the visible pixels
 		if x >= wx && y >= wy {
 			pixel := ppu.window[y-wy][x-wx]
@@ -278,7 +277,7 @@ func (ppu *PPU) renderPixel(x, y, scx, scy, wx, wy uint8, debug bool) color.RGBA
 			return gray[pixel]
 		}
 	}
-	if ppu.bgDisplayEnable() {
+	if ppu.bgEnabled {
 		// Use SCX/SCY to shift the visible pixels
 		pixel := ppu.bg[y+scy][x+scx]
 		if debug && (x >= 160 || y >= 144) {
@@ -336,54 +335,6 @@ func (ppu *PPU) Screenshot(filename string) {
 	if err != nil {
 		fmt.Println(err)
 	}
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 7 - LCD Display Enable             (0=Off, 1=On)
-func (ppu *PPU) lcdDisplayEnable() bool {
-	return ppu.lcdc&0x80 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 6 - Window Tile Map Display Select (0=9800-9BFF, 1=9C00-9FFF)
-func (ppu *PPU) highWindowTileMapDisplaySelect() bool {
-	return ppu.lcdc&0x40 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 5 - Window Display Enable          (0=Off, 1=On)
-func (ppu *PPU) windowDisplayEnable() bool {
-	return ppu.lcdc&0x20 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 4 - BG & Window Tile Data Select   (0=8800-97FF, 1=8000-8FFF)
-func (ppu *PPU) lowTileDataSelect() bool {
-	return ppu.lcdc&0x10 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 3 - BG Tile Map Display Select     (0=9800-9BFF, 1=9C00-9FFF)
-func (ppu *PPU) highBgTileMapDisplaySelect() bool {
-	return ppu.lcdc&0x08 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 2 - OBJ (Sprite) Size              (0=8x8, 1=8x16)
-func (ppu *PPU) largeSprites() bool {
-	return ppu.lcdc&0x04 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 1 - OBJ (Sprite) Display Enable    (0=Off, 1=On)
-func (ppu *PPU) spriteDisplayEnable() bool {
-	return ppu.lcdc&0x02 > 0
-}
-
-// FF40 - LCDC - LCD Control (R/W)
-// Bit 0 - BG Display (for CGB see below) (0=Off, 1=On)
-func (ppu *PPU) bgDisplayEnable() bool {
-	return ppu.lcdc&0x01 > 0
 }
 
 // Byte3 - Attributes/Flags:

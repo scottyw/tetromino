@@ -7,9 +7,17 @@ import (
 )
 
 type PPU struct {
-	interrupts *interrupts.Interrupts
 
-	lcdc uint8
+	//LCDC
+	enabled           bool
+	highWindowTileMap bool
+	windowEnabled     bool
+	lowTileData       bool
+	highBgTileMap     bool
+	spritesLarge      bool
+	spritesEnabled    bool
+	bgEnabled         bool
+
 	ly   uint8
 	lyc  uint8
 	scx  uint8
@@ -21,10 +29,11 @@ type PPU struct {
 	obp0 uint8
 	obp1 uint8
 
-	videoRAM [0x2000]byte
-	oam      *[0xa0]byte
-	tick     int
-	debug    bool
+	interrupts *interrupts.Interrupts
+	videoRAM   [0x2000]byte
+	oam        *[0xa0]byte
+	tick       int
+	debug      bool
 
 	// LCD
 	tileCache      [384]*[8][8]uint8
@@ -40,20 +49,20 @@ func New(oam *[0xa0]byte, interrupts *interrupts.Interrupts, debug bool) *PPU {
 	ppu := &PPU{
 		oam:        oam,
 		interrupts: interrupts,
-		lcdc:       0x91,
-		ly:         0x00,
-		lyc:        0x00,
-		scx:        0x00,
-		scy:        0x00,
-		stat:       0x00,
-		wx:         0x00,
-		wy:         0x00,
-		bgp:        0xfc,
-		obp0:       0xff,
-		obp1:       0xff,
 		frame:      image.NewRGBA(image.Rect(0, 0, 256, 256)),
 		debug:      debug,
 	}
+	ppu.WriteLCDC(0x91)
+	ppu.WriteLY(0x00)
+	ppu.WriteLYC(0x00)
+	ppu.WriteSCX(0x00)
+	ppu.WriteSCY(0x00)
+	ppu.WriteSTAT(0x00)
+	ppu.WriteWX(0x00)
+	ppu.WriteWY(0x00)
+	ppu.WriteBGP(0xFC)
+	ppu.WriteOBP0(0xFF)
+	ppu.WriteOBP1(0xFF)
 	return ppu
 }
 

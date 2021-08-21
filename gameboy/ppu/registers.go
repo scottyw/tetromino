@@ -13,12 +13,43 @@ package ppu
 // WriteLCDC handles writes to register LCDC
 func (ppu *PPU) WriteLCDC(value uint8) {
 	// fmt.Printf("> LCDC - 0x%02x\n", value)
-	ppu.lcdc = value
+	ppu.enabled = value&0x80 > 0
+	ppu.highWindowTileMap = value&0x40 > 0
+	ppu.windowEnabled = value&0x20 > 0
+	ppu.lowTileData = value&0x10 > 0
+	ppu.highBgTileMap = value&0x08 > 0
+	ppu.spritesLarge = value&0x04 > 0
+	ppu.spritesEnabled = value&0x02 > 0
+	ppu.bgEnabled = value&0x01 > 0
 }
 
 // ReadLCDC handles reads from register LCDC
 func (ppu *PPU) ReadLCDC() uint8 {
-	lcdc := ppu.lcdc
+	var lcdc uint8
+	if ppu.enabled {
+		lcdc += 0x80
+	}
+	if ppu.highWindowTileMap {
+		lcdc += 0x40
+	}
+	if ppu.windowEnabled {
+		lcdc += 0x20
+	}
+	if ppu.lowTileData {
+		lcdc += 0x10
+	}
+	if ppu.highBgTileMap {
+		lcdc += 0x08
+	}
+	if ppu.spritesLarge {
+		lcdc += 0x04
+	}
+	if ppu.spritesEnabled {
+		lcdc += 0x02
+	}
+	if ppu.bgEnabled {
+		lcdc += 0x01
+	}
 	// fmt.Printf("< LCDC - 0x%02x\n", lcdc )
 	return lcdc
 }
