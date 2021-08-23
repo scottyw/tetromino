@@ -160,6 +160,8 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context) {
 	defer gb.Cleanup()
+	// var frames int
+	// var t0 time.Time
 	for {
 		select {
 		case <-ctx.Done():
@@ -169,5 +171,14 @@ func (gb *Gameboy) Run(ctx context.Context) {
 				return
 			}
 		}
+
+		// // Check FPS
+		// if frames%300 == 0 {
+		// 	duration := time.Now().Sub(t0)
+		// 	fmt.Printf(">> %0.0ffps\n", 300.0/duration.Seconds())
+		// 	t0 = time.Now()
+		// }
+		// frames++
+
 	}
 }
