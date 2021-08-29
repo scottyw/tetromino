@@ -1,7 +1,10 @@
 package ppu
 
 import (
+	"fmt"
 	"image"
+	"image/png"
+	"os"
 
 	"github.com/scottyw/tetromino/gameboy/interrupts"
 	"github.com/scottyw/tetromino/gameboy/oam"
@@ -28,20 +31,13 @@ type PPU struct {
 	mode                 uint8
 
 	// BGP
-	bgpColour0 uint8
-	bgpColour1 uint8
-	bgpColour2 uint8
-	bgpColour3 uint8
+	bgpColour [4]uint8
 
 	// OBP0
-	obp0Colour1 uint8
-	obp0Colour2 uint8
-	obp0Colour3 uint8
+	obp0Colour [4]uint8
 
 	// OBP1
-	obp1Colour1 uint8
-	obp1Colour2 uint8
-	obp1Colour3 uint8
+	obp1Colour [4]uint8
 
 	// Single-value registers
 	ly  uint8
@@ -52,20 +48,13 @@ type PPU struct {
 	wy  uint8
 
 	// Internal state
-	interrupts *interrupts.Interrupts
-	oam        *oam.OAM
-	videoRAM   [0x2000]byte
-	tick       int
-	debug      bool
-
-	// Internal LCD state
-	tileCache      [384]*[8][8]uint8
-	previousBg     [32][32]uint16
-	previousWindow [32][32]uint16
-	bg             [256][256]uint8
-	window         [256][256]uint8
-	sprites        [144][160]uint8
+	interrupts     *interrupts.Interrupts
+	oam            *oam.OAM
+	videoRAM       [0x2000]byte
 	frame          *image.RGBA
+	spriteOverlaps [40]bool
+	ticks          int
+	debug          bool
 }
 
 func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debug bool) *PPU {
@@ -89,14 +78,146 @@ func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debug bool) *PPU {
 	return ppu
 }
 
+// EndMachineCycle updates the LCD driver after each machine cycle i.e. 4 clock cycles
+func (ppu *PPU) EndMachineCycle() {
+
+	// Is the lcd enabled?
+	if !ppu.enabled {
+		return
+	}
+
+	// Find x and y co-ords
+	ppu.ly = uint8(ppu.ticks / 114)
+	ticksThisLine := uint8(ppu.ticks % 114)
+
+	// Should we switch to a different mode?
+	switch ppu.mode {
+	case 2:
+		if ticksThisLine == 20 {
+			ppu.mode = 3
+		}
+	case 3:
+		// In reality, this time is dependent on sprite reading delays
+		// but we are hardcoding to the minimum for now i.e. 41 mticks
+		if ticksThisLine == 61 {
+			ppu.mode = 0
+			// If the h-blank interrupt is enabled in stat
+			// then the stat interrupt occurs
+			if ppu.hlankInterrupt {
+				ppu.interrupts.RequestStat()
+			}
+		}
+	case 0:
+		// In reality, this time is dependent on the time spent in mode 3
+		// but we are hardcoding to the maximum for now i.e. 52
+		if ticksThisLine == 0 {
+			if ppu.ly == 144 {
+				ppu.mode = 1
+				// V-blank interrupt always occurs
+				ppu.interrupts.RequestVblank()
+				// If the v-blank interrupt is also enabled in stat
+				// then the stat interrupt occurs too
+				if ppu.vblankInterrupt {
+					ppu.interrupts.RequestStat()
+				}
+			} else {
+				ppu.mode = 2
+				// If the oam interrupt is enabled in stat
+				// then the stat interrupt occurs
+				if ppu.oamInterrupt {
+					ppu.interrupts.RequestStat()
+				}
+			}
+		}
+	case 1:
+		if ppu.ticks == 0 {
+			ppu.mode = 2
+		}
+	default:
+		panic(fmt.Sprintf("unexpected mode during check: %d", ppu.mode))
+	}
+
+	// Check coincidence flag
+	if ticksThisLine == 0 {
+		ppu.coincidence = ppu.ly == ppu.lyc
+		// If the coincidence interrupt is enabled in stat
+		// then the stat interrupt occurs
+		if ppu.coincidence && ppu.coincidenceInterrupt {
+			ppu.interrupts.RequestStat()
+		}
+	}
+
+	// Execute a single tick
+	switch ppu.mode {
+	case 2:
+		ppu.checkOverlappingSprites(ticksThisLine)
+	case 3:
+		lx := (ticksThisLine - 20) * 4
+		if lx < 160 {
+			ppu.renderPixel(lx, ppu.ly)
+			ppu.renderPixel(lx+1, ppu.ly)
+			ppu.renderPixel(lx+2, ppu.ly)
+			ppu.renderPixel(lx+3, ppu.ly)
+		}
+	case 0:
+		// Nothing to do
+	case 1:
+		// Nothing to do
+	default:
+		panic(fmt.Sprintf("unexpected mode during tick: %d", ppu.mode))
+	}
+
+	// Tick the PPU
+	ppu.ticks++
+	if ppu.ticks == 17556 {
+		ppu.ticks = 0
+	}
+
+}
+
+func (ppu *PPU) checkOverlappingSprites(lx uint8) {
+	ppu.checkOverlappingSprite(lx * 2)
+	ppu.checkOverlappingSprite((lx * 2) + 1)
+}
+
+func (ppu *PPU) checkOverlappingSprite(sprite uint8) {
+	spriteAddr := 0xfe00 + uint16(sprite*4)
+	startY := ppu.oam.ReadOAM(spriteAddr)
+	ppu.spriteOverlaps[sprite] = startY != 0 && ppu.ly >= startY-16 && ppu.ly < startY-8
+}
+
+func (ppu *PPU) enable() {
+	ppu.enabled = true
+}
+
+func (ppu *PPU) disable() {
+	ppu.enabled = false
+	ppu.ly = 0
+	ppu.ticks = 0
+}
+
 func (ppu *PPU) ReadVideoRAM(addr uint16) uint8 {
 	return ppu.videoRAM[addr-0x8000]
 }
 
 func (ppu *PPU) WriteVideoRAM(addr uint16, value uint8) {
-	if addr < 0x9800 {
-		tileNumber := (addr - 0x8000) / 16
-		ppu.tileCache[tileNumber] = nil
-	}
 	ppu.videoRAM[addr-0x8000] = value
+}
+
+// Frame returns the most recently rendered frame
+func (ppu *PPU) Frame() *image.RGBA {
+	return ppu.frame
+}
+
+// Screenshot writes a screenshot to file
+func (ppu *PPU) Screenshot(filename string) {
+	f, err := os.Create(filename)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+	err = png.Encode(f, ppu.frame)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

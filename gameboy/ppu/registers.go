@@ -13,7 +13,12 @@ package ppu
 // WriteLCDC handles writes to register LCDC
 func (ppu *PPU) WriteLCDC(value uint8) {
 	// fmt.Printf("> LCDC - 0x%02x\n", value)
-	ppu.enabled = value&0x80 > 0
+	enabled := value&0x80 > 0
+	if enabled && !ppu.enabled {
+		ppu.enable()
+	} else if !enabled && ppu.enabled {
+		ppu.disable()
+	}
 	ppu.highWindowTileMap = value&0x40 > 0
 	ppu.windowEnabled = value&0x20 > 0
 	ppu.lowTileData = value&0x10 > 0
@@ -226,19 +231,19 @@ func (ppu *PPU) ReadWX() uint8 {
 // WriteBGP handles writes to register BGP
 func (ppu *PPU) WriteBGP(value uint8) {
 	// fmt.Printf("> BGP - 0x%02x\n", value)
-	ppu.bgpColour3 = (value >> 6) & 0x03
-	ppu.bgpColour2 = (value >> 4) & 0x03
-	ppu.bgpColour1 = (value >> 2) & 0x03
-	ppu.bgpColour0 = value & 0x03
+	ppu.bgpColour[3] = (value >> 6) & 0x03
+	ppu.bgpColour[2] = (value >> 4) & 0x03
+	ppu.bgpColour[1] = (value >> 2) & 0x03
+	ppu.bgpColour[0] = value & 0x03
 }
 
 // ReadBGP handles reads from register BGP
 func (ppu *PPU) ReadBGP() uint8 {
 	var bgp uint8
-	bgp += ppu.bgpColour3 << 6
-	bgp += ppu.bgpColour2 << 4
-	bgp += ppu.bgpColour1 << 2
-	bgp += ppu.bgpColour0
+	bgp += ppu.bgpColour[3] << 6
+	bgp += ppu.bgpColour[2] << 4
+	bgp += ppu.bgpColour[1] << 2
+	bgp += ppu.bgpColour[0]
 	// fmt.Printf("< BGP - 0x%02x\n", bgp)
 	return bgp
 }
@@ -251,17 +256,17 @@ func (ppu *PPU) ReadBGP() uint8 {
 // WriteOBP0 handles writes to register OBP0
 func (ppu *PPU) WriteOBP0(value uint8) {
 	// fmt.Printf("> OBP0 - 0x%02x\n", value)
-	ppu.obp0Colour3 = (value >> 6) & 0x03
-	ppu.obp0Colour2 = (value >> 4) & 0x03
-	ppu.obp0Colour1 = (value >> 2) & 0x03
+	ppu.obp0Colour[3] = (value >> 6) & 0x03
+	ppu.obp0Colour[2] = (value >> 4) & 0x03
+	ppu.obp0Colour[1] = (value >> 2) & 0x03
 }
 
 // ReadOBP0 handles reads from register OBP0
 func (ppu *PPU) ReadOBP0() uint8 {
 	var obp0 uint8
-	obp0 += ppu.obp0Colour3 << 6
-	obp0 += ppu.obp0Colour2 << 4
-	obp0 += ppu.obp0Colour1 << 2
+	obp0 += ppu.obp0Colour[3] << 6
+	obp0 += ppu.obp0Colour[2] << 4
+	obp0 += ppu.obp0Colour[1] << 2
 	// fmt.Printf("< OBP0 - 0x%02x\n", obp0)
 	return obp0
 }
@@ -274,17 +279,17 @@ func (ppu *PPU) ReadOBP0() uint8 {
 // WriteOBP1 handles writes to register OBP1
 func (ppu *PPU) WriteOBP1(value uint8) {
 	// fmt.Printf("> OBP1 - 0x%02x\n", value)
-	ppu.obp1Colour3 = (value >> 6) & 0x03
-	ppu.obp1Colour2 = (value >> 4) & 0x03
-	ppu.obp1Colour1 = (value >> 2) & 0x03
+	ppu.obp1Colour[3] = (value >> 6) & 0x03
+	ppu.obp1Colour[2] = (value >> 4) & 0x03
+	ppu.obp1Colour[1] = (value >> 2) & 0x03
 }
 
 // ReadOBP1 handles reads from register OBP1
 func (ppu *PPU) ReadOBP1() uint8 {
 	var obp1 uint8
-	obp1 += ppu.obp1Colour3 << 6
-	obp1 += ppu.obp1Colour2 << 4
-	obp1 += ppu.obp1Colour1 << 2
+	obp1 += ppu.obp1Colour[3] << 6
+	obp1 += ppu.obp1Colour[2] << 4
+	obp1 += ppu.obp1Colour[1] << 2
 	// fmt.Printf("< OBP1 - 0x%02x\n", obp1)
 	return obp1
 }
