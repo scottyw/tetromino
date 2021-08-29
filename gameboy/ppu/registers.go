@@ -13,7 +13,12 @@ package ppu
 // WriteLCDC handles writes to register LCDC
 func (ppu *PPU) WriteLCDC(value uint8) {
 	// fmt.Printf("> LCDC - 0x%02x\n", value)
-	ppu.enabled = value&0x80 > 0
+	enabled := value&0x80 > 0
+	if enabled && !ppu.enabled {
+		ppu.enable()
+	} else if !enabled && ppu.enabled {
+		ppu.disable()
+	}
 	ppu.highWindowTileMap = value&0x40 > 0
 	ppu.windowEnabled = value&0x20 > 0
 	ppu.lowTileData = value&0x10 > 0

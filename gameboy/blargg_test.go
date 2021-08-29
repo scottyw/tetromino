@@ -3,7 +3,6 @@ package gameboy
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -43,13 +42,16 @@ func runBlarggTest(t *testing.T, filename string, checkRAM bool) {
 	}()
 	gameboy.Run(ctx)
 	<-ctx.Done()
-	screenshotFilename := fmt.Sprintf(
-		"testresults/%s.png",
-		strings.Replace(
-			strings.TrimPrefix(filename, "testdata/blargg/"),
-			"/", "_", -1),
-	)
-	gameboy.ppu.Screenshot(screenshotFilename)
+
+	// FIXME
+
+	// screenshotFilename := fmt.Sprintf(
+	// 	"testresults/%s.png",
+	// 	strings.Replace(
+	// 		strings.TrimPrefix(filename, "testdata/blargg/"),
+	// 		"/", "_", -1),
+	// )
+	// gameboy.ppu.Screenshot(screenshotFilename)
 	if !strings.Contains(result, "Passed") {
 		t.Errorf("\n--------\n%s\n--------\n%s\n--------\n", filename, result)
 		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)

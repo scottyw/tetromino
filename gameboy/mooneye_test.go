@@ -2,8 +2,6 @@ package gameboy
 
 import (
 	"context"
-	"fmt"
-	"strings"
 	"testing"
 	"time"
 )
@@ -33,13 +31,16 @@ func runMooneyeTest(t *testing.T, filename string) {
 	}()
 	gameboy.Run(ctx)
 	<-ctx.Done()
-	screenshotFilename := fmt.Sprintf(
-		"testresults/%s.png",
-		strings.Replace(
-			strings.TrimPrefix(filename, "testdata/mooneye-gb_hwtests/"),
-			"/", "_", -1),
-	)
-	gameboy.ppu.Screenshot(screenshotFilename)
+
+	// FIXME
+
+	// screenshotFilename := fmt.Sprintf(
+	// 	"testresults/%s.png",
+	// 	strings.Replace(
+	// 		strings.TrimPrefix(filename, "testdata/mooneye-gb_hwtests/"),
+	// 		"/", "_", -1),
+	// )
+	// gameboy.ppu.Screenshot(screenshotFilename)
 	if gameboy.dispatch.TestA() != 0 || !gameboy.dispatch.Mooneye {
 		t.Errorf("Test ROM failed: %s", filename)
 		// fmt.Printf("| :boom: fail | %s | [pic](%s) |\n", filename, screenshotFilename)

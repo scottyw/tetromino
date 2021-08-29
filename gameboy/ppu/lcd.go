@@ -8,6 +8,19 @@ import (
 	"os"
 )
 
+func (ppu *PPU) drawPixel(x, y uint8) {
+
+}
+
+////////
+////////
+////////
+////////
+////////
+////////
+////////
+////////
+
 const (
 	bit7 = 1 << iota
 	bit6 = 1 << iota
@@ -48,71 +61,6 @@ var (
 		{0x00, 0x00, 0x55, 0xff},
 	}
 )
-
-// EndMachineCycle updates the LCD driver after each machine cycle i.e. 4 clock cycles
-func (ppu *PPU) EndMachineCycle() {
-
-	// is the lcd enabled?
-	if !ppu.enabled {
-		ppu.ly = 0
-		ppu.tick = 0
-		return
-	}
-
-	// where are we on the lcd?
-	ppu.ly = uint8(ppu.tick / 114)
-	x := ppu.tick % 114
-	ppu.tick++
-	if ppu.tick >= 17556 {
-		ppu.tick = 0
-	}
-
-	// set mode on stat register
-	switch {
-	case x == 0 && ppu.ly == 144:
-		// v-blank period starts
-		ppu.mode = 1
-		// v-blank interrupt always occurs
-		ppu.interrupts.RequestVblank()
-		// if the vblank interrupt is also enabled in stat
-		// then the stat interrupt occurs too
-		if ppu.vblankInterrupt {
-			ppu.interrupts.RequestStat()
-		}
-	case x == 0 && ppu.ly < 144:
-		// oam period starts
-		ppu.mode = 2
-		// if the oam interrupt is enabled in stat
-		// then the stat interrupt occurs
-		if ppu.oamInterrupt {
-			ppu.interrupts.RequestStat()
-		}
-	case x == 20 && ppu.ly < 144:
-		// lcd data transfer period starts
-		ppu.mode = 3
-	case x == 63 && ppu.ly < 144:
-		// h-blank period starts
-		ppu.mode = 0
-		// if the hblank interrupt is enabled in stat
-		// then the stat interrupt occurs
-		if ppu.hlankInterrupt {
-			ppu.interrupts.RequestStat()
-		}
-		// render lcd line
-		ppu.updateLcdLine(ppu.ly)
-	}
-
-	// check coincidence flag
-	if x == 0 {
-		ppu.coincidence = ppu.ly == ppu.lyc
-		// if the coincidence interrupt is enabled in stat
-		// then the stat interrupt occurs
-		if ppu.coincidence && ppu.coincidenceInterrupt {
-			ppu.interrupts.RequestStat()
-		}
-	}
-
-}
 
 func (ppu *PPU) readTile(tileNumber uint16) (*[8][8]uint8, bool) {
 	tile := ppu.tileCache[tileNumber]
