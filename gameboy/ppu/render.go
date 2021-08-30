@@ -5,15 +5,17 @@ import (
 )
 
 var (
+
+	// Tile bits are counted left-to-right so bit 0 of the tile is bit 7 of the byte
 	patterns = []uint8{
-		0b00000001,
-		0b00000010,
-		0b00000100,
-		0b00001000,
-		0b00010000,
-		0b00100000,
-		0b01000000,
 		0b10000000,
+		0b01000000,
+		0b00100000,
+		0b00010000,
+		0b00001000,
+		0b00000100,
+		0b00000010,
+		0b00000001,
 	}
 
 	grey = []color.RGBA{
@@ -81,10 +83,10 @@ func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, at
 	flipX := attributes&0x20 > 0
 	usePalette1 := attributes&0x08 > 0
 	if flipX {
-		panic("flipx")
+		tileOffsetX = 7 - tileOffsetX
 	}
 	if flipY {
-		panic("flipy")
+		tileOffsetY = 7 - tileOffsetY
 	}
 	if behind {
 		panic("behind")
@@ -138,8 +140,8 @@ func (ppu *PPU) readTilePixel(tileNumber int, tileOffsetX, tileOffsetY uint8) ui
 	startAddr := tileNumber * 16
 	a := ppu.videoRAM[startAddr+int(tileOffsetY*2)]
 	b := ppu.videoRAM[startAddr+int(tileOffsetY*2)+1]
-	aset := a&patterns[7-tileOffsetX] > 0
-	bset := b&patterns[7-tileOffsetX] > 0
+	aset := a&patterns[tileOffsetX] > 0
+	bset := b&patterns[tileOffsetX] > 0
 	switch {
 	case !aset && !bset:
 		return 0
