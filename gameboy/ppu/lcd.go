@@ -1,5 +1,119 @@
 package ppu
 
+// import (
+// 	"fmt"
+// 	"image"
+// 	"image/color"
+// 	"image/png"
+// 	"os"
+// )
+
+// const (
+// 	bit7 = 1 << iota
+// 	bit6 = 1 << iota
+// 	bit5 = 1 << iota
+// 	bit4 = 1 << iota
+// 	bit3 = 1 << iota
+// 	bit2 = 1 << iota
+// 	bit1 = 1 << iota
+// 	bit0 = 1 << iota
+// )
+
+// var (
+// 	gray = []color.RGBA{
+// 		{0xff, 0xff, 0xff, 0xff},
+// 		{0xaa, 0xaa, 0xaa, 0xff},
+// 		{0x77, 0x77, 0x77, 0xff},
+// 		{0x33, 0x33, 0x33, 0xff},
+// 	}
+
+// 	red = []color.RGBA{
+// 		{0xff, 0xaa, 0xaa, 0xff},
+// 		{0xdd, 0x77, 0x77, 0xff},
+// 		{0xaa, 0x33, 0x33, 0xff},
+// 		{0x55, 0x00, 0x00, 0xff},
+// 	}
+
+// 	green = []color.RGBA{
+// 		{0xaa, 0xff, 0xaa, 0xff},
+// 		{0x77, 0xdd, 0x77, 0xff},
+// 		{0x33, 0xaa, 0x33, 0xff},
+// 		{0x00, 0x55, 0x00, 0xff},
+// 	}
+
+// 	blue = []color.RGBA{
+// 		{0xaa, 0xaa, 0xff, 0xff},
+// 		{0x77, 0x77, 0xdd, 0xff},
+// 		{0x33, 0x33, 0xaa, 0xff},
+// 		{0x00, 0x00, 0x55, 0xff},
+// 	}
+// )
+
+// // EndMachineCycle updates the LCD driver after each machine cycle i.e. 4 clock cycles
+// func (ppu *PPU) EndMachineCycle() {
+
+// 	// is the lcd enabled?
+// 	if !ppu.enabled {
+// 		ppu.ly = 0
+// 		ppu.tick = 0
+// 		return
+// 	}
+
+// 	// where are we on the lcd?
+// 	ppu.ly = uint8(ppu.tick / 114)
+// 	x := ppu.tick % 114
+// 	ppu.tick++
+// 	if ppu.tick >= 17556 {
+// 		ppu.tick = 0
+// 	}
+
+// 	// set mode on stat register
+// 	switch {
+// 	case x == 0 && ppu.ly == 144:
+// 		// v-blank period starts
+// 		ppu.mode = 1
+// 		// v-blank interrupt always occurs
+// 		ppu.interrupts.RequestVblank()
+// 		// if the vblank interrupt is also enabled in stat
+// 		// then the stat interrupt occurs too
+// 		if ppu.vblankInterrupt {
+// 			ppu.interrupts.RequestStat()
+// 		}
+// 	case x == 0 && ppu.ly < 144:
+// 		// oam period starts
+// 		ppu.mode = 2
+// 		// if the oam interrupt is enabled in stat
+// 		// then the stat interrupt occurs
+// 		if ppu.oamInterrupt {
+// 			ppu.interrupts.RequestStat()
+// 		}
+// 	case x == 20 && ppu.ly < 144:
+// 		// lcd data transfer period starts
+// 		ppu.mode = 3
+// 	case x == 63 && ppu.ly < 144:
+// 		// h-blank period starts
+// 		ppu.mode = 0
+// 		// if the hblank interrupt is enabled in stat
+// 		// then the stat interrupt occurs
+// 		if ppu.hlankInterrupt {
+// 			ppu.interrupts.RequestStat()
+// 		}
+// 		// render lcd line
+// 		ppu.updateLcdLine(ppu.ly)
+// 	}
+
+// 	// check coincidence flag
+// 	if x == 0 {
+// 		ppu.coincidence = ppu.ly == ppu.lyc
+// 		// if the coincidence interrupt is enabled in stat
+// 		// then the stat interrupt occurs
+// 		if ppu.coincidence && ppu.coincidenceInterrupt {
+// 			ppu.interrupts.RequestStat()
+// 		}
+// 	}
+
+// }
+
 // func (ppu *PPU) readTile(tileNumber uint16) (*[8][8]uint8, bool) {
 // 	tile := ppu.tileCache[tileNumber]
 // 	if tile != nil {
@@ -26,7 +140,40 @@ package ppu
 // }
 
 // func (ppu *PPU) updateTiles(lcdY uint8, offsetAddr uint16, layer *[256][256]uint8, previousTiles *[32][32]uint16) {
+// 	tileY := lcdY / 8
+// 	for tileX := 0; tileX < 32; tileX++ {
+// 		var tileNumber uint16
+// 		tileAddr := 32*uint16(tileY) + uint16(tileX)
+// 		tileByte := ppu.ReadVideoRAM(offsetAddr + tileAddr)
+// 		if ppu.lowTileData {
+// 			tileNumber = uint16(tileByte)
+// 		} else {
+// 			tileNumber = uint16(256 + int(int8(tileByte)))
+// 		}
+// 		tile, cacheHit := ppu.readTile(tileNumber)
+// 		if !cacheHit || tileNumber != previousTiles[tileY][tileX] {
+// 			lcdX := uint8(tileX * 8)
+// 			for y := uint8(0); y < 8; y++ {
+// 				for x := uint8(0); x < 8; x++ {
+// 					layer[lcdY+y][lcdX+x] = tile[y][x]
+// 				}
+// 			}
+// 		}
+// 		previousTiles[tileY][tileX] = tileNumber
+// 	}
+// }
 
+// func (ppu *PPU) updateBG(lcdY, scy uint8) {
+// 	if !ppu.bgEnabled {
+// 		return
+// 	}
+// 	var offsetAddr uint16
+// 	if ppu.highBgTileMap {
+// 		offsetAddr = 0x9c00
+// 	} else {
+// 		offsetAddr = 0x9800
+// 	}
+// 	ppu.updateTiles(lcdY+scy, offsetAddr, &ppu.bg, &ppu.previousBg)
 // }
 
 // func (ppu *PPU) updateWindow(lcdY uint8) {
@@ -158,6 +305,16 @@ package ppu
 // 	ppu.updateWindow(y)
 // 	ppu.updateSprites(y)
 // 	ppu.renderLine(y, scy)
+// }
+
+// // FrameEnd writes any remaining VRAM lines to the GUI for debugging
+// func (ppu *PPU) Frame() *image.RGBA {
+// 	// if ppu.debug {
+// 	// 	for y := ppu.memory.SCY + 144; y < ppu.memory.SCY || y >= ppu.memory.SCY+144; y++ {
+// 	// 		ppu.updateLcdLine(y)
+// 	// 	}
+// 	// }
+// 	return ppu.frame
 // }
 
 // // Screenshot writes a screenshot to file

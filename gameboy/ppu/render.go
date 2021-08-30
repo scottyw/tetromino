@@ -48,19 +48,22 @@ var (
 func (ppu *PPU) drawPixel(x, y uint8) {
 
 	// Find the first overlapping spite if there is one
-	// if ppu.spritesEnabled {
-	// 	for sprite := range ppu.spriteOverlaps {
-	// 		spriteAddr := 0xfe00 + uint16(sprite*4) + 1
-	// 		spriteX := ppu.oam.ReadOAM(spriteAddr)
-	// 		if x >= spriteX && x < spriteX+8 {
-	// 			spriteY := ppu.oam.ReadOAM(spriteAddr + 2)
-	// 			tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
-	// 			attributes := ppu.oam.ReadOAM(spriteAddr + 3)
-	// 			ppu.drawSpritePixel(x, y, spriteX, spriteY, tileNumber, attributes)
-	// 			return
-	// 		}
-	// 	}
-	// }
+	if ppu.spritesEnabled {
+		for sprite, overlaps := range ppu.spriteOverlaps {
+			if !overlaps {
+				continue
+			}
+			spriteAddr := 0xfe00 + uint16(sprite*4)
+			spriteX := ppu.oam.ReadOAM(spriteAddr + 1)
+			if x >= spriteX-8 && x < spriteX {
+				spriteY := ppu.oam.ReadOAM(spriteAddr)
+				tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
+				attributes := ppu.oam.ReadOAM(spriteAddr + 3)
+				ppu.drawSpritePixel(x, y, spriteX, spriteY, int(tileNumber), attributes)
+				return
+			}
+		}
+	}
 
 	// Use the background
 	if ppu.bgEnabled {
@@ -69,8 +72,11 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 
 }
 
-func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY, tileNumber, attributes uint8) {
-
+func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) {
+	tileOffsetX := x % 8
+	tileOffsetY := y % 8
+	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
+	ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[pixel]])
 }
 
 func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
@@ -89,33 +95,37 @@ func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
 		offsetAddr = 0x9800
 	}
 
-	var tileNumber uint16
+	var tileNumber int
 	tileAddr := 32*uint16(tileY) + uint16(tileX)
 	tileByte := ppu.ReadVideoRAM(offsetAddr + tileAddr)
 	if ppu.lowTileData {
-		tileNumber = uint16(tileByte)
+		tileNumber = int(tileByte)
 	} else {
-		tileNumber = uint16(256 + int(int8(tileByte)))
+		tileNumber = 256 + int(int8(tileByte))
 	}
 
+	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
+
+	ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[pixel]])
+
+}
+
+func (ppu *PPU) readTilePixel(tileNumber int, tileOffsetX, tileOffsetY uint8) uint8 {
 	startAddr := uint16(0x8000 + (tileNumber * 16))
 	a := ppu.ReadVideoRAM(startAddr + uint16(tileOffsetY*2))
 	b := ppu.ReadVideoRAM(startAddr + uint16(tileOffsetY*2) + 1)
 	aset := a&patterns[7-tileOffsetX] > 0
 	bset := b&patterns[7-tileOffsetX] > 0
-
-	var pixel uint8
 	switch {
 	case !aset && !bset:
-		pixel = ppu.bgpColour[0]
+		return 0
 	case !aset && bset:
-		pixel = ppu.bgpColour[1]
+		return 1
 	case aset && !bset:
-		pixel = ppu.bgpColour[2]
+		return 2
 	case aset && bset:
-		pixel = ppu.bgpColour[3]
+		return 3
+	default:
+		panic("error reading tile")
 	}
-
-	ppu.frame.SetRGBA(int(x), int(y), grey[pixel])
-
 }
