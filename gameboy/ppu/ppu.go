@@ -135,6 +135,16 @@ func (ppu *PPU) EndMachineCycle() {
 		panic(fmt.Sprintf("unexpected mode during check: %d", ppu.mode))
 	}
 
+	// Check coincidence flag
+	if lx == 0 {
+		ppu.coincidence = ppu.ly == ppu.lyc
+		// If the coincidence interrupt is enabled in stat
+		// then the stat interrupt occurs
+		if ppu.coincidence && ppu.coincidenceInterrupt {
+			ppu.interrupts.RequestStat()
+		}
+	}
+
 	// Execute a single tick
 	switch ppu.mode {
 	case 2:
@@ -142,15 +152,6 @@ func (ppu *PPU) EndMachineCycle() {
 	case 3:
 		for offset := 0; offset < 4; offset++ {
 			ppu.drawPixel(((lx-20)*4)+uint8(offset), ppu.ly)
-		}
-		if lx == 0 {
-			// Check coincidence flag
-			ppu.coincidence = ppu.ly == ppu.lyc
-			// If the coincidence interrupt is enabled in stat
-			// then the stat interrupt occurs
-			if ppu.coincidence && ppu.coincidenceInterrupt {
-				ppu.interrupts.RequestStat()
-			}
 		}
 	case 0:
 		// Nothing to do
