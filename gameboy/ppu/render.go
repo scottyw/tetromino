@@ -59,8 +59,9 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 				spriteY := ppu.oam.ReadOAM(spriteAddr)
 				tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
 				attributes := ppu.oam.ReadOAM(spriteAddr + 3)
-				ppu.drawSpritePixel(x, y, spriteX, spriteY, int(tileNumber), attributes)
-				return
+				if ppu.drawSpritePixel(x, y, spriteX, spriteY, int(tileNumber), attributes) {
+					return
+				}
 			}
 		}
 	}
@@ -72,7 +73,7 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 
 }
 
-func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) {
+func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) bool {
 	tileOffsetX := (x - spriteX) % 8
 	tileOffsetY := (y - spriteY) % 8
 	behind := attributes&0x80 > 0
@@ -89,13 +90,17 @@ func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, at
 		panic("behind")
 	}
 	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
-	var colour color.RGBA
-	if usePalette1 {
-		colour = blue[ppu.obp1Colour[pixel]]
-	} else {
-		colour = blue[ppu.obp0Colour[pixel]]
+	if pixel > 0 {
+		var colour color.RGBA
+		if usePalette1 {
+			colour = blue[ppu.obp1Colour[pixel]]
+		} else {
+			colour = blue[ppu.obp0Colour[pixel]]
+		}
+		ppu.frame.SetRGBA(int(x), int(y), colour)
+		return true
 	}
-	ppu.frame.SetRGBA(int(x), int(y), colour)
+	return false
 }
 
 func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
