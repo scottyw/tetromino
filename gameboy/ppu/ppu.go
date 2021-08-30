@@ -151,7 +151,7 @@ func (ppu *PPU) EndMachineCycle() {
 		ppu.checkOverlappingSprites(lx)
 	case 3:
 		for offset := 0; offset < 4; offset++ {
-			ppu.drawPixel(((lx-20)*4)+uint8(offset), ppu.ly)
+			ppu.renderPixel(((lx-20)*4)+uint8(offset), ppu.ly)
 		}
 	case 0:
 		// Nothing to do

@@ -47,7 +47,7 @@ var (
 	}
 )
 
-func (ppu *PPU) drawPixel(x, y uint8) {
+func (ppu *PPU) renderPixel(x, y uint8) {
 
 	// Find the first overlapping spite if there is one
 	if ppu.spritesEnabled {
@@ -61,7 +61,7 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 				spriteY := ppu.oam.ReadOAM(spriteAddr)
 				tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
 				attributes := ppu.oam.ReadOAM(spriteAddr + 3)
-				if ppu.drawSpritePixel(x, y, spriteX, spriteY, int(tileNumber), attributes) {
+				if ppu.renderSpritePixel(x, y, spriteX, spriteY, int(tileNumber), attributes) {
 					return
 				}
 			}
@@ -70,12 +70,12 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 
 	// Use the background
 	if ppu.bgEnabled {
-		ppu.drawBackgroundPixel(x, y)
+		ppu.renderBackgroundPixel(x, y)
 	}
 
 }
 
-func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) bool {
+func (ppu *PPU) renderSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) bool {
 	tileOffsetX := (x - spriteX) % 8
 	tileOffsetY := (y - spriteY) % 8
 	behind := attributes&0x80 > 0
@@ -105,7 +105,7 @@ func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, at
 	return false
 }
 
-func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
+func (ppu *PPU) renderBackgroundPixel(x, y uint8) {
 
 	scx := ppu.ReadSCX()
 	scy := ppu.ReadSCY()
