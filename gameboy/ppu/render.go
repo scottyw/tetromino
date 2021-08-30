@@ -57,7 +57,7 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 			}
 			spriteAddr := 0xfe00 + uint16(sprite*4)
 			spriteX := ppu.oam.ReadOAM(spriteAddr + 1)
-			if x >= spriteX-8 && x < spriteX {
+			if x+8 >= spriteX && x < spriteX {
 				spriteY := ppu.oam.ReadOAM(spriteAddr)
 				tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
 				attributes := ppu.oam.ReadOAM(spriteAddr + 3)
