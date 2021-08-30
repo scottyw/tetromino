@@ -90,14 +90,14 @@ func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
 
 	var offsetAddr uint16
 	if ppu.highBgTileMap {
-		offsetAddr = 0x9c00
+		offsetAddr = 0x9c00 - 0x8000
 	} else {
-		offsetAddr = 0x9800
+		offsetAddr = 0x9800 - 0x8000
 	}
 
 	var tileNumber int
 	tileAddr := 32*uint16(tileY) + uint16(tileX)
-	tileByte := ppu.ReadVideoRAM(offsetAddr + tileAddr)
+	tileByte := ppu.videoRAM[offsetAddr+tileAddr]
 	if ppu.lowTileData {
 		tileNumber = int(tileByte)
 	} else {
@@ -111,9 +111,9 @@ func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
 }
 
 func (ppu *PPU) readTilePixel(tileNumber int, tileOffsetX, tileOffsetY uint8) uint8 {
-	startAddr := uint16(0x8000 + (tileNumber * 16))
-	a := ppu.ReadVideoRAM(startAddr + uint16(tileOffsetY*2))
-	b := ppu.ReadVideoRAM(startAddr + uint16(tileOffsetY*2) + 1)
+	startAddr := tileNumber * 16
+	a := ppu.videoRAM[startAddr+int(tileOffsetY*2)]
+	b := ppu.videoRAM[startAddr+int(tileOffsetY*2)+1]
 	aset := a&patterns[7-tileOffsetX] > 0
 	bset := b&patterns[7-tileOffsetX] > 0
 	switch {
