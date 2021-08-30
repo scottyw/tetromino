@@ -73,8 +73,8 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 }
 
 func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) {
-	tileOffsetX := x % 8
-	tileOffsetY := y % 8
+	tileOffsetX := (x - spriteX) % 8
+	tileOffsetY := (y - spriteY) % 8
 	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
 	ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[pixel]])
 }
