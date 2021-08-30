@@ -195,3 +195,8 @@ func (ppu *PPU) ReadVideoRAM(addr uint16) uint8 {
 func (ppu *PPU) WriteVideoRAM(addr uint16, value uint8) {
 	ppu.videoRAM[addr-0x8000] = value
 }
+
+// Frame returns the most recently rendered frame
+func (ppu *PPU) Frame() *image.RGBA {
+	return ppu.frame
+}
