@@ -29,20 +29,13 @@ type PPU struct {
 	mode                 uint8
 
 	// BGP
-	bgpColour0 uint8
-	bgpColour1 uint8
-	bgpColour2 uint8
-	bgpColour3 uint8
+	bgpColour [4]uint8
 
 	// OBP0
-	obp0Colour1 uint8
-	obp0Colour2 uint8
-	obp0Colour3 uint8
+	obp0Colour [4]uint8
 
 	// OBP1
-	obp1Colour1 uint8
-	obp1Colour2 uint8
-	obp1Colour3 uint8
+	obp1Colour [4]uint8
 
 	// Single-value registers
 	ly  uint8
@@ -52,33 +45,14 @@ type PPU struct {
 	wx  uint8
 	wy  uint8
 
-	// Mode 2
-	spriteOverlaps [40]bool
-	nextSprite     uint16
-
-	// Mode 3
-	lx uint8
-
-	// Mode 0
-	ticksMode0 int
-
-	// Mode 1
-	ticksMode1 int
-
 	// Internal state
-	interrupts *interrupts.Interrupts
-	oam        *oam.OAM
-	videoRAM   [0x2000]byte
-	debug      bool
-
-	// Internal LCD state
-	tileCache      [384]*[8][8]uint8
-	previousBg     [32][32]uint16
-	previousWindow [32][32]uint16
-	bg             [256][256]uint8
-	window         [256][256]uint8
-	sprites        [144][160]uint8
+	interrupts     *interrupts.Interrupts
+	oam            *oam.OAM
+	videoRAM       [0x2000]byte
 	frame          *image.RGBA
+	spriteOverlaps [40]bool
+	ticks          int
+	debug          bool
 }
 
 func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debug bool) *PPU {
@@ -110,18 +84,20 @@ func (ppu *PPU) EndMachineCycle() {
 		return
 	}
 
+	// Find x and y co-ords
+	ppu.ly = uint8(ppu.ticks / 114)
+	lx := uint8(ppu.ticks % 114)
+
 	// Should we switch to a different mode?
 	switch ppu.mode {
 	case 2:
-		if ppu.nextSprite >= 40 {
-			ppu.nextSprite = 0
+		if lx == 20 {
 			ppu.mode = 3
 		}
 	case 3:
 		// In reality, this time is dependent on sprite reading delays
-		// but we are hardcoding to the minimum for now
-		if ppu.lx >= 168 {
-			ppu.lx = 0
+		// but we are hardcoding to the minimum for now i.e. 41 mticks
+		if lx == 61 {
 			ppu.mode = 0
 			// If the h-blank interrupt is enabled in stat
 			// then the stat interrupt occurs
@@ -131,10 +107,8 @@ func (ppu *PPU) EndMachineCycle() {
 		}
 	case 0:
 		// In reality, this time is dependent on the time spent in mode 3
-		// but we are hardcoding to themaximum for now
-		if ppu.ticksMode0 >= 208 {
-			ppu.ticksMode0 = 0
-			ppu.ly++
+		// but we are hardcoding to the maximum for now i.e. 52
+		if lx == 0 {
 			if ppu.ly == 144 {
 				ppu.mode = 1
 				// V-blank interrupt always occurs
@@ -154,25 +128,22 @@ func (ppu *PPU) EndMachineCycle() {
 			}
 		}
 	case 1:
-		if ppu.ticksMode1 >= 456 {
-			ppu.ticksMode1 = 0
-			ppu.ly++
-		}
-		if ppu.ly == 154 {
-			ppu.ly = 0
+		if ppu.ticks == 0 {
 			ppu.mode = 2
 		}
 	default:
 		panic(fmt.Sprintf("unexpected mode during check: %d", ppu.mode))
 	}
 
-	// Tick the PPU
+	// Execute a single tick
 	switch ppu.mode {
 	case 2:
-		ppu.checkSpriteOverlap()
+		ppu.checkOverlappingSprites(lx)
 	case 3:
-		ppu.drawPixel(ppu.lx, ppu.ly)
-		if ppu.lx == 0 {
+		for offset := 0; offset < 4; offset++ {
+			ppu.drawPixel(((lx-20)*4)+uint8(offset), ppu.ly)
+		}
+		if lx == 0 {
 			// Check coincidence flag
 			ppu.coincidence = ppu.ly == ppu.lyc
 			// If the coincidence interrupt is enabled in stat
@@ -181,26 +152,31 @@ func (ppu *PPU) EndMachineCycle() {
 				ppu.interrupts.RequestStat()
 			}
 		}
-		ppu.lx++
 	case 0:
-		ppu.ticksMode0++
+		// Nothing to do
 	case 1:
-		ppu.ticksMode1++
+		// Nothing to do
 	default:
 		panic(fmt.Sprintf("unexpected mode during tick: %d", ppu.mode))
 	}
 
+	// Tick the PPU
+	ppu.ticks++
+	if ppu.ticks == 17556 {
+		ppu.ticks = 0
+	}
+
 }
 
-func (ppu *PPU) checkSpriteOverlap() {
-	spriteAddr := 0xfe00 + uint16(ppu.nextSprite*4)
+func (ppu *PPU) checkOverlappingSprites(lx uint8) {
+	ppu.checkOverlappingSprite(lx * 2)
+	ppu.checkOverlappingSprite((lx * 2) + 1)
+}
+
+func (ppu *PPU) checkOverlappingSprite(sprite uint8) {
+	spriteAddr := 0xfe00 + uint16(sprite*4)
 	startY := ppu.oam.ReadOAM(spriteAddr)
-	ppu.spriteOverlaps[ppu.nextSprite] = startY != 0 && ppu.ly >= startY-16 && ppu.ly < startY-8
-	ppu.nextSprite++
-	spriteAddr = 0xfe00 + uint16(ppu.nextSprite*4)
-	startY = ppu.oam.ReadOAM(spriteAddr)
-	ppu.spriteOverlaps[ppu.nextSprite] = startY != 0 && ppu.ly >= startY-16 && ppu.ly < startY-8
-	ppu.nextSprite++
+	ppu.spriteOverlaps[sprite] = startY != 0 && ppu.ly >= startY-16 && ppu.ly < startY-8
 }
 
 func (ppu *PPU) enable() {
@@ -217,9 +193,5 @@ func (ppu *PPU) ReadVideoRAM(addr uint16) uint8 {
 }
 
 func (ppu *PPU) WriteVideoRAM(addr uint16, value uint8) {
-	if addr < 0x9800 {
-		tileNumber := (addr - 0x8000) / 16
-		ppu.tileCache[tileNumber] = nil
-	}
 	ppu.videoRAM[addr-0x8000] = value
 }
