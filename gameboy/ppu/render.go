@@ -75,8 +75,27 @@ func (ppu *PPU) drawPixel(x, y uint8) {
 func (ppu *PPU) drawSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) {
 	tileOffsetX := (x - spriteX) % 8
 	tileOffsetY := (y - spriteY) % 8
+	behind := attributes&0x80 > 0
+	flipY := attributes&0x40 > 0
+	flipX := attributes&0x20 > 0
+	usePalette1 := attributes&0x08 > 0
+	if flipX {
+		panic("flipx")
+	}
+	if flipY {
+		panic("flipy")
+	}
+	if behind {
+		panic("behind")
+	}
 	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
-	ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[pixel]])
+	var colour color.RGBA
+	if usePalette1 {
+		colour = blue[ppu.obp1Colour[pixel]]
+	} else {
+		colour = blue[ppu.obp0Colour[pixel]]
+	}
+	ppu.frame.SetRGBA(int(x), int(y), colour)
 }
 
 func (ppu *PPU) drawBackgroundPixel(x, y uint8) {
