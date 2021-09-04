@@ -49,8 +49,13 @@ var (
 
 func (ppu *PPU) renderPixel(x, y uint8) {
 
-	// Find the first overlapping spite if there is one
+	var spritePixel uint8
+	var spriteBehindBackground bool
+	var useSpritePalette1 bool
+
+	// Does this pixel intersect with a sprite?
 	if ppu.spritesEnabled {
+
 		for sprite, overlaps := range ppu.spriteOverlaps {
 			if !overlaps {
 				continue
@@ -61,51 +66,68 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 				spriteY := ppu.oam.ReadOAM(spriteAddr)
 				tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
 				attributes := ppu.oam.ReadOAM(spriteAddr + 3)
-				if ppu.renderSpritePixel(x, y, spriteX, spriteY, int(tileNumber), attributes) {
-					return
+				tileOffsetX := (x - spriteX) % 8
+				tileOffsetY := (y - spriteY) % 8
+				spriteBehindBackground = attributes&0x80 > 0
+				flipY := attributes&0x40 > 0
+				flipX := attributes&0x20 > 0
+				useSpritePalette1 = attributes&0x08 > 0
+				if flipX {
+					tileOffsetX = 7 - tileOffsetX
+				}
+				if flipY {
+					tileOffsetY = 7 - tileOffsetY
+				}
+				spritePixel = ppu.readTilePixel(int(tileNumber), tileOffsetX, tileOffsetY)
+				if spritePixel > 0 {
+					break
 				}
 			}
 		}
-	}
 
-	// Use the background
-	if ppu.bgEnabled {
-		ppu.renderBackgroundPixel(x, y)
-	}
-
-}
-
-func (ppu *PPU) renderSpritePixel(x, y, spriteX, spriteY uint8, tileNumber int, attributes uint8) bool {
-	tileOffsetX := (x - spriteX) % 8
-	tileOffsetY := (y - spriteY) % 8
-	behind := attributes&0x80 > 0
-	flipY := attributes&0x40 > 0
-	flipX := attributes&0x20 > 0
-	usePalette1 := attributes&0x08 > 0
-	if flipX {
-		tileOffsetX = 7 - tileOffsetX
-	}
-	if flipY {
-		tileOffsetY = 7 - tileOffsetY
-	}
-	if behind {
-		panic("behind")
-	}
-	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
-	if pixel > 0 {
-		var colour color.RGBA
-		if usePalette1 {
-			colour = blue[ppu.obp1Colour[pixel]]
-		} else {
-			colour = blue[ppu.obp0Colour[pixel]]
+		// Did we intersect with a foreground sprite?
+		if spritePixel > 0 && !spriteBehindBackground {
+			if useSpritePalette1 {
+				ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp1Colour[spritePixel]])
+			} else {
+				ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp0Colour[spritePixel]])
+			}
+			return
 		}
-		ppu.frame.SetRGBA(int(x), int(y), colour)
-		return true
+
 	}
-	return false
+
+	// Does this pixel intersect with the window?
+	if ppu.windowEnabled {
+		pixel := ppu.findWindowPixel(x, y)
+		ppu.frame.SetRGBA(int(x), int(y), green[ppu.bgpColour[pixel]])
+		return
+	}
+
+	// Where does this pixel intersect with teh background?
+	var backgroundPixel uint8
+	if ppu.bgEnabled {
+		backgroundPixel = ppu.findBackgroundPixel(x, y)
+	}
+
+	// Does this pixel intersect with a background sprite?
+	if backgroundPixel == 0 && spritePixel != 0 && spriteBehindBackground {
+		if useSpritePalette1 {
+			ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp1Colour[spritePixel]])
+		} else {
+			ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp0Colour[spritePixel]])
+		}
+	} else {
+		ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[backgroundPixel]])
+	}
+
 }
 
-func (ppu *PPU) renderBackgroundPixel(x, y uint8) {
+func (ppu *PPU) findWindowPixel(x, y uint8) uint8 {
+	return 0
+}
+
+func (ppu *PPU) findBackgroundPixel(x, y uint8) uint8 {
 
 	scx := ppu.ReadSCX()
 	scy := ppu.ReadSCY()
@@ -130,9 +152,7 @@ func (ppu *PPU) renderBackgroundPixel(x, y uint8) {
 		tileNumber = 256 + int(int8(tileByte))
 	}
 
-	pixel := ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
-
-	ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[pixel]])
+	return ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
 
 }
 
