@@ -99,9 +99,13 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 
 	// Does this pixel intersect with the window?
 	if ppu.windowEnabled {
-		pixel := ppu.findWindowPixel(x, y)
-		ppu.frame.SetRGBA(int(x), int(y), green[ppu.bgpColour[pixel]])
-		return
+		wx := ppu.ReadWX()
+		wy := ppu.ReadWY()
+		if x >= (wx-7) && y >= wy {
+			windowPixel := ppu.findWindowPixel(x-(wx-7), y-wy)
+			ppu.frame.SetRGBA(int(x), int(y), green[ppu.bgpColour[windowPixel]])
+			return
+		}
 	}
 
 	// Where does this pixel intersect with teh background?
@@ -124,7 +128,30 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 }
 
 func (ppu *PPU) findWindowPixel(x, y uint8) uint8 {
-	return 0
+
+	tileX := x / 8
+	tileY := y / 8
+	tileOffsetX := x % 8
+	tileOffsetY := y % 8
+
+	var offsetAddr uint16
+	if ppu.highWindowTileMap {
+		offsetAddr = 0x9c00 - 0x8000
+	} else {
+		offsetAddr = 0x9800 - 0x8000
+	}
+
+	var tileNumber int
+	tileAddr := 32*uint16(tileY) + uint16(tileX)
+	tileByte := ppu.videoRAM[offsetAddr+tileAddr]
+	if ppu.lowTileData {
+		tileNumber = int(tileByte)
+	} else {
+		tileNumber = 256 + int(int8(tileByte))
+	}
+
+	return ppu.readTilePixel(tileNumber, tileOffsetX, tileOffsetY)
+
 }
 
 func (ppu *PPU) findBackgroundPixel(x, y uint8) uint8 {
