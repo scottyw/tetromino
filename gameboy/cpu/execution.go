@@ -104,11 +104,6 @@ func (d *Dispatch) peek() *[]func() {
 	cpu := d.cpu
 	mapper := d.mapper
 	instructionByte := mapper.Read(cpu.pc)
-	// Mooneye uses the 0x40 instruction as a magic breakpoint
-	// to indicate that a test rom has completed
-	if instructionByte == 0x40 {
-		d.Mooneye = true
-	}
 	md := instructionMetadata[instructionByte]
 	if md.Addr == "" {
 		panic(fmt.Sprintf("Unknown instruction opcode: %v", md))

@@ -6,14 +6,14 @@ import (
 
 // Dispatch determines how CPU instructions are dispatched
 type Dispatch struct {
-	cpu               *CPU
-	mapper            *memory.Mapper
-	normal            [256][]func()
-	prefix            [256][]func()
-	steps             *[]func()
-	stepIndex         int
-	handlingInterrupt bool
-	Mooneye           bool
+	cpu                    *CPU
+	mapper                 *memory.Mapper
+	normal                 [256][]func()
+	prefix                 [256][]func()
+	steps                  *[]func()
+	stepIndex              int
+	handlingInterrupt      bool
+	mooneyeDebugBreakpoint bool
 }
 
 // NewDispatch returns a Dispatch instance bringing the CPU and memory together
@@ -28,9 +28,19 @@ func NewDispatch(cpu *CPU, mapper *memory.Mapper) *Dispatch {
 	return dispatch
 }
 
-// TestA returns the value of register a for test purposes
-func (d *Dispatch) TestA() uint8 {
-	return d.cpu.a
+// CheckMooneye checks if the magic Mooneye breakpoint was hit and if so returns
+// the register values needed to see whether the test passed
+func (d *Dispatch) CheckMooneye() []uint8 {
+	if d.mooneyeDebugBreakpoint {
+		return []uint8{d.cpu.a, d.cpu.b, d.cpu.c, d.cpu.d, d.cpu.e, d.cpu.h, d.cpu.l}
+	}
+	return nil
+}
+
+func (d *Dispatch) mooneye() {
+	// Mooneye uses this instruction (0x40) as a magic breakpoint
+	// to indicate that a test rom has completed
+	d.mooneyeDebugBreakpoint = true
 }
 
 func nop() {
@@ -248,7 +258,7 @@ func (d *Dispatch) initialize(cpu *CPU, mapper *memory.Mapper) {
 	d.normal[0x3f] = []func(){cpu.ccf}
 
 	// LD B B [] 1 [4]
-	d.normal[0x40] = []func(){nop}
+	d.normal[0x40] = []func(){d.mooneye}
 
 	// LD B C [] 1 [4]
 	d.normal[0x41] = []func(){cpu.ldBC}
