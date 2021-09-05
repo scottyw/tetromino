@@ -58,10 +58,16 @@ type PPU struct {
 }
 
 func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debug bool) *PPU {
+	var frame *image.RGBA
+	if debug {
+		frame = image.NewRGBA(image.Rect(0, 0, 256, 256))
+	} else {
+		frame = image.NewRGBA(image.Rect(0, 0, 160, 144))
+	}
 	ppu := &PPU{
 		interrupts: interrupts,
 		oam:        oam,
-		frame:      image.NewRGBA(image.Rect(0, 0, 256, 256)),
+		frame:      frame,
 		debug:      debug,
 	}
 	ppu.WriteLCDC(0x91)

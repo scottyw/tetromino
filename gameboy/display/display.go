@@ -14,8 +14,6 @@ import (
 type Display struct {
 	window  *glfw.Window
 	texture uint32
-	width   float32
-	height  float32
 }
 
 // New implements an LCD display in GL
@@ -56,8 +54,6 @@ func New(controller *controller.Controller, debug bool) *Display {
 	display := &Display{
 		window:  window,
 		texture: createTexture(),
-		width:   width,
-		height:  height,
 	}
 	return display
 }
@@ -72,7 +68,7 @@ func (d *Display) RenderFrame(image *image.RGBA) bool {
 	gl.Clear(gl.COLOR_BUFFER_BIT)
 	gl.BindTexture(gl.TEXTURE_2D, d.texture)
 	setTexture(image)
-	drawBuffer(d.window, d.width, d.height)
+	drawBuffer(d.window)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	d.window.SwapBuffers()
 	glfw.PollEvents()
@@ -136,27 +132,15 @@ func setTexture(im *image.RGBA) {
 		0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(im.Pix))
 }
 
-func drawBuffer(window *glfw.Window, width, height float32) {
-	w, h := window.GetFramebufferSize()
-	s1 := float32(w) / width
-	s2 := float32(h) / height
-	f := float32(1 - 0)
-	var x, y float32
-	if s1 >= s2 {
-		x = f * s2 / s1
-		y = f
-	} else {
-		x = f
-		y = f * s1 / s2
-	}
+func drawBuffer(window *glfw.Window) {
 	gl.Begin(gl.QUADS)
-	gl.TexCoord2f(0, height/256.0)
-	gl.Vertex2f(-x, -y)
-	gl.TexCoord2f(width/256.0, height/256.0)
-	gl.Vertex2f(x, -y)
-	gl.TexCoord2f(width/256.0, 0)
-	gl.Vertex2f(x, y)
+	gl.TexCoord2f(0, 1)
+	gl.Vertex2f(-1, -1)
+	gl.TexCoord2f(1, 1)
+	gl.Vertex2f(1, -1)
+	gl.TexCoord2f(1, 0)
+	gl.Vertex2f(1, 1)
 	gl.TexCoord2f(0, 0)
-	gl.Vertex2f(-x, y)
+	gl.Vertex2f(-1, 1)
 	gl.End()
 }
