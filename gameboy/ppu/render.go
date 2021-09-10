@@ -25,12 +25,12 @@ var (
 		{0x33, 0x33, 0x33, 0xff},
 	}
 
-	red = []color.RGBA{
-		{0xff, 0xaa, 0xaa, 0xff},
-		{0xdd, 0x77, 0x77, 0xff},
-		{0xaa, 0x33, 0x33, 0xff},
-		{0x55, 0x00, 0x00, 0xff},
-	}
+	// red = []color.RGBA{
+	// 	{0xff, 0xaa, 0xaa, 0xff},
+	// 	{0xdd, 0x77, 0x77, 0xff},
+	// 	{0xaa, 0x33, 0x33, 0xff},
+	// 	{0x55, 0x00, 0x00, 0xff},
+	// }
 
 	green = []color.RGBA{
 		{0xaa, 0xff, 0xaa, 0xff},
@@ -61,11 +61,11 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 				continue
 			}
 			spriteAddr := 0xfe00 + uint16(sprite*4)
-			spriteX := ppu.oam.ReadOAM(spriteAddr + 1)
+			spriteX := ppu.oam.PPURead(spriteAddr + 1)
 			if x+8 >= spriteX && x < spriteX {
-				spriteY := ppu.oam.ReadOAM(spriteAddr)
-				tileNumber := ppu.oam.ReadOAM(spriteAddr + 2)
-				attributes := ppu.oam.ReadOAM(spriteAddr + 3)
+				spriteY := ppu.oam.PPURead(spriteAddr)
+				tileNumber := ppu.oam.PPURead(spriteAddr + 2)
+				attributes := ppu.oam.PPURead(spriteAddr + 3)
 				tileOffsetX := (x - spriteX) % 8
 				tileOffsetY := (y - spriteY) % 8
 				spriteBehindBackground = attributes&0x80 > 0

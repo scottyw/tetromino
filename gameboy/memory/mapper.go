@@ -107,11 +107,8 @@ func (m *Mapper) Read(addr uint16) byte {
 		return m.internalRAM[addr-0xc000]
 	case addr < 0xfe00:
 		return m.internalRAM[addr-0xe000]
-	case addr < 0xfea0:
-		return m.oam.ReadOAM(addr)
 	case addr < 0xff00:
-		// Unusable region
-		return 0
+		return m.oam.Read(addr)
 	case addr == JOYP:
 		return m.controller.ReadJOYP()
 	case addr == SB:
@@ -224,10 +221,8 @@ func (m *Mapper) Write(addr uint16, value byte) {
 		m.internalRAM[addr-0xc000] = value
 	case addr < 0xfe00:
 		m.internalRAM[addr-0xe000] = value
-	case addr < 0xfea0:
-		m.oam.WriteOAM(addr, value)
 	case addr < 0xff00:
-		// Unusable region
+		m.oam.Write(addr, value)
 	case addr == JOYP:
 		m.controller.WriteJOYP(value)
 	case addr == SB:

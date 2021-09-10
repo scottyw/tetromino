@@ -54,6 +54,7 @@ type PPU struct {
 	frame          *image.RGBA
 	spriteOverlaps [40]bool
 	ticks          int
+	firstLine      bool
 	debug          bool
 }
 
@@ -101,6 +102,7 @@ func (ppu *PPU) EndMachineCycle() {
 	case 2:
 		if ticksThisLine == 20 {
 			ppu.mode = 3
+			ppu.oam.ExitMode2()
 		}
 	case 3:
 		// In reality, this time is dependent on sprite reading delays
@@ -128,6 +130,7 @@ func (ppu *PPU) EndMachineCycle() {
 				}
 			} else {
 				ppu.mode = 2
+				ppu.oam.EnterMode2()
 				// If the oam interrupt is enabled in stat
 				// then the stat interrupt occurs
 				if ppu.oamInterrupt {
@@ -138,6 +141,7 @@ func (ppu *PPU) EndMachineCycle() {
 	case 1:
 		if ppu.ticks == 0 {
 			ppu.mode = 2
+			ppu.oam.EnterMode2()
 		}
 	default:
 		panic(fmt.Sprintf("unexpected mode during check: %d", ppu.mode))
@@ -166,7 +170,11 @@ func (ppu *PPU) EndMachineCycle() {
 			ppu.renderPixel(lx+3, ppu.ly)
 		}
 	case 0:
-		// Nothing to do
+		// The first line after being enabled, the h-blank period is 2 ticks shorter
+		if ppu.firstLine {
+			ppu.ticks += 2
+			ppu.firstLine = false
+		}
 	case 1:
 		// Nothing to do
 	default:
@@ -188,18 +196,22 @@ func (ppu *PPU) checkOverlappingSprites(lx uint8) {
 
 func (ppu *PPU) checkOverlappingSprite(sprite uint8) {
 	spriteAddr := 0xfe00 + uint16(sprite*4)
-	startY := ppu.oam.ReadOAM(spriteAddr)
+	startY := ppu.oam.PPURead(spriteAddr)
 	ppu.spriteOverlaps[sprite] = startY != 0 && ppu.ly >= startY-16 && ppu.ly < startY-8
 }
 
 func (ppu *PPU) enable() {
 	ppu.enabled = true
+	ppu.firstLine = true
+	ppu.mode = 2
+	ppu.oam.EnterMode2()
 }
 
 func (ppu *PPU) disable() {
 	ppu.enabled = false
 	ppu.ly = 0
 	ppu.ticks = 0
+	ppu.mode = 0
 }
 
 func (ppu *PPU) ReadVideoRAM(addr uint16) uint8 {
