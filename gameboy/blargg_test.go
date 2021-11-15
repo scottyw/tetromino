@@ -25,7 +25,7 @@ func runBlarggTest(t *testing.T, filename string, checkRAM bool) {
 		for {
 			// Some ROMs write results to serial but for some we need to directly check RAM
 			if checkRAM {
-				result = string(gameboy.mapper.CartRAM()[0][:])
+				result = string(gameboy.mapper.DumpRAM())
 			} else {
 				result = serialWriter.String()
 			}

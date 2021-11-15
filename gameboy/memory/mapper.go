@@ -70,7 +70,7 @@ type Mapper struct {
 	controller  *controller.Controller
 	interrupts  *interrupts.Interrupts
 	oam         *oam.OAM
-	mbc         *mbc
+	mbc         mbc
 	ppu         *ppu.PPU
 	serial      *serial.Serial
 	timer       *timer.Timer
@@ -98,11 +98,11 @@ func (m *Mapper) EndMachineCycle() {
 func (m *Mapper) Read(addr uint16) byte {
 	switch {
 	case addr < 0x8000:
-		return m.mbc.read(addr)
+		return m.mbc.Read(addr)
 	case addr < 0xa000:
 		return m.ppu.ReadVideoRAM(addr)
 	case addr < 0xc000:
-		return m.mbc.read(addr)
+		return m.mbc.Read(addr)
 	case addr < 0xe000:
 		return m.internalRAM[addr-0xc000]
 	case addr < 0xfe00:
@@ -212,11 +212,11 @@ func (m *Mapper) Read(addr uint16) byte {
 func (m *Mapper) Write(addr uint16, value byte) {
 	switch {
 	case addr < 0x8000:
-		m.mbc.write(addr, value)
+		m.mbc.Write(addr, value)
 	case addr < 0xa000:
 		m.ppu.WriteVideoRAM(addr, value)
 	case addr < 0xc000:
-		m.mbc.write(addr, value)
+		m.mbc.Write(addr, value)
 	case addr < 0xe000:
 		m.internalRAM[addr-0xc000] = value
 	case addr < 0xfe00:
@@ -320,7 +320,6 @@ func (m *Mapper) Write(addr uint16, value byte) {
 	}
 }
 
-// CartRAM returns the contents of cartridge RAM, which is useful for verifing test results
-func (m *Mapper) CartRAM() [][0x2000]byte {
-	return m.mbc.ram
+func (m *Mapper) DumpRAM() []byte {
+	return m.mbc.DumpRAM()
 }
