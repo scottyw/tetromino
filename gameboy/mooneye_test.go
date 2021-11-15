@@ -41,11 +41,10 @@ func runMooneyeTest(t *testing.T, filename string) {
 			"/", "_", -1),
 	)
 	gameboy.ppu.Screenshot(screenshotFilename)
-	fmt.Println(filename, gameboy.dispatch.CheckMooneye())
 	if !reflect.DeepEqual(gameboy.dispatch.CheckMooneye(), []uint8{0, 3, 5, 8, 13, 21, 34}) {
 		t.Errorf("Test ROM failed: %s", filename)
 		// fmt.Printf("| :boom: fail | %s | [pic](%s) |\n", filename, screenshotFilename)
-	} else {
+		// } else {
 		// fmt.Printf("| :green_heart: pass | %s | [pic](%s) |\n", filename, screenshotFilename)
 	}
 

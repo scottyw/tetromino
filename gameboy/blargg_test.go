@@ -53,7 +53,7 @@ func runBlarggTest(t *testing.T, filename string, checkRAM bool) {
 	if !strings.Contains(result, "Passed") {
 		t.Errorf("\n--------\n%s\n--------\n%s\n--------\n", filename, result)
 		// fmt.Printf("| :boom: fail | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
-	} else {
+		// } else {
 		// fmt.Printf("| :green_heart: pass | %s | [pic](pkg/gb/%s) |\n", filename, screenshotFilename)
 	}
 }
@@ -83,23 +83,5 @@ func TestBlarggMemTiming2(t *testing.T) {
 }
 
 func TestBlarggOAMBug(t *testing.T) {
-
-	// runBlarggTest(t, "testdata/blargg/oam_bug/oam_bug.gb")
-
-	for _, filename := range []string{
-		// Test individual OAM ROMs until they are all passing
-		// "testdata/blargg/oam_bug/rom_singles/1-lcd_sync.gb",
-		// "testdata/blargg/oam_bug/rom_singles/2-causes.gb",
-		// "testdata/blargg/oam_bug/rom_singles/3-non_causes.gb",
-		// "testdata/blargg/oam_bug/rom_singles/4-scanline_timing.gb",
-		// "testdata/blargg/oam_bug/rom_singles/5-timing_bug.gb",
-		// "testdata/blargg/oam_bug/rom_singles/6-timing_no_bug.gb",
-		// "testdata/blargg/oam_bug/rom_singles/7-timing_effect.gb",
-		// "testdata/blargg/oam_bug/rom_singles/8-instr_effect.gb",
-	} {
-		t.Run(filename, func(t *testing.T) {
-			runBlarggTest(t, filename, false)
-		})
-	}
-
+	runBlarggTest(t, "testdata/blargg/oam_bug/oam_bug.gb", true)
 }

@@ -263,11 +263,20 @@ func (cpu *CPU) dec(r8 *uint8) {
 	cpu.setHf(hc8Sub(old, 1))
 }
 
-func (cpu *CPU) decBC() { cpu.dec16(&cpu.b, &cpu.c) }
+func (cpu *CPU) decBC() {
+	cpu.oam.TriggerWriteCorruption(cpu.bc())
+	cpu.dec16(&cpu.b, &cpu.c)
+}
 
-func (cpu *CPU) decDE() { cpu.dec16(&cpu.d, &cpu.e) }
+func (cpu *CPU) decDE() {
+	cpu.oam.TriggerWriteCorruption(cpu.de())
+	cpu.dec16(&cpu.d, &cpu.e)
+}
 
-func (cpu *CPU) decHL() { cpu.dec16(&cpu.h, &cpu.l) }
+func (cpu *CPU) decHL() {
+	cpu.oam.TriggerWriteCorruption(cpu.hl())
+	cpu.dec16(&cpu.h, &cpu.l)
+}
 
 func (cpu *CPU) dec16(msb, lsb *uint8) {
 	new := uint16(*msb)<<8 + uint16(*lsb) - 1
@@ -276,6 +285,7 @@ func (cpu *CPU) dec16(msb, lsb *uint8) {
 }
 
 func (cpu *CPU) decSP() {
+	cpu.oam.TriggerWriteCorruption(cpu.sp)
 	cpu.sp--
 }
 
@@ -331,11 +341,20 @@ func (cpu *CPU) inc(r8 *uint8) {
 	cpu.setHf(hc8(old, 1))
 }
 
-func (cpu *CPU) incBC() { cpu.inc16(&cpu.b, &cpu.c) }
+func (cpu *CPU) incBC() {
+	cpu.oam.TriggerWriteCorruption(cpu.bc())
+	cpu.inc16(&cpu.b, &cpu.c)
+}
 
-func (cpu *CPU) incDE() { cpu.inc16(&cpu.d, &cpu.e) }
+func (cpu *CPU) incDE() {
+	cpu.oam.TriggerWriteCorruption(cpu.de())
+	cpu.inc16(&cpu.d, &cpu.e)
+}
 
-func (cpu *CPU) incHL() { cpu.inc16(&cpu.h, &cpu.l) }
+func (cpu *CPU) incHL() {
+	cpu.oam.TriggerWriteCorruption(cpu.hl())
+	cpu.inc16(&cpu.h, &cpu.l)
+}
 
 func (cpu *CPU) inc16(msb, lsb *uint8) {
 	new := uint16(*msb)<<8 + uint16(*lsb) + 1
@@ -344,6 +363,7 @@ func (cpu *CPU) inc16(msb, lsb *uint8) {
 }
 
 func (cpu *CPU) incSP() {
+	cpu.oam.TriggerWriteCorruption(cpu.sp)
 	cpu.sp++
 }
 
@@ -677,7 +697,7 @@ func (cpu *CPU) or(u8 uint8) {
 func (cpu *CPU) pop(mapper *memory.Mapper, r8 *uint8) func() {
 	return func() {
 		*r8 = mapper.Read(cpu.sp)
-		cpu.sp++
+		cpu.incSP()
 	}
 }
 
@@ -685,13 +705,14 @@ func (cpu *CPU) popF(mapper *memory.Mapper) func() {
 	return func() {
 		// Lower nibble is always zero no matter what data was written
 		cpu.f = mapper.Read(cpu.sp) & 0xf0
+		cpu.oam.TriggerWriteCorruption(cpu.sp)
 		cpu.sp++
 	}
 }
 
 func (cpu *CPU) push(mapper *memory.Mapper, r8 *uint8) func() {
 	return func() {
-		cpu.sp--
+		cpu.decSP()
 		mapper.Write(cpu.sp, *r8)
 	}
 }

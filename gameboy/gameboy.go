@@ -49,8 +49,11 @@ func New(config Config) *Gameboy {
 	// Create interrrupts subsystem
 	i := interrupts.New()
 
+	// Create OAM memory
+	oam := oam.New()
+
 	// Create CPU
-	c := cpu.New(i, config.DebugCPU)
+	c := cpu.New(i, oam, config.DebugCPU)
 
 	// Create controller
 	controller := controller.New(c.Restart)
@@ -70,9 +73,6 @@ func New(config Config) *Gameboy {
 	} else {
 		a = audio.New(nil, nil)
 	}
-
-	// Create OAM memory
-	oam := oam.New()
 
 	// Create the PPU
 	ppu := ppu.New(i, oam, config.DebugLCD)
@@ -116,7 +116,7 @@ func (gb *Gameboy) Cleanup() {
 func readRomFile(romFilename string) []byte {
 	var rom []byte
 	if romFilename == "" {
-		panic(fmt.Sprintf("No ROM file specified"))
+		panic("No ROM file specified")
 	}
 	rom, err := ioutil.ReadFile(romFilename)
 	if err != nil {
@@ -127,8 +127,8 @@ func readRomFile(romFilename string) []byte {
 
 func (gb *Gameboy) runFrame(ctx context.Context) bool {
 	// The Game Boy clock runs at 4.194304MHz
-	// Each loop iteration below represents one machine cycle
 	// One machine cycle is 4 clock cycles
+	// Each loop iteration below represents one machine cycle
 	// Each LCD frame is 17556 machine cycles
 	for mtick := 0; mtick < 17556; mtick++ {
 		gb.dispatch.ExecuteMachineCycle()

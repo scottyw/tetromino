@@ -187,5 +187,6 @@ func (d *Dispatch) ExecuteMachineCycle() {
 	}
 	step := (*d.steps)[d.stepIndex]
 	step()
+	d.cpu.oam.Corrupt()
 	d.stepIndex++
 }
