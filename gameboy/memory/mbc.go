@@ -31,11 +31,11 @@ func newMBC(romImage []byte) mbc {
 	if romImage == nil || len(romImage) < 0x0148 {
 		return nil
 	}
-	cartType := romImage[0x0147]
 	romSize := romImage[0x0148]
-	rom := splitROMIntoPages(romSize, romImage)
+	rom := prepareROM(romSize, romImage)
+	cartType := romImage[0x0147]
 	ramSize := romImage[0x0149]
-	ram := createRAM(cartType, ramSize)
+	ram := prepareRAM(cartType, ramSize)
 
 	switch cartType {
 	case 0x00:
@@ -64,19 +64,19 @@ func newMBC(romImage []byte) mbc {
 		// 0D - ROM + MMM01 + SRAM + BATT
 	case 0x0f:
 		// 0f - ROM + MBC3 + TIMER + BATT
-		return newMBC3(rom, ram)
+		// return newMBC3(rom, ram)
 	case 0x10:
 		// 10 - ROM + MBC3 + RAM + TIMER + BATT
-		return newMBC3(rom, ram)
+		// return newMBC3(rom, ram)
 	case 0x11:
 		// 11 - ROM + MBC3
-		return newMBC3(rom, ram)
+		// return newMBC3(rom, ram)
 	case 0x12:
 		// 12 - ROM + MBC3 + RAM
-		return newMBC3(rom, ram)
+		// return newMBC3(rom, ram)
 	case 0x13:
 		// 13 - ROM + MBC3 + RAM + BATT
-		return newMBC3(rom, ram)
+		// return newMBC3(rom, ram)
 	case 0x19:
 		// 19 - ROM + MBC5
 	case 0x1a:
@@ -105,7 +105,7 @@ func newMBC(romImage []byte) mbc {
 	panic(fmt.Sprintf("mbc does not support cart type 0x%02x", cartType))
 }
 
-func splitROMIntoPages(romSize uint8, rom []byte) [][0x4000]byte {
+func prepareROM(romSize uint8, rom []byte) [][0x4000]byte {
 	if len(rom)%0x4000 != 0 {
 		panic(fmt.Sprintf("ROM size must be a multiple of 32KB. Current size: 0x%02x", len(rom)))
 	}
@@ -120,7 +120,7 @@ func splitROMIntoPages(romSize uint8, rom []byte) [][0x4000]byte {
 	return pages
 }
 
-func createRAM(cartType, ramSize uint8) [][0x2000]byte {
+func prepareRAM(cartType, ramSize uint8) [][0x2000]byte {
 	var ram [][0x2000]byte
 	if cartType == 0x05 || cartType == 0x06 {
 		ram = make([][0x2000]byte, 1)
