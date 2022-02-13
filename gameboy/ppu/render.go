@@ -49,6 +49,8 @@ var (
 
 func (ppu *PPU) renderPixel(x, y uint8) {
 
+	colours := grey
+
 	var spritePixel uint8
 	var spriteBehindBackground bool
 	var useSpritePalette1 bool
@@ -87,10 +89,13 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 
 		// Did we intersect with a foreground sprite?
 		if spritePixel > 0 && !spriteBehindBackground {
+			if ppu.debug {
+				colours = blue
+			}
 			if useSpritePalette1 {
-				ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp1Colour[spritePixel]])
+				ppu.frame.SetRGBA(int(x), int(y), colours[ppu.obp1Colour[spritePixel]])
 			} else {
-				ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp0Colour[spritePixel]])
+				ppu.frame.SetRGBA(int(x), int(y), colours[ppu.obp0Colour[spritePixel]])
 			}
 			return
 		}
@@ -117,14 +122,20 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 
 	// Does this pixel intersect with a background sprite?
 	if pixel == 0 && spritePixel != 0 && spriteBehindBackground {
+		if ppu.debug {
+			colours = blue
+		}
 		if useSpritePalette1 {
-			ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp1Colour[spritePixel]])
+			ppu.frame.SetRGBA(int(x), int(y), colours[ppu.obp1Colour[spritePixel]])
 		} else {
-			ppu.frame.SetRGBA(int(x), int(y), blue[ppu.obp0Colour[spritePixel]])
+			ppu.frame.SetRGBA(int(x), int(y), colours[ppu.obp0Colour[spritePixel]])
 		}
 	} else {
 		if intersectedWindow {
-			ppu.frame.SetRGBA(int(x), int(y), green[ppu.bgpColour[pixel]])
+			if ppu.debug {
+				colours = green
+			}
+			ppu.frame.SetRGBA(int(x), int(y), colours[ppu.bgpColour[pixel]])
 		} else {
 			ppu.frame.SetRGBA(int(x), int(y), grey[ppu.bgpColour[pixel]])
 		}
