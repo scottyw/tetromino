@@ -69,8 +69,9 @@ type Mapper struct {
 	audio       *audio.Audio
 	controller  *controller.Controller
 	interrupts  *interrupts.Interrupts
-	oam         *oam.OAM
 	mbc         mbc
+	rtc         *rtc
+	oam         *oam.OAM
 	ppu         *ppu.PPU
 	serial      *serial.Serial
 	timer       *timer.Timer
@@ -78,8 +79,11 @@ type Mapper struct {
 
 // NewMemory creates the memory struct and initializes it with ROM contents and default values
 func New(rom []byte, interrupts *interrupts.Interrupts, oam *oam.OAM, ppu *ppu.PPU, controller *controller.Controller, serial *serial.Serial, timer *timer.Timer, audio *audio.Audio) *Mapper {
+	rtc := newRTC()
+	mbc := newMBC(rom, rtc)
 	return &Mapper{
-		mbc:        newMBC(rom),
+		mbc:        mbc,
+		rtc:        rtc,
 		oam:        oam,
 		interrupts: interrupts,
 		ppu:        ppu,
@@ -92,6 +96,7 @@ func New(rom []byte, interrupts *interrupts.Interrupts, oam *oam.OAM, ppu *ppu.P
 
 func (m *Mapper) EndMachineCycle() {
 	m.oam.TickDMA(m.Read)
+	m.rtc.tick()
 }
 
 // Read a byte from the chosen memory location
