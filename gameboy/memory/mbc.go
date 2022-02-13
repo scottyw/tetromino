@@ -64,19 +64,19 @@ func newMBC(romImage []byte) mbc {
 		// 0D - ROM + MMM01 + SRAM + BATT
 	case 0x0f:
 		// 0f - ROM + MBC3 + TIMER + BATT
-		// return newMBC3(rom, ram)
+		return newMBC3(rom, ram)
 	case 0x10:
 		// 10 - ROM + MBC3 + RAM + TIMER + BATT
-		// return newMBC3(rom, ram)
+		return newMBC3(rom, ram)
 	case 0x11:
 		// 11 - ROM + MBC3
-		// return newMBC3(rom, ram)
+		return newMBC3(rom, ram)
 	case 0x12:
 		// 12 - ROM + MBC3 + RAM
-		// return newMBC3(rom, ram)
+		return newMBC3(rom, ram)
 	case 0x13:
 		// 13 - ROM + MBC3 + RAM + BATT
-		// return newMBC3(rom, ram)
+		return newMBC3(rom, ram)
 	case 0x19:
 		// 19 - ROM + MBC5
 	case 0x1a:
