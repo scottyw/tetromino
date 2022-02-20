@@ -224,6 +224,19 @@ func (ppu *PPU) WriteVideoRAM(addr uint16, value uint8) {
 
 // Frame returns the most recently rendered frame
 func (ppu *PPU) Frame() *image.RGBA {
+	if ppu.debug {
+		if ppu.bgEnabled {
+			for x := 0; x < 256; x++ {
+				for y := 0; y < 256; y++ {
+
+					pixel := ppu.findBackgroundPixel(uint8(x), uint8(y))
+
+					ppu.frame.SetRGBA(int(uint8(x)+ppu.scx), int(uint8(y)+ppu.scy), red[ppu.bgpColour[pixel]])
+
+				}
+			}
+		}
+	}
 	return ppu.frame
 }
 
