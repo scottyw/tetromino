@@ -143,6 +143,15 @@ func (ppu *PPU) renderPixel(x, y uint8) {
 
 }
 
+func (ppu *PPU) drawDebugLine() {
+	if ppu.bgEnabled && ppu.ly < 144 {
+		for x := 0; x < 256; x++ {
+			pixel := ppu.findBackgroundPixel(uint8(x), ppu.ly)
+			ppu.frame.SetRGBA(int(uint8(x)+ppu.scx), int(ppu.ly+ppu.scy), red[ppu.bgpColour[pixel]])
+		}
+	}
+}
+
 func (ppu *PPU) findWindowPixel(x, y uint8) uint8 {
 
 	tileX := x / 8

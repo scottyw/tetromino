@@ -97,6 +97,11 @@ func (ppu *PPU) EndMachineCycle() {
 	ppu.ly = uint8(ppu.ticks / 114)
 	ticksThisLine := uint8(ppu.ticks % 114)
 
+	// In debug mode, draw a whole line of background before drawing the line for real
+	if ppu.debug && ticksThisLine == 0 {
+		ppu.drawDebugLine()
+	}
+
 	// Should we switch to a different mode?
 	switch ppu.mode {
 	case 2:
@@ -224,19 +229,6 @@ func (ppu *PPU) WriteVideoRAM(addr uint16, value uint8) {
 
 // Frame returns the most recently rendered frame
 func (ppu *PPU) Frame() *image.RGBA {
-	if ppu.debug {
-		if ppu.bgEnabled {
-			for x := 0; x < 256; x++ {
-				for y := 0; y < 256; y++ {
-
-					pixel := ppu.findBackgroundPixel(uint8(x), uint8(y))
-
-					ppu.frame.SetRGBA(int(uint8(x)+ppu.scx), int(uint8(y)+ppu.scy), red[ppu.bgpColour[pixel]])
-
-				}
-			}
-		}
-	}
 	return ppu.frame
 }
 
