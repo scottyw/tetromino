@@ -160,8 +160,8 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context) {
 	defer gb.Cleanup()
-	// var frames int
-	// var t0 time.Time
+	// var frames uint8
+	// t0 := time.Now().UnixMicro()
 	for {
 		select {
 		case <-ctx.Done():
@@ -172,11 +172,12 @@ func (gb *Gameboy) Run(ctx context.Context) {
 			}
 		}
 
-		// // Check FPS
-		// if frames%300 == 0 {
-		// 	duration := time.Now().Sub(t0)
-		// 	fmt.Printf(">> %0.0ffps\n", 300.0/duration.Seconds())
-		// 	t0 = time.Now()
+		// Show FPS
+		// if frames == 0 {
+		// 	t1 := time.Now().UnixMicro()
+		// 	microseconds := (t1 - t0) / 256
+		// 	fmt.Printf(">>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
+		// 	t0 = time.Now().UnixMicro()
 		// }
 		// frames++
 
