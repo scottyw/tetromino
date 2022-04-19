@@ -12,17 +12,16 @@ import (
 
 // Display implements the LCD display using GL
 type Display struct {
-	window  *glfw.Window
-	texture uint32
+	window *glfw.Window
 }
 
 // New implements an LCD display in GL
 func New(controller *controller.Controller, debug bool) *Display {
-	// initialize glfw
+
 	if err := glfw.Init(); err != nil {
 		panic(fmt.Sprintf("Failed to create display: %v", err))
 	}
-	// define window width
+
 	var width float32
 	var height float32
 	if debug {
@@ -32,7 +31,7 @@ func New(controller *controller.Controller, debug bool) *Display {
 		width = 160
 		height = 144
 	}
-	// create window
+
 	glfw.WindowHint(glfw.ContextVersionMajor, 2)
 	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.Resizable, 0)
@@ -42,18 +41,25 @@ func New(controller *controller.Controller, debug bool) *Display {
 	}
 	window.MakeContextCurrent()
 
-	// For now let's max out speed and worry about locking the framerate later
+	// Max out speed - framerate is controlled by the audio subsystem
 	glfw.SwapInterval(0)
 
-	// initialize gl
 	if err := gl.Init(); err != nil {
 		panic(fmt.Sprintf("Failed to create display: %v", err))
 	}
 	gl.Enable(gl.TEXTURE_2D)
 	window.SetKeyCallback(onKeyFunc(controller))
+
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
 	display := &Display{
-		window:  window,
-		texture: createTexture(),
+		window: window,
 	}
 	return display
 }
@@ -65,11 +71,18 @@ func (d *Display) Cleanup() {
 
 // RenderFrame draws a frame to the GL window and returns user input
 func (d *Display) RenderFrame(image *image.RGBA) bool {
-	gl.Clear(gl.COLOR_BUFFER_BIT)
-	gl.BindTexture(gl.TEXTURE_2D, d.texture)
-	setTexture(image)
-	drawBuffer(d.window)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
+	size := image.Rect.Size()
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(size.X), int32(size.Y), 0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(image.Pix))
+	gl.Begin(gl.QUADS)
+	gl.TexCoord2f(0, 1)
+	gl.Vertex2f(-1, -1)
+	gl.TexCoord2f(1, 1)
+	gl.Vertex2f(1, -1)
+	gl.TexCoord2f(1, 0)
+	gl.Vertex2f(1, 1)
+	gl.TexCoord2f(0, 0)
+	gl.Vertex2f(-1, 1)
+	gl.End()
 	d.window.SwapBuffers()
 	glfw.PollEvents()
 	return d.window.ShouldClose()
@@ -111,36 +124,4 @@ func init() {
 
 	// we need to keep OpenGL calls on a single thread
 	runtime.LockOSThread()
-}
-
-func createTexture() uint32 {
-	var texture uint32
-	gl.GenTextures(1, &texture)
-	gl.BindTexture(gl.TEXTURE_2D, texture)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	return texture
-}
-
-func setTexture(im *image.RGBA) {
-	size := im.Rect.Size()
-	gl.TexImage2D(
-		gl.TEXTURE_2D, 0, gl.RGBA, int32(size.X), int32(size.Y),
-		0, gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(im.Pix))
-}
-
-func drawBuffer(window *glfw.Window) {
-	gl.Begin(gl.QUADS)
-	gl.TexCoord2f(0, 1)
-	gl.Vertex2f(-1, -1)
-	gl.TexCoord2f(1, 1)
-	gl.Vertex2f(1, -1)
-	gl.TexCoord2f(1, 0)
-	gl.Vertex2f(1, 1)
-	gl.TexCoord2f(0, 0)
-	gl.Vertex2f(-1, 1)
-	gl.End()
 }
