@@ -6,7 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"runtime/pprof"
+	"syscall"
 
 	"github.com/scottyw/tetromino/gameboy"
 )
@@ -33,6 +35,13 @@ func main() {
 			return
 		}
 		defer pprof.StopCPUProfile()
+		c := make(chan os.Signal)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		go func() {
+			<-c
+			pprof.StopCPUProfile()
+			os.Exit(0)
+		}()
 	}
 
 	rom := flag.Arg(0)
