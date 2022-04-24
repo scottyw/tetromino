@@ -1,12 +1,8 @@
 package cpu
 
-import (
-	"fmt"
-)
+import "fmt"
 
-func (d *Dispatch) handleInterrupt() func() {
-	cpu := d.cpu
-	mapper := d.mapper
+func (cpu *CPU) handleInterrupt() func() {
 	return func() {
 		if cpu.interrupts.Enabled() {
 			cpu.interrupts.Disable()
@@ -34,14 +30,13 @@ func (d *Dispatch) handleInterrupt() func() {
 			}
 
 			// Now push the PC
-			cpu.push(mapper, &cpu.m8b)()
-			cpu.push(mapper, &cpu.m8a)()
+			cpu.push(cpu.mapper, &cpu.m8b)()
+			cpu.push(cpu.mapper, &cpu.m8a)()
 		}
 	}
 }
 
-func (d *Dispatch) checkInterrupts() *[]func() {
-	cpu := d.cpu
+func (cpu *CPU) checkInterrupts() int {
 	var length int
 	if cpu.interrupts.Pending() {
 		if cpu.halted {
@@ -52,19 +47,11 @@ func (d *Dispatch) checkInterrupts() *[]func() {
 			length += 5
 		}
 	}
-	if length == 0 {
-		return nil
-	}
-	steps := make([]func(), length)
-	for i := range steps {
-		steps[i] = nop
-	}
-	steps[length-1] = d.handleInterrupt()
-	return &steps
+	return length
 }
 
-func (d *Dispatch) useAltMachineCycles(instruction uint8) bool {
-	cpu := d.cpu
+func (cpu *CPU) useAltMachineCycles(instruction uint8) bool {
+
 	switch instruction {
 
 	// CALL 3 [24 12] [] 0xc4 NZ a16 196 false 6 3 <nil>
@@ -99,94 +86,99 @@ func (d *Dispatch) useAltMachineCycles(instruction uint8) bool {
 	return false
 }
 
-// Every instruction is implemented as a list of steps that take one machine cycle each
-func (d *Dispatch) peek() *[]func() {
-	cpu := d.cpu
-	mapper := d.mapper
-	instructionByte := mapper.Read(cpu.pc)
-	md := instructionMetadata[instructionByte]
-	if md.Addr == "" {
-		panic(fmt.Sprintf("Unknown instruction opcode: %v", md))
+func (cpu *CPU) next() {
+
+	if cpu.halted || cpu.stopped {
+		return
 	}
-	if instructionByte == 0xcb {
-		instructionByte = mapper.Read(cpu.pc + 1)
-		md = prefixedInstructionMetadata[instructionByte]
+
+	if cpu.interruptCycles == 0 {
+		cpu.interruptCycles = cpu.checkInterrupts()
 	}
-	pc := cpu.pc
-	var steps []func()
-	var value string
-	if md.Prefixed {
-		steps = d.prefix[md.Dispatch]
-		if !cpu.haltbug {
-			cpu.pc += 2
-		} else {
-			cpu.haltbug = false
-		}
+
+	if cpu.interruptCycles > 0 {
+		fmt.Println("interrupt")
+		return
+	}
+
+	mapper := cpu.mapper
+	cpu.cycle = 0
+	cpu.instruction = mapper.Read(cpu.pc)
+
+	// FIXME
+	// every possible instruction value should be dispatchable
+	// invalid instructions should panic
+
+	cpu.prefixed = cpu.instruction == 0xcb
+	if cpu.prefixed {
+		cpu.pc++
+		cpu.instruction = mapper.Read(cpu.pc)
+	}
+
+	// Reset any context from previous instructions
+	cpu.u8a = 0
+	cpu.u8b = 0
+	cpu.m8a = 0
+	cpu.m8b = 0
+
+	// Check for instructions that need to use the shorter alt machine cycle count
+	// FIXME
+	// if cpu.useAltMachineCycles(md.Dispatch) {
+	// 	steps = steps[:md.AltMachineCycles]
+	// }
+
+	// Finally increment PC
+	if !cpu.haltbug {
+		cpu.pc++
 	} else {
-		// Peek at the instruction arguments for debug purposes
-		if cpu.debugCPU {
-			switch md.Length {
-			case 2:
-				u8 := mapper.Read(cpu.pc + 1)
-				value = fmt.Sprintf("%02x", u8)
-			case 3:
-				u16 := uint16(mapper.Read(cpu.pc+1)) | uint16(mapper.Read(cpu.pc+2))<<8
-				value = fmt.Sprintf("%04x", u16)
-			}
-		}
-
-		// Reset any context from previous instructions
-		cpu.u8a = 0
-		cpu.u8b = 0
-		cpu.m8a = 0
-		cpu.m8b = 0
-
-		// Get the steps associated with this instruction
-		steps = d.normal[md.Dispatch]
-
-		// Check for instructions that need to use the shorter alt machine cycle count
-		if d.useAltMachineCycles(md.Dispatch) {
-			steps = steps[:md.AltMachineCycles]
-		}
-
-		// Finally increment PC
-		if !cpu.haltbug {
-			cpu.pc++
-		} else {
-			cpu.haltbug = false
-		}
+		cpu.haltbug = false
 	}
+
 	if cpu.debugCPU {
+		var metadata *metadata
+		if cpu.prefixed {
+			metadata = prefixedInstructionMetadata[cpu.instruction]
+		} else {
+			metadata = instructionMetadata[cpu.instruction]
+		}
+		var operandValue string
+		switch metadata.Length {
+		case 2:
+			u8 := mapper.Read(cpu.pc + 1)
+			operandValue = fmt.Sprintf("%02x", u8)
+		case 3:
+			u16 := uint16(mapper.Read(cpu.pc+1)) | uint16(mapper.Read(cpu.pc+2))<<8
+			operandValue = fmt.Sprintf("%04x", u16)
+		}
 		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-			pc, md.Dispatch, fmt.Sprintf("%s %s %s", md.Mnemonic, md.Operand1, md.Operand2), value, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+			cpu.pc, cpu.instruction, fmt.Sprintf("%s %s %s", metadata.Mnemonic, metadata.Operand1, metadata.Operand2), operandValue, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 	}
-	return &steps
+
 }
 
 // ExecuteMachineCycle runs the CPU for one machine cycle
-func (d *Dispatch) ExecuteMachineCycle() {
-	cpu := d.cpu
-	if d.stepIndex == len(*d.steps) {
-		var steps *[]func()
-		if !d.handlingInterrupt {
-			steps = d.checkInterrupts()
-			if cpu.halted || cpu.stopped {
-				return
-			}
-			if steps != nil {
-				d.handlingInterrupt = true
-			}
-		} else {
-			d.handlingInterrupt = false
+func (cpu *CPU) ExecuteMachineCycle() {
+	if cpu.prefixed {
+		if cpu.cycle == len(prefix[cpu.instruction]) {
+			cpu.next()
 		}
-		if steps == nil {
-			steps = d.peek()
+	} else {
+		if cpu.cycle == len(normal[cpu.instruction]) {
+			cpu.next()
 		}
-		d.stepIndex = 0
-		d.steps = steps
 	}
-	step := (*d.steps)[d.stepIndex]
-	step()
-	d.cpu.oam.Corrupt()
-	d.stepIndex++
+	if cpu.interruptCycles == 1 {
+		cpu.handleInterrupt()
+	}
+	if cpu.interruptCycles > 0 {
+		cpu.interruptCycles--
+	} else {
+		if cpu.prefixed {
+			prefix[cpu.instruction][cpu.cycle]()
+		} else {
+			normal[cpu.instruction][cpu.cycle]()
+		}
+	}
+	cpu.oam.Corrupt()
+	cpu.cycle++
 }

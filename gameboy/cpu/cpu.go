@@ -2,6 +2,7 @@ package cpu
 
 import (
 	"github.com/scottyw/tetromino/gameboy/interrupts"
+	"github.com/scottyw/tetromino/gameboy/memory"
 	"github.com/scottyw/tetromino/gameboy/oam"
 )
 
@@ -40,13 +41,18 @@ type CPU struct {
 	l uint8
 
 	// State
-	sp         uint16
-	pc         uint16
-	halted     bool
-	haltbug    bool
-	stopped    bool
-	interrupts *interrupts.Interrupts
-	oam        *oam.OAM
+	sp              uint16
+	pc              uint16
+	halted          bool
+	haltbug         bool
+	stopped         bool
+	interrupts      *interrupts.Interrupts
+	oam             *oam.OAM
+	mapper          *memory.Mapper
+	instruction     uint8
+	prefixed        bool
+	cycle           int
+	interruptCycles int
 
 	// Context
 	u8a uint8 // 8-bit instruction argument
@@ -55,14 +61,16 @@ type CPU struct {
 	m8b uint8 // Additional cached copy of an 8-bit memory value for instructions that operate over it
 
 	// Debug
-	debugCPU bool
+	debugCPU               bool
+	mooneyeDebugBreakpoint bool
 }
 
 // NewCPU returns a CPU initialized as a Gameboy does on start
-func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debugCPU bool) *CPU {
+func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debugCPU bool, mapper *memory.Mapper) *CPU {
 	return &CPU{
 		interrupts: interrupts,
 		oam:        oam,
+		mapper:     mapper,
 		debugCPU:   debugCPU,
 		a:          0x01,
 		f:          0xb0,
@@ -96,4 +104,31 @@ func (cpu *CPU) hl() uint16 {
 
 func (cpu *CPU) u16() uint16 {
 	return uint16(cpu.u8b)<<8 + uint16(cpu.u8a)
+}
+
+// CheckMooneye checks if the magic Mooneye breakpoint was hit and if so returns
+// the register values needed to see whether the test passed
+func (cpu *CPU) CheckMooneye() []uint8 {
+	if cpu.mooneyeDebugBreakpoint {
+		return []uint8{cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.h, cpu.l}
+	}
+	return nil
+}
+
+func (cpu *CPU) mooneye() {
+	// Mooneye uses this instruction (0x40) as a magic breakpoint
+	// to indicate that a test rom has completed
+	cpu.mooneyeDebugBreakpoint = true
+}
+
+// Read an 8-bit instruction argument
+func (cpu *CPU) readParamA() {
+	cpu.u8a = cpu.mapper.Read(cpu.pc)
+	cpu.pc++
+}
+
+// Read an additonal 8-bit instruction argument
+func (cpu *CPU) readParamB() {
+	cpu.u8b = cpu.mapper.Read(cpu.pc)
+	cpu.pc++
 }

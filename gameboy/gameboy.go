@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"time"
 
 	"github.com/scottyw/tetromino/gameboy/audio"
 	"github.com/scottyw/tetromino/gameboy/controller"
@@ -34,7 +35,7 @@ type Gameboy struct {
 	audio      *audio.Audio
 	config     Config
 	controller *controller.Controller
-	dispatch   *cpu.Dispatch
+	cpu        *cpu.CPU
 	display    *display.Display
 	interrupts *interrupts.Interrupts
 	ppu        *ppu.PPU
@@ -51,18 +52,6 @@ func New(config Config) *Gameboy {
 
 	// Create OAM memory
 	oam := oam.New()
-
-	// Create CPU
-	c := cpu.New(i, oam, config.DebugCPU)
-
-	// Create controller
-	controller := controller.New(c.Restart)
-
-	// Create a display
-	var d *display.Display
-	if !config.DisableVideoOutput {
-		d = display.New(controller, config.DebugLCD)
-	}
 
 	// Create speakers
 	var a *audio.Audio
@@ -86,15 +75,29 @@ func New(config Config) *Gameboy {
 	// Load the ROM file
 	rom := readRomFile(config.RomFilename)
 
+	// Create controller
+
+	// FIXME
+	controller := controller.New(nil)
+
 	mapper := memory.New(rom, i, oam, ppu, controller, serial, timer, a)
 
-	dispatch := cpu.NewDispatch(c, mapper)
+	// Create CPU
+	c := cpu.New(i, oam, config.DebugCPU, mapper)
+
+	c.Initialize()
+
+	// Create a display
+	var d *display.Display
+	if !config.DisableVideoOutput {
+		d = display.New(controller, config.DebugLCD)
+	}
 
 	return &Gameboy{
 		audio:      a,
 		config:     config,
 		controller: controller,
-		dispatch:   dispatch,
+		cpu:        c,
 		display:    d,
 		interrupts: i,
 		ppu:        ppu,
@@ -131,7 +134,7 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 	// Each loop iteration below represents one machine cycle
 	// Each LCD frame is 17556 machine cycles
 	for mtick := 0; mtick < 17556; mtick++ {
-		gb.dispatch.ExecuteMachineCycle()
+		gb.cpu.ExecuteMachineCycle()
 		gb.ppu.EndMachineCycle()
 		gb.mapper.EndMachineCycle()
 		gb.audio.EndMachineCycle()
@@ -160,8 +163,8 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context) {
 	defer gb.Cleanup()
-	// var frames uint8
-	// t0 := time.Now().UnixMicro()
+	var frames uint8
+	t0 := time.Now().UnixMicro()
 	for {
 		select {
 		case <-ctx.Done():
@@ -173,13 +176,13 @@ func (gb *Gameboy) Run(ctx context.Context) {
 		}
 
 		// Show FPS
-		// if frames == 0 {
-		// 	t1 := time.Now().UnixMicro()
-		// 	microseconds := (t1 - t0) / 256
-		// 	fmt.Printf(">>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
-		// 	t0 = time.Now().UnixMicro()
-		// }
-		// frames++
+		if frames == 0 {
+			t1 := time.Now().UnixMicro()
+			microseconds := (t1 - t0) / 256
+			fmt.Printf(">>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
+			t0 = time.Now().UnixMicro()
+		}
+		frames++
 
 	}
 }

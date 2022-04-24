@@ -24,7 +24,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 			case <-ctx.Done():
 				return
 			default:
-				if gameboy.dispatch.CheckMooneye() != nil {
+				if gameboy.cpu.CheckMooneye() != nil {
 					cancel()
 					return
 				}
@@ -41,7 +41,7 @@ func runMooneyeTest(t *testing.T, filename string) {
 			"/", "_", -1),
 	)
 	gameboy.ppu.Screenshot(screenshotFilename)
-	if !reflect.DeepEqual(gameboy.dispatch.CheckMooneye(), []uint8{0, 3, 5, 8, 13, 21, 34}) {
+	if !reflect.DeepEqual(gameboy.cpu.CheckMooneye(), []uint8{0, 3, 5, 8, 13, 21, 34}) {
 		t.Errorf("Test ROM failed: %s", filename)
 		// fmt.Printf("| :boom: fail | %s | [pic](%s) |\n", filename, screenshotFilename)
 		// } else {
