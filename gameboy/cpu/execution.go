@@ -136,22 +136,25 @@ func (cpu *CPU) next() {
 
 	if cpu.debugCPU {
 		var metadata *metadata
+		var pc uint16
 		if cpu.prefixed {
 			metadata = prefixedInstructionMetadata[cpu.instruction]
+			pc = cpu.pc - 2
 		} else {
 			metadata = instructionMetadata[cpu.instruction]
+			pc = cpu.pc - 1
 		}
 		var operandValue string
 		switch metadata.Length {
 		case 2:
-			u8 := mapper.Read(cpu.pc + 1)
+			u8 := mapper.Read(cpu.pc)
 			operandValue = fmt.Sprintf("%02x", u8)
 		case 3:
-			u16 := uint16(mapper.Read(cpu.pc+1)) | uint16(mapper.Read(cpu.pc+2))<<8
+			u16 := uint16(mapper.Read(cpu.pc)) | uint16(mapper.Read(cpu.pc+1))<<8
 			operandValue = fmt.Sprintf("%04x", u16)
 		}
 		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
-			cpu.pc, cpu.instruction, fmt.Sprintf("%s %s %s", metadata.Mnemonic, metadata.Operand1, metadata.Operand2), operandValue, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
+			pc, cpu.instruction, fmt.Sprintf("%s %s %s", metadata.Mnemonic, metadata.Operand1, metadata.Operand2), operandValue, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 	}
 
 }
