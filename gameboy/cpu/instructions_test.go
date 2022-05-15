@@ -9,7 +9,20 @@ import (
 ////////////////////////////////////////////////////////////////
 
 func compareCPUs(t *testing.T, expectedCPU, actualCPU *CPU) {
-	if *actualCPU != *expectedCPU {
+
+	if actualCPU.a != expectedCPU.a ||
+		actualCPU.b != expectedCPU.b ||
+		actualCPU.c != expectedCPU.c ||
+		actualCPU.d != expectedCPU.d ||
+		actualCPU.e != expectedCPU.e ||
+		actualCPU.f != expectedCPU.f ||
+		actualCPU.h != expectedCPU.h ||
+		actualCPU.l != expectedCPU.l ||
+		actualCPU.sp != expectedCPU.sp ||
+		actualCPU.pc != expectedCPU.pc ||
+		actualCPU.haltbug != expectedCPU.haltbug ||
+		actualCPU.halted != expectedCPU.halted ||
+		actualCPU.stopped != expectedCPU.stopped {
 		t.Error("CPUs do not match")
 		t.Error("  Expected : ", expectedCPU)
 		t.Error("  Actual   : ", actualCPU)

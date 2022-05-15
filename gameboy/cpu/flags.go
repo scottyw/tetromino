@@ -16,6 +16,14 @@ func (cpu *CPU) cf() bool {
 	return cpu.f&cFlag > 0
 }
 
+func (cpu *CPU) nzf() bool {
+	return !cpu.zf()
+}
+
+func (cpu *CPU) ncf() bool {
+	return !cpu.cf()
+}
+
 func (cpu *CPU) setZf(value bool) {
 	if value {
 		cpu.f |= zFlag

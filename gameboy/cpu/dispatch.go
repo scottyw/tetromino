@@ -2,9 +2,21 @@ package cpu
 
 var normal [256][]func()
 var prefix [256][]func()
+var shortInterrupt []func()
+var longInterrupt []func()
+var earlyCycle [256]int
+var earlyCheck [256]func() bool
 
 func nop() {
 	// Do nothing
+}
+
+func (cpu *CPU) ended() bool {
+	return cpu.currentCycle == len(cpu.currentSubinstructions)
+	// } else if earlyCheck[cpu.instruction] != nil &&
+	// 	earlyCheck[cpu.instruction]() &&
+	// 	earlyCycle[cpu.instruction] == cpu.cycle {
+	// 	cpu.next()
 }
 
 func (cpu *CPU) Initialize() {
@@ -12,6 +24,43 @@ func (cpu *CPU) Initialize() {
 	cpu.next()
 
 	mapper := cpu.mapper
+
+	shortInterrupt = []func(){cpu.handleInterrupt}
+	longInterrupt = []func(){nop, nop, nop, nop, nop, cpu.handleInterrupt}
+
+	earlyCycle[0x20] = 2
+	earlyCycle[0x28] = 2
+	earlyCycle[0x30] = 2
+	earlyCycle[0x38] = 2
+	earlyCycle[0xc0] = 2
+	earlyCycle[0xc2] = 3
+	earlyCycle[0xc4] = 3
+	earlyCycle[0xc8] = 2
+	earlyCycle[0xca] = 3
+	earlyCycle[0xcc] = 3
+	earlyCycle[0xd0] = 2
+	earlyCycle[0xd2] = 3
+	earlyCycle[0xd4] = 3
+	earlyCycle[0xd8] = 2
+	earlyCycle[0xda] = 3
+	earlyCycle[0xdc] = 3
+
+	earlyCheck[0xc4] = cpu.zf
+	earlyCheck[0xc2] = cpu.zf
+	earlyCheck[0x20] = cpu.zf
+	earlyCheck[0xc0] = cpu.zf
+	earlyCheck[0xcc] = cpu.nzf
+	earlyCheck[0xca] = cpu.nzf
+	earlyCheck[0x28] = cpu.nzf
+	earlyCheck[0xc8] = cpu.nzf
+	earlyCheck[0xd4] = cpu.cf
+	earlyCheck[0xd2] = cpu.cf
+	earlyCheck[0x30] = cpu.cf
+	earlyCheck[0xd0] = cpu.cf
+	earlyCheck[0xdc] = cpu.ncf
+	earlyCheck[0xda] = cpu.ncf
+	earlyCheck[0x38] = cpu.ncf
+	earlyCheck[0xd8] = cpu.ncf
 
 	// NOP          1 [4]
 	normal[0x00] = []func(){nop}

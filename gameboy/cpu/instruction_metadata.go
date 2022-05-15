@@ -7,6 +7,10 @@ import (
 	"github.com/scottyw/tetromino/gameboy/memory"
 )
 
+var instructionMetadata [256]*metadata
+
+var prefixedInstructionMetadata [256]*metadata
+
 type metadata struct {
 	Mnemonic         string   `json:"mnemonic"`
 	Length           int      `json:"length"`

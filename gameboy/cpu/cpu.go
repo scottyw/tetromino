@@ -24,10 +24,6 @@ const (
 
 var bits = [8]uint8{bit0, bit1, bit2, bit3, bit4, bit5, bit6, bit7}
 
-var instructionMetadata [256]*metadata
-
-var prefixedInstructionMetadata [256]*metadata
-
 // CPU stores the internal CPU state
 type CPU struct {
 	// 8-bit registers
@@ -41,18 +37,19 @@ type CPU struct {
 	l uint8
 
 	// State
-	sp              uint16
-	pc              uint16
-	halted          bool
-	haltbug         bool
-	stopped         bool
-	interrupts      *interrupts.Interrupts
-	oam             *oam.OAM
-	mapper          *memory.Mapper
-	instruction     uint8
-	prefixed        bool
-	cycle           int
-	interruptCycles int
+	sp                     uint16
+	pc                     uint16
+	halted                 bool
+	haltbug                bool
+	stopped                bool
+	interrupts             *interrupts.Interrupts
+	oam                    *oam.OAM
+	mapper                 *memory.Mapper
+	currentInstruction     uint8
+	currentSubinstructions []func()
+	currentCycle           int
+	currentEnded           func() bool
+	currentMetadata        *metadata
 
 	// Context
 	u8a uint8 // 8-bit instruction argument
