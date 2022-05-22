@@ -2,21 +2,27 @@ package cpu
 
 var normal [256][]func()
 var prefix [256][]func()
+var veryShortInterrupt []func()
 var shortInterrupt []func()
 var longInterrupt []func()
-var earlyCycle [256]int
-var earlyCheck [256]func() bool
+var earlyCheck [256]func(int) bool
 
 func nop() {
 	// Do nothing
 }
 
-func (cpu *CPU) ended() bool {
-	return cpu.currentCycle == len(cpu.currentSubinstructions)
-	// } else if earlyCheck[cpu.instruction] != nil &&
-	// 	earlyCheck[cpu.instruction]() &&
-	// 	earlyCycle[cpu.instruction] == cpu.cycle {
-	// 	cpu.next()
+func isFinishedSpecial(check func() bool, early, last int) func(int) bool {
+	return func(currentCycle int) bool {
+		// fmt.Println("isFinishedSpecial", check(), early, last, currentCycle)
+		return (currentCycle == early && check()) || currentCycle == last
+	}
+}
+
+func isFinished(last int) func(int) bool {
+	return func(currentCycle int) bool {
+		// fmt.Println("isFinished", last)
+		return currentCycle == last
+	}
 }
 
 func (cpu *CPU) Initialize() {
@@ -25,42 +31,43 @@ func (cpu *CPU) Initialize() {
 
 	mapper := cpu.mapper
 
-	shortInterrupt = []func(){cpu.handleInterrupt}
+	veryShortInterrupt = []func(){cpu.handleInterrupt}
+	shortInterrupt = []func(){nop, nop, nop, nop, cpu.handleInterrupt}
 	longInterrupt = []func(){nop, nop, nop, nop, nop, cpu.handleInterrupt}
 
-	earlyCycle[0x20] = 2
-	earlyCycle[0x28] = 2
-	earlyCycle[0x30] = 2
-	earlyCycle[0x38] = 2
-	earlyCycle[0xc0] = 2
-	earlyCycle[0xc2] = 3
-	earlyCycle[0xc4] = 3
-	earlyCycle[0xc8] = 2
-	earlyCycle[0xca] = 3
-	earlyCycle[0xcc] = 3
-	earlyCycle[0xd0] = 2
-	earlyCycle[0xd2] = 3
-	earlyCycle[0xd4] = 3
-	earlyCycle[0xd8] = 2
-	earlyCycle[0xda] = 3
-	earlyCycle[0xdc] = 3
+	// earlyCycle[0x20] = 2
+	// earlyCycle[0x28] = 2
+	// earlyCycle[0x30] = 2
+	// earlyCycle[0x38] = 2
+	// earlyCycle[0xc0] = 2
+	// earlyCycle[0xc2] = 3
+	// earlyCycle[0xc4] = 3
+	// earlyCycle[0xc8] = 2
+	// earlyCycle[0xca] = 3
+	// earlyCycle[0xcc] = 3
+	// earlyCycle[0xd0] = 2
+	// earlyCycle[0xd2] = 3
+	// earlyCycle[0xd4] = 3
+	// earlyCycle[0xd8] = 2
+	// earlyCycle[0xda] = 3
+	// earlyCycle[0xdc] = 3
 
-	earlyCheck[0xc4] = cpu.zf
-	earlyCheck[0xc2] = cpu.zf
-	earlyCheck[0x20] = cpu.zf
-	earlyCheck[0xc0] = cpu.zf
-	earlyCheck[0xcc] = cpu.nzf
-	earlyCheck[0xca] = cpu.nzf
-	earlyCheck[0x28] = cpu.nzf
-	earlyCheck[0xc8] = cpu.nzf
-	earlyCheck[0xd4] = cpu.cf
-	earlyCheck[0xd2] = cpu.cf
-	earlyCheck[0x30] = cpu.cf
-	earlyCheck[0xd0] = cpu.cf
-	earlyCheck[0xdc] = cpu.ncf
-	earlyCheck[0xda] = cpu.ncf
-	earlyCheck[0x38] = cpu.ncf
-	earlyCheck[0xd8] = cpu.ncf
+	earlyCheck[0x20] = isFinishedSpecial(cpu.zf, 1, 2)
+	earlyCheck[0x28] = isFinishedSpecial(cpu.nzf, 1, 2)
+	earlyCheck[0x30] = isFinishedSpecial(cpu.cf, 1, 2)
+	earlyCheck[0x38] = isFinishedSpecial(cpu.ncf, 1, 2)
+	earlyCheck[0xc0] = isFinishedSpecial(cpu.zf, 1, 4)
+	earlyCheck[0xc2] = isFinishedSpecial(cpu.zf, 2, 3)
+	earlyCheck[0xc4] = isFinishedSpecial(cpu.zf, 2, 5)
+	earlyCheck[0xc8] = isFinishedSpecial(cpu.nzf, 1, 4)
+	earlyCheck[0xca] = isFinishedSpecial(cpu.nzf, 2, 3)
+	earlyCheck[0xcc] = isFinishedSpecial(cpu.nzf, 2, 5)
+	earlyCheck[0xd0] = isFinishedSpecial(cpu.cf, 1, 4)
+	earlyCheck[0xd2] = isFinishedSpecial(cpu.cf, 2, 3)
+	earlyCheck[0xd4] = isFinishedSpecial(cpu.cf, 2, 5)
+	earlyCheck[0xd8] = isFinishedSpecial(cpu.ncf, 1, 4)
+	earlyCheck[0xda] = isFinishedSpecial(cpu.ncf, 2, 3)
+	earlyCheck[0xdc] = isFinishedSpecial(cpu.ncf, 2, 5)
 
 	// NOP          1 [4]
 	normal[0x00] = []func(){nop}

@@ -1,6 +1,8 @@
 package cpu
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func (cpu *CPU) handleInterrupt() {
 	if cpu.interrupts.Enabled() {
@@ -34,33 +36,33 @@ func (cpu *CPU) handleInterrupt() {
 	}
 }
 
-func (cpu *CPU) checkInterrupts() int {
-	var length int
+func (cpu *CPU) checkInterrupts() []func() {
 	if cpu.interrupts.Pending() {
-		if cpu.halted {
-			cpu.halted = false
-			length++
-		}
 		if cpu.interrupts.Enabled() {
-			length += 5
+			if cpu.halted {
+				cpu.halted = false
+				return longInterrupt
+			}
+			return shortInterrupt
+		} else {
+			if cpu.halted {
+				cpu.halted = false
+				return veryShortInterrupt
+			}
 		}
 	}
-	return length
+	return nil
 }
 
 func (cpu *CPU) next() {
 
-	if cpu.halted || cpu.stopped {
+	interrupts := cpu.checkInterrupts()
+	if interrupts != nil {
+		cpu.currentCycle = 0
+		cpu.currentIsFinished = isFinished(len(interrupts))
+		cpu.currentSubinstructions = interrupts
 		return
 	}
-
-	// if cpu.interruptCycles == 0 {
-	// 	cpu.interruptCycles = cpu.checkInterrupts()
-	// }
-
-	// if cpu.interruptCycles > 0 {
-	// 	return
-	// }
 
 	mapper := cpu.mapper
 	cpu.currentInstruction = mapper.Read(cpu.pc)
@@ -73,14 +75,17 @@ func (cpu *CPU) next() {
 		cpu.pc++
 		cpu.currentInstruction = mapper.Read(cpu.pc)
 		cpu.currentCycle = 0
-		cpu.currentEnded = cpu.ended
 		cpu.currentMetadata = prefixedInstructionMetadata[cpu.currentInstruction]
 		cpu.currentSubinstructions = prefix[cpu.currentInstruction]
+		cpu.currentIsFinished = isFinished(len(cpu.currentSubinstructions))
 	} else {
 		cpu.currentCycle = 0
-		cpu.currentEnded = cpu.ended
 		cpu.currentMetadata = instructionMetadata[cpu.currentInstruction]
 		cpu.currentSubinstructions = normal[cpu.currentInstruction]
+		cpu.currentIsFinished = earlyCheck[cpu.currentInstruction]
+		if cpu.currentIsFinished == nil {
+			cpu.currentIsFinished = isFinished(len(cpu.currentSubinstructions))
+		}
 	}
 
 	// Reset any context from previous instructions
@@ -113,7 +118,7 @@ func (cpu *CPU) next() {
 			u16 := uint16(mapper.Read(cpu.pc)) | uint16(mapper.Read(cpu.pc+1))<<8
 			operandValue = fmt.Sprintf("%04x", u16)
 		}
-		fmt.Printf("0x%04x: [%02x] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
+		fmt.Printf("0x%04x: [%s] %-12s | %-4s | a:%02x b:%02x c:%02x d:%02x e:%02x f:%02x h:%02x l:%02x sp:%04x\n",
 			pc, metadata.Addr, fmt.Sprintf("%s %s %s", metadata.Mnemonic, metadata.Operand1, metadata.Operand2), operandValue, cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.f, cpu.h, cpu.l, cpu.sp)
 	}
 
@@ -121,7 +126,10 @@ func (cpu *CPU) next() {
 
 // ExecuteMachineCycle runs the CPU for one machine cycle
 func (cpu *CPU) ExecuteMachineCycle() {
-	if cpu.currentEnded() {
+	if cpu.currentIsFinished(cpu.currentCycle) {
+		if cpu.halted || cpu.stopped {
+			return
+		}
 		cpu.next()
 	}
 	cpu.currentSubinstructions[cpu.currentCycle]()
