@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"time"
 
 	"github.com/scottyw/tetromino/gameboy/audio"
 	"github.com/scottyw/tetromino/gameboy/controller"
@@ -164,7 +163,7 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 func (gb *Gameboy) Run(ctx context.Context) {
 	defer gb.Cleanup()
 	var frames uint8
-	t0 := time.Now().UnixMicro()
+	// t0 := time.Now().UnixMicro()
 	for {
 		select {
 		case <-ctx.Done():
@@ -177,10 +176,10 @@ func (gb *Gameboy) Run(ctx context.Context) {
 
 		// Show FPS
 		if frames == 0 {
-			t1 := time.Now().UnixMicro()
-			microseconds := (t1 - t0) / 256
-			fmt.Printf(">>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
-			t0 = time.Now().UnixMicro()
+			// t1 := time.Now().UnixMicro()
+			// microseconds := (t1 - t0) / 256
+			// fmt.Printf(">>>>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
+			// t0 = time.Now().UnixMicro()
 		}
 		frames++
 

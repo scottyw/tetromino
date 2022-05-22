@@ -4,6 +4,14 @@ import (
 	"github.com/scottyw/tetromino/gameboy/memory"
 )
 
+//
+// Refactor FIXME
+//
+// It is not necessary to pass mapper as an argument to many of these methods any more because the cpu holds a direct reference to the mapper itself
+//
+// This is a vestigial tail from the major refactor of core execution
+//
+
 func (cpu *CPU) adcM(mapper *memory.Mapper) func() {
 	return func() {
 		cpu.adc(mapper.Read(cpu.hl()))

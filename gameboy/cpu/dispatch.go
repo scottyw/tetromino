@@ -13,17 +13,23 @@ func nop() {
 
 func isFinishedSpecial(check func() bool, early, last int) func(int) bool {
 	return func(currentCycle int) bool {
-		// fmt.Println("isFinishedSpecial", check(), early, last, currentCycle)
 		return (currentCycle == early && check()) || currentCycle == last
 	}
 }
 
 func isFinished(last int) func(int) bool {
 	return func(currentCycle int) bool {
-		// fmt.Println("isFinished", last)
 		return currentCycle == last
 	}
 }
+
+//
+// Refactor FIXME
+//
+// This initialize() method is no longer necessary but is a leftover from the major refactor of core execution
+//
+// Replace this method with a standard init() function that doesn't depend on a reference to the CPU
+//
 
 func (cpu *CPU) Initialize() {
 
@@ -52,22 +58,22 @@ func (cpu *CPU) Initialize() {
 	// earlyCycle[0xda] = 3
 	// earlyCycle[0xdc] = 3
 
-	earlyCheck[0x20] = isFinishedSpecial(cpu.zf, 1, 2)
-	earlyCheck[0x28] = isFinishedSpecial(cpu.nzf, 1, 2)
-	earlyCheck[0x30] = isFinishedSpecial(cpu.cf, 1, 2)
-	earlyCheck[0x38] = isFinishedSpecial(cpu.ncf, 1, 2)
-	earlyCheck[0xc0] = isFinishedSpecial(cpu.zf, 1, 4)
-	earlyCheck[0xc2] = isFinishedSpecial(cpu.zf, 2, 3)
-	earlyCheck[0xc4] = isFinishedSpecial(cpu.zf, 2, 5)
-	earlyCheck[0xc8] = isFinishedSpecial(cpu.nzf, 1, 4)
-	earlyCheck[0xca] = isFinishedSpecial(cpu.nzf, 2, 3)
-	earlyCheck[0xcc] = isFinishedSpecial(cpu.nzf, 2, 5)
-	earlyCheck[0xd0] = isFinishedSpecial(cpu.cf, 1, 4)
-	earlyCheck[0xd2] = isFinishedSpecial(cpu.cf, 2, 3)
-	earlyCheck[0xd4] = isFinishedSpecial(cpu.cf, 2, 5)
-	earlyCheck[0xd8] = isFinishedSpecial(cpu.ncf, 1, 4)
-	earlyCheck[0xda] = isFinishedSpecial(cpu.ncf, 2, 3)
-	earlyCheck[0xdc] = isFinishedSpecial(cpu.ncf, 2, 5)
+	earlyCheck[0x20] = isFinishedSpecial(cpu.zf, 2, 3)
+	earlyCheck[0x28] = isFinishedSpecial(cpu.nzf, 2, 3)
+	earlyCheck[0x30] = isFinishedSpecial(cpu.cf, 2, 3)
+	earlyCheck[0x38] = isFinishedSpecial(cpu.ncf, 2, 3)
+	earlyCheck[0xc0] = isFinishedSpecial(cpu.zf, 2, 5)
+	earlyCheck[0xc2] = isFinishedSpecial(cpu.zf, 3, 4)
+	earlyCheck[0xc4] = isFinishedSpecial(cpu.zf, 3, 6)
+	earlyCheck[0xc8] = isFinishedSpecial(cpu.nzf, 2, 5)
+	earlyCheck[0xca] = isFinishedSpecial(cpu.nzf, 3, 4)
+	earlyCheck[0xcc] = isFinishedSpecial(cpu.nzf, 3, 6)
+	earlyCheck[0xd0] = isFinishedSpecial(cpu.cf, 2, 5)
+	earlyCheck[0xd2] = isFinishedSpecial(cpu.cf, 3, 4)
+	earlyCheck[0xd4] = isFinishedSpecial(cpu.cf, 3, 6)
+	earlyCheck[0xd8] = isFinishedSpecial(cpu.ncf, 2, 5)
+	earlyCheck[0xda] = isFinishedSpecial(cpu.ncf, 3, 4)
+	earlyCheck[0xdc] = isFinishedSpecial(cpu.ncf, 3, 6)
 
 	// NOP          1 [4]
 	normal[0x00] = []func(){nop}
