@@ -16,7 +16,7 @@ type Display struct {
 }
 
 // New implements an LCD display in GL
-func New(controller *controller.Controller, debug bool) *Display {
+func New(controller *controller.Controller, onInput func(), debug bool) *Display {
 
 	if err := glfw.Init(); err != nil {
 		panic(fmt.Sprintf("Failed to create display: %v", err))
@@ -48,7 +48,7 @@ func New(controller *controller.Controller, debug bool) *Display {
 		panic(fmt.Sprintf("Failed to create display: %v", err))
 	}
 	gl.Enable(gl.TEXTURE_2D)
-	window.SetKeyCallback(onKeyFunc(controller))
+	window.SetKeyCallback(onKeyFunc(controller, onInput))
 
 	var texture uint32
 	gl.GenTextures(1, &texture)
@@ -88,7 +88,7 @@ func (d *Display) RenderFrame(image *image.RGBA) bool {
 	return d.window.ShouldClose()
 }
 
-func onKeyFunc(c *controller.Controller) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
+func onKeyFunc(c *controller.Controller, onInput func()) func(*glfw.Window, glfw.Key, int, glfw.Action, glfw.ModifierKey) {
 	return func(window *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 		if action != glfw.Press && action != glfw.Release {
 			return
@@ -96,20 +96,28 @@ func onKeyFunc(c *controller.Controller) func(*glfw.Window, glfw.Key, int, glfw.
 		switch key {
 		case glfw.KeyA:
 			c.ButtonAction(controller.Start, action == glfw.Press)
+			onInput()
 		case glfw.KeyS:
 			c.ButtonAction(controller.Select, action == glfw.Press)
+			onInput()
 		case glfw.KeyZ:
 			c.ButtonAction(controller.B, action == glfw.Press)
+			onInput()
 		case glfw.KeyX:
 			c.ButtonAction(controller.A, action == glfw.Press)
+			onInput()
 		case glfw.KeyUp:
 			c.ButtonAction(controller.Up, action == glfw.Press)
+			onInput()
 		case glfw.KeyDown:
 			c.ButtonAction(controller.Down, action == glfw.Press)
+			onInput()
 		case glfw.KeyLeft:
 			c.ButtonAction(controller.Left, action == glfw.Press)
+			onInput()
 		case glfw.KeyRight:
 			c.ButtonAction(controller.Right, action == glfw.Press)
+			onInput()
 		case glfw.KeyT:
 			if action == glfw.Press {
 				c.EmulatorAction(controller.TakeScreenshot)

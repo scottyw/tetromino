@@ -83,7 +83,7 @@ func New(interrupts *interrupts.Interrupts, oam *oam.OAM, debugCPU bool, mapper 
 }
 
 // Restart the CPU again on button press
-func (cpu *CPU) Restart() {
+func (cpu *CPU) OnInput() {
 	cpu.stopped = false
 }
 

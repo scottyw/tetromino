@@ -77,7 +77,7 @@ func New(config Config) *Gameboy {
 	// Create controller
 
 	// FIXME
-	controller := controller.New(nil)
+	controller := controller.New()
 
 	mapper := memory.New(rom, i, oam, ppu, controller, serial, timer, a)
 
@@ -89,7 +89,7 @@ func New(config Config) *Gameboy {
 	// Create a display
 	var d *display.Display
 	if !config.DisableVideoOutput {
-		d = display.New(controller, config.DebugLCD)
+		d = display.New(controller, c.OnInput, config.DebugLCD)
 	}
 
 	return &Gameboy{
