@@ -1,10 +1,5 @@
 package controller
 
-import (
-	"fmt"
-	"time"
-)
-
 // Button represents a direction pad or button control
 type Button int
 
@@ -133,18 +128,5 @@ func (c *Controller) ButtonAction(button Button, pressed bool) {
 		} else {
 			c.directionInput |= 0x1
 		}
-	}
-}
-
-// EmulatorAction turns UI key presses into actions controlling the emulator itself
-func (c *Controller) EmulatorAction(action Action) {
-	switch action {
-	case TakeScreenshot:
-		t := time.Now()
-		filename := fmt.Sprintf("tetromino-%d%02d%02d-%02d%02d%02d.png",
-			t.Year(), t.Month(), t.Day(),
-			t.Hour(), t.Minute(), t.Second())
-		fmt.Println("Writing screenshot to", filename)
-		// gb.lcd.Screenshot(filename) //FIXME
 	}
 }

@@ -75,8 +75,6 @@ func New(config Config) *Gameboy {
 	rom := readRomFile(config.RomFilename)
 
 	// Create controller
-
-	// FIXME
 	controller := controller.New()
 
 	mapper := memory.New(rom, i, oam, ppu, controller, serial, timer, a)
@@ -162,7 +160,7 @@ func (gb *Gameboy) runFrame(ctx context.Context) bool {
 // Run the Gameboy
 func (gb *Gameboy) Run(ctx context.Context) {
 	defer gb.Cleanup()
-	var frames uint8
+	// var frames uint8
 	// t0 := time.Now().UnixMicro()
 	for {
 		select {
@@ -175,13 +173,13 @@ func (gb *Gameboy) Run(ctx context.Context) {
 		}
 
 		// Show FPS
-		if frames == 0 {
-			// t1 := time.Now().UnixMicro()
-			// microseconds := (t1 - t0) / 256
-			// fmt.Printf(">>>>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
-			// t0 = time.Now().UnixMicro()
-		}
-		frames++
+		// if frames == 0 {
+		// t1 := time.Now().UnixMicro()
+		// microseconds := (t1 - t0) / 256
+		// fmt.Printf(">>>>  %0d fps ( %0d μs/frame )\n", 1000000/microseconds, microseconds)
+		// t0 = time.Now().UnixMicro()
+		// }
+		// frames++
 
 	}
 }

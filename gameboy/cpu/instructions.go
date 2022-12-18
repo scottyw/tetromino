@@ -5,11 +5,11 @@ import (
 )
 
 //
-// Refactor FIXME
+// FIXME Cleanup leftovers from the core execution refactor
 //
 // It is not necessary to pass mapper as an argument to many of these methods any more because the cpu holds a direct reference to the mapper itself
 //
-// This is a vestigial tail from the major refactor of core execution
+// This is a leftover from the major refactor of core execution
 //
 
 func (cpu *CPU) adcM(mapper *memory.Mapper) func() {

@@ -118,10 +118,6 @@ func onKeyFunc(c *controller.Controller, onInput func()) func(*glfw.Window, glfw
 		case glfw.KeyRight:
 			c.ButtonAction(controller.Right, action == glfw.Press)
 			onInput()
-		case glfw.KeyT:
-			if action == glfw.Press {
-				c.EmulatorAction(controller.TakeScreenshot)
-			}
 		}
 	}
 }

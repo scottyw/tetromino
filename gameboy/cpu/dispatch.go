@@ -24,9 +24,9 @@ func isFinished(last int) func(int) bool {
 }
 
 //
-// Refactor FIXME
+// FIXME Cleanup leftovers from the core execution refactor
 //
-// This initialize() method is no longer necessary but is a leftover from the major refactor of core execution
+// This initialize() method on CPU is no longer necessary and is a leftover from the major refactor of core execution that removed dispatch as a separate emulator component
 //
 // Replace this method with a standard init() function that doesn't depend on a reference to the CPU
 //

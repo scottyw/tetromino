@@ -33,17 +33,17 @@ func (s *Serial) WriteSB(value uint8) {
 // ReadSB handles reads from register SB
 func (s *Serial) ReadSB() uint8 {
 	// fmt.Printf("< SB - 0xff\n")
-	return 0xff // FIXME
+	return 0xff // FIXME implement serial support
 }
 
 // WriteSC handles writes to register SC
 func (s *Serial) WriteSC(value uint8) {
 	// fmt.Printf("> SC - 0x%02x\n", value)
-	// FIXME
+	// FIXME implement serial support
 }
 
 // ReadSC handles reads from register SC
 func (s *Serial) ReadSC() uint8 {
 	// fmt.Printf("< SC - 0xff\n")
-	return 0xff // FIXME
+	return 0xff // FIXME implement serial support
 }
