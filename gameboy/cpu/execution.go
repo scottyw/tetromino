@@ -31,8 +31,8 @@ func (cpu *CPU) handleInterrupt() {
 		}
 
 		// Now push the PC
-		cpu.push(cpu.mapper, &cpu.m8b)()
-		cpu.push(cpu.mapper, &cpu.m8a)()
+		cpu.push(&cpu.m8b)()
+		cpu.push(&cpu.m8a)()
 	}
 }
 

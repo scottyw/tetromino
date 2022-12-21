@@ -1,21 +1,7 @@
 package cpu
 
-import (
-	"github.com/scottyw/tetromino/gameboy/memory"
-)
-
-//
-// FIXME Cleanup leftovers from the core execution refactor
-//
-// It is not necessary to pass mapper as an argument to many of these methods any more because the cpu holds a direct reference to the mapper itself
-//
-// This is a leftover from the major refactor of core execution
-//
-
-func (cpu *CPU) adcM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.adc(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) adcM() {
+	cpu.adc(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) adcA() { cpu.adc(cpu.a) }
@@ -51,10 +37,8 @@ func (cpu *CPU) adc(u8 uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) addM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.add(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) addM() {
+	cpu.add(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) addA() { cpu.add(cpu.a) }
@@ -118,10 +102,8 @@ func (cpu *CPU) addSP() {
 	}
 }
 
-func (cpu *CPU) andM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.and(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) andM() {
+	cpu.and(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) andA() { cpu.and(cpu.a) }
@@ -149,9 +131,9 @@ func (cpu *CPU) and(u8 uint8) {
 	cpu.setCf(false)
 }
 
-func (cpu *CPU) bitM(mapper *memory.Mapper, pos uint8) func() {
+func (cpu *CPU) bitM(pos uint8) func() {
 	return func() {
-		u8 := mapper.Read(cpu.hl())
+		u8 := cpu.mapper.Read(cpu.hl())
 		cpu.bit(pos, &u8)()
 	}
 }
@@ -181,10 +163,8 @@ func (cpu *CPU) ccf() {
 	cpu.setCf(!cpu.cf())
 }
 
-func (cpu *CPU) cpM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.cp(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) cpM() {
+	cpu.cp(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) cpA() { cpu.cp(cpu.a) }
@@ -241,11 +221,9 @@ func (cpu *CPU) daa() {
 	cpu.setHf(false)
 }
 
-func (cpu *CPU) decM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.dec(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) decM() {
+	cpu.dec(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) decA() { cpu.dec(&cpu.a) }
@@ -305,25 +283,21 @@ func (cpu *CPU) ei() {
 	cpu.interrupts.Enable()
 }
 
-func (cpu *CPU) halt() func() {
-	return func() {
-		if cpu.interrupts.Enabled() {
+func (cpu *CPU) halt() {
+	if cpu.interrupts.Enabled() {
+		cpu.halted = true
+	} else {
+		if !cpu.interrupts.Pending() {
 			cpu.halted = true
 		} else {
-			if !cpu.interrupts.Pending() {
-				cpu.halted = true
-			} else {
-				cpu.haltbug = true
-			}
+			cpu.haltbug = true
 		}
 	}
 }
 
-func (cpu *CPU) incM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.inc(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) incM() {
+	cpu.inc(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) incA() { cpu.inc(&cpu.a) }
@@ -486,10 +460,8 @@ func (cpu *CPU) ldLH() { cpu.l = cpu.h }
 
 func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
 
-func (cpu *CPU) ldHLU8(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.hl(), cpu.u8a)
-	}
+func (cpu *CPU) ldHLU8() {
+	cpu.mapper.Write(cpu.hl(), cpu.u8a)
 }
 
 func (cpu *CPU) ldBCU16() {
@@ -535,146 +507,112 @@ func (cpu *CPU) ldHLSP() {
 	}
 }
 
-func (cpu *CPU) ldBCA(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.bc(), cpu.a)
-	}
+func (cpu *CPU) ldBCA() {
+	cpu.mapper.Write(cpu.bc(), cpu.a)
 }
 
-func (cpu *CPU) ldABC(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.a = mapper.Read(cpu.bc())
-	}
+func (cpu *CPU) ldABC() {
+	cpu.a = cpu.mapper.Read(cpu.bc())
 }
 
-func (cpu *CPU) ldDEA(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.de(), cpu.a)
-	}
+func (cpu *CPU) ldDEA() {
+	cpu.mapper.Write(cpu.de(), cpu.a)
 }
 
-func (cpu *CPU) ldADE(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.a = mapper.Read(cpu.de())
-	}
+func (cpu *CPU) ldADE() {
+	cpu.a = cpu.mapper.Read(cpu.de())
 }
 
-func (cpu *CPU) ldHLDA(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.hl(), cpu.a)
-		cpu.decHL()
-	}
+func (cpu *CPU) ldHLDA() {
+	cpu.mapper.Write(cpu.hl(), cpu.a)
+	cpu.decHL()
 }
 
-func (cpu *CPU) ldAHLD(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.a = mapper.Read(cpu.hl())
-		cpu.decHL()
-	}
+func (cpu *CPU) ldAHLD() {
+	cpu.a = cpu.mapper.Read(cpu.hl())
+	cpu.decHL()
 }
 
-func (cpu *CPU) ldHLIA(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.hl(), cpu.a)
-		cpu.incHL()
-	}
+func (cpu *CPU) ldHLIA() {
+	cpu.mapper.Write(cpu.hl(), cpu.a)
+	cpu.incHL()
 }
 
-func (cpu *CPU) ldAHLI(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.a = mapper.Read(cpu.hl())
-		cpu.incHL()
-	}
+func (cpu *CPU) ldAHLI() {
+	cpu.a = cpu.mapper.Read(cpu.hl())
+	cpu.incHL()
 }
 
-func (cpu *CPU) ldHLA(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.a) } }
+func (cpu *CPU) ldHLA() { cpu.mapper.Write(cpu.hl(), cpu.a) }
 
-func (cpu *CPU) ldHLB(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.b) } }
+func (cpu *CPU) ldHLB() { cpu.mapper.Write(cpu.hl(), cpu.b) }
 
-func (cpu *CPU) ldHLC(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.c) } }
+func (cpu *CPU) ldHLC() { cpu.mapper.Write(cpu.hl(), cpu.c) }
 
-func (cpu *CPU) ldHLD(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.d) } }
+func (cpu *CPU) ldHLD() { cpu.mapper.Write(cpu.hl(), cpu.d) }
 
-func (cpu *CPU) ldHLE(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.e) } }
+func (cpu *CPU) ldHLE() { cpu.mapper.Write(cpu.hl(), cpu.e) }
 
-func (cpu *CPU) ldHLH(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.h) } }
+func (cpu *CPU) ldHLH() { cpu.mapper.Write(cpu.hl(), cpu.h) }
 
-func (cpu *CPU) ldHLL(mapper *memory.Mapper) func() { return func() { mapper.Write(cpu.hl(), cpu.l) } }
+func (cpu *CPU) ldHLL() { cpu.mapper.Write(cpu.hl(), cpu.l) }
 
-func (cpu *CPU) ldAHL(mapper *memory.Mapper) func() { return func() { cpu.a = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldAHL() { cpu.a = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldBHL(mapper *memory.Mapper) func() { return func() { cpu.b = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldBHL() { cpu.b = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldCHL(mapper *memory.Mapper) func() { return func() { cpu.c = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldCHL() { cpu.c = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldDHL(mapper *memory.Mapper) func() { return func() { cpu.d = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldDHL() { cpu.d = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldEHL(mapper *memory.Mapper) func() { return func() { cpu.e = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldEHL() { cpu.e = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldHHL(mapper *memory.Mapper) func() { return func() { cpu.h = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldHHL() { cpu.h = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldLHL(mapper *memory.Mapper) func() { return func() { cpu.l = mapper.Read(cpu.hl()) } }
+func (cpu *CPU) ldLHL() { cpu.l = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldMHL(mapper *memory.Mapper) func() {
-	return func() { cpu.m8a = mapper.Read(cpu.hl()) }
+func (cpu *CPU) ldMHL() {
+	cpu.m8a = cpu.mapper.Read(cpu.hl())
 }
 
-func (cpu *CPU) ldACX(mapper *memory.Mapper) func() {
-	return func() {
-		a16 := uint16(0xff00 + uint16(cpu.c))
-		cpu.a = mapper.Read(a16)
-	}
+func (cpu *CPU) ldACX() {
+	a16 := uint16(0xff00 + uint16(cpu.c))
+	cpu.a = cpu.mapper.Read(a16)
 }
 
-func (cpu *CPU) ldCXA(mapper *memory.Mapper) func() {
-	return func() {
-		a16 := uint16(0xff00 + uint16(cpu.c))
-		mapper.Write(a16, cpu.a)
-	}
+func (cpu *CPU) ldCXA() {
+	a16 := uint16(0xff00 + uint16(cpu.c))
+	cpu.mapper.Write(a16, cpu.a)
 }
 
-func (cpu *CPU) ldAUX(mapper *memory.Mapper) func() {
-	return func() {
-		a16 := uint16(0xff00 + uint16(cpu.u8a))
-		cpu.a = mapper.Read(a16)
-	}
+func (cpu *CPU) ldAUX() {
+	a16 := uint16(0xff00 + uint16(cpu.u8a))
+	cpu.a = cpu.mapper.Read(a16)
 }
 
-func (cpu *CPU) ldUXA(mapper *memory.Mapper) func() {
-	return func() {
-		a16 := uint16(0xff00 + uint16(cpu.u8a))
-		mapper.Write(a16, cpu.a)
-	}
+func (cpu *CPU) ldUXA() {
+	a16 := uint16(0xff00 + uint16(cpu.u8a))
+	cpu.mapper.Write(a16, cpu.a)
 }
 
-func (cpu *CPU) ldAUX16(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.a = mapper.Read(cpu.u16())
-	}
+func (cpu *CPU) ldAUX16() {
+	cpu.a = cpu.mapper.Read(cpu.u16())
 }
 
-func (cpu *CPU) ldUX16A(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.u16(), cpu.a)
-	}
+func (cpu *CPU) ldUX16A() {
+	cpu.mapper.Write(cpu.u16(), cpu.a)
 }
 
-func (cpu *CPU) writeLowSP(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.u16(), uint8(cpu.sp))
-	}
+func (cpu *CPU) writeLowSP() {
+	cpu.mapper.Write(cpu.u16(), uint8(cpu.sp))
 }
 
-func (cpu *CPU) writeHighSP(mapper *memory.Mapper) func() {
-	return func() {
-		mapper.Write(cpu.u16()+1, uint8(cpu.sp>>8))
-	}
+func (cpu *CPU) writeHighSP() {
+	cpu.mapper.Write(cpu.u16()+1, uint8(cpu.sp>>8))
 }
 
-func (cpu *CPU) orM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.or(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) orM() {
+	cpu.or(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) orA() { cpu.or(cpu.a) }
@@ -702,33 +640,31 @@ func (cpu *CPU) or(u8 uint8) {
 	cpu.setCf(false)
 }
 
-func (cpu *CPU) pop(mapper *memory.Mapper, r8 *uint8) func() {
+func (cpu *CPU) pop(r8 *uint8) func() {
 	return func() {
-		*r8 = mapper.Read(cpu.sp)
+		*r8 = cpu.mapper.Read(cpu.sp)
 		cpu.incSP()
 	}
 }
 
-func (cpu *CPU) popF(mapper *memory.Mapper) func() {
-	return func() {
-		// Lower nibble is always zero no matter what data was written
-		cpu.f = mapper.Read(cpu.sp) & 0xf0
-		cpu.oam.TriggerWriteCorruption(cpu.sp)
-		cpu.sp++
-	}
+func (cpu *CPU) popF() {
+	// Lower nibble is always zero no matter what data was written
+	cpu.f = cpu.mapper.Read(cpu.sp) & 0xf0
+	cpu.oam.TriggerWriteCorruption(cpu.sp)
+	cpu.sp++
 }
 
-func (cpu *CPU) push(mapper *memory.Mapper, r8 *uint8) func() {
+func (cpu *CPU) push(r8 *uint8) func() {
 	return func() {
 		cpu.decSP()
-		mapper.Write(cpu.sp, *r8)
+		cpu.mapper.Write(cpu.sp, *r8)
 	}
 }
 
-func (cpu *CPU) resM(mapper *memory.Mapper, pos uint8) func() {
+func (cpu *CPU) resM(pos uint8) func() {
 	return func() {
 		cpu.res(pos, &cpu.m8a)()
-		mapper.Write(cpu.hl(), cpu.m8a)
+		cpu.mapper.Write(cpu.hl(), cpu.m8a)
 	}
 }
 
@@ -747,11 +683,9 @@ func (cpu *CPU) reti() {
 	cpu.ei()
 }
 
-func (cpu *CPU) rlM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.rl(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) rlM() {
+	cpu.rl(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) rlA() { cpu.rl(&cpu.a) }
@@ -788,11 +722,9 @@ func (cpu *CPU) rla() {
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rlcM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.rlc(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) rlcM() {
+	cpu.rlc(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) rlcA() { cpu.rlc(&cpu.a) }
@@ -829,11 +761,9 @@ func (cpu *CPU) rlca() {
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rrM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.rr(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) rrM() {
+	cpu.rr(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) rrA() { cpu.rr(&cpu.a) }
@@ -869,11 +799,9 @@ func (cpu *CPU) rra() {
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rrcM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.rrc(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) rrcM() {
+	cpu.rrc(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) rrcA() { cpu.rrc(&cpu.a) }
@@ -919,10 +847,10 @@ func (cpu *CPU) rst(a16 uint16) func() {
 	}
 }
 
-func (cpu *CPU) setM(mapper *memory.Mapper, pos uint8) func() {
+func (cpu *CPU) setM(pos uint8) func() {
 	return func() {
 		cpu.set(pos, &cpu.m8a)()
-		mapper.Write(cpu.hl(), cpu.m8a)
+		cpu.mapper.Write(cpu.hl(), cpu.m8a)
 	}
 }
 
@@ -932,11 +860,9 @@ func (cpu *CPU) set(pos uint8, r8 *uint8) func() {
 	}
 }
 
-func (cpu *CPU) slaM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.sla(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) slaM() {
+	cpu.sla(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) slaA() { cpu.sla(&cpu.a) }
@@ -963,11 +889,9 @@ func (cpu *CPU) sla(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) sraM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.sra(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) sraM() {
+	cpu.sra(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) sraA() { cpu.sra(&cpu.a) }
@@ -998,11 +922,9 @@ func (cpu *CPU) sra(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) srlM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.srl(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) srlM() {
+	cpu.srl(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) srlA() { cpu.srl(&cpu.a) }
@@ -1029,11 +951,9 @@ func (cpu *CPU) srl(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) swapM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.swap(&cpu.m8a)
-		mapper.Write(cpu.hl(), cpu.m8a)
-	}
+func (cpu *CPU) swapM() {
+	cpu.swap(&cpu.m8a)
+	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
 func (cpu *CPU) swapA() { cpu.swap(&cpu.a) }
@@ -1071,10 +991,8 @@ func (cpu *CPU) stop() {
 	cpu.stopped = true
 }
 
-func (cpu *CPU) sbcM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.sbc(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) sbcM() {
+	cpu.sbc(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) sbcA() { cpu.sbc(cpu.a) }
@@ -1111,10 +1029,8 @@ func (cpu *CPU) sbc(u8 uint8) {
 
 }
 
-func (cpu *CPU) subM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.sub(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) subM() {
+	cpu.sub(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) subA() { cpu.sub(cpu.a) }
@@ -1143,10 +1059,8 @@ func (cpu *CPU) sub(u8 uint8) {
 	cpu.setCf(c8Sub(a, u8))
 }
 
-func (cpu *CPU) xorM(mapper *memory.Mapper) func() {
-	return func() {
-		cpu.xor(mapper.Read(cpu.hl()))
-	}
+func (cpu *CPU) xorM() {
+	cpu.xor(cpu.mapper.Read(cpu.hl()))
 }
 
 func (cpu *CPU) xorA() { cpu.xor(cpu.a) }

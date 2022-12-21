@@ -35,8 +35,6 @@ func (cpu *CPU) Initialize() {
 
 	cpu.next()
 
-	mapper := cpu.mapper
-
 	veryShortInterrupt = []func(){cpu.handleInterrupt}
 	shortInterrupt = []func(){nop, nop, nop, nop, cpu.handleInterrupt}
 	longInterrupt = []func(){nop, nop, nop, nop, nop, cpu.handleInterrupt}
@@ -82,7 +80,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x01] = []func(){cpu.readParamA, cpu.readParamB, cpu.ldBCU16}
 
 	// LD (BC) A [] 1 [8]
-	normal[0x02] = []func(){nop, cpu.ldBCA(mapper)}
+	normal[0x02] = []func(){nop, cpu.ldBCA}
 
 	// INC BC  [] 1 [8]
 	normal[0x03] = []func(){nop, cpu.incBC}
@@ -100,13 +98,13 @@ func (cpu *CPU) Initialize() {
 	normal[0x07] = []func(){cpu.rlca}
 
 	// LD (a16) SP [] 3 [20]
-	normal[0x08] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.writeLowSP(mapper), cpu.writeHighSP(mapper)}
+	normal[0x08] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.writeLowSP, cpu.writeHighSP}
 
 	// ADD HL BC [- 0 H C] 1 [8]
 	normal[0x09] = []func(){nop, cpu.addHLBC}
 
 	// LD A (BC) [] 1 [8]
-	normal[0x0a] = []func(){nop, cpu.ldABC(mapper)}
+	normal[0x0a] = []func(){nop, cpu.ldABC}
 
 	// DEC BC  [] 1 [8]
 	normal[0x0b] = []func(){nop, cpu.decBC}
@@ -130,7 +128,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x11] = []func(){cpu.readParamA, cpu.readParamB, cpu.ldDEU16}
 
 	// LD (DE) A [] 1 [8]
-	normal[0x12] = []func(){nop, cpu.ldDEA(mapper)}
+	normal[0x12] = []func(){nop, cpu.ldDEA}
 
 	// INC DE  [] 1 [8]
 	normal[0x13] = []func(){nop, cpu.incDE}
@@ -154,7 +152,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x19] = []func(){nop, cpu.addHLDE}
 
 	// LD A (DE) [] 1 [8]
-	normal[0x1a] = []func(){nop, cpu.ldADE(mapper)}
+	normal[0x1a] = []func(){nop, cpu.ldADE}
 
 	// DEC DE  [] 1 [8]
 	normal[0x1b] = []func(){nop, cpu.decDE}
@@ -178,7 +176,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x21] = []func(){cpu.readParamA, cpu.readParamB, cpu.ldHLU16}
 
 	// LD (HL+) A [] 1 [8]
-	normal[0x22] = []func(){nop, cpu.ldHLIA(mapper)}
+	normal[0x22] = []func(){nop, cpu.ldHLIA}
 
 	// INC HL  [] 1 [8]
 	normal[0x23] = []func(){nop, cpu.incHL}
@@ -202,7 +200,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x29] = []func(){nop, cpu.addHLHL}
 
 	// LD A (HL+) [] 1 [8]
-	normal[0x2a] = []func(){nop, cpu.ldAHLI(mapper)}
+	normal[0x2a] = []func(){nop, cpu.ldAHLI}
 
 	// DEC HL  [] 1 [8]
 	normal[0x2b] = []func(){nop, cpu.decHL}
@@ -226,19 +224,19 @@ func (cpu *CPU) Initialize() {
 	normal[0x31] = []func(){cpu.readParamA, cpu.readParamB, cpu.ldSPU16}
 
 	// LD (HL-) A [] 1 [8]
-	normal[0x32] = []func(){nop, cpu.ldHLDA(mapper)}
+	normal[0x32] = []func(){nop, cpu.ldHLDA}
 
 	// INC SP  [] 1 [8]
 	normal[0x33] = []func(){nop, cpu.incSP}
 
 	// INC (HL)  [Z 0 H -] 1 [12]
-	normal[0x34] = []func(){nop, cpu.ldMHL(mapper), cpu.incM(mapper)}
+	normal[0x34] = []func(){nop, cpu.ldMHL, cpu.incM}
 
 	// DEC (HL)  [Z 1 H -] 1 [12]
-	normal[0x35] = []func(){nop, cpu.ldMHL(mapper), cpu.decM(mapper)}
+	normal[0x35] = []func(){nop, cpu.ldMHL, cpu.decM}
 
 	// LD (HL) d8 [] 2 [12]
-	normal[0x36] = []func(){cpu.readParamA, nop, cpu.ldHLU8(mapper)}
+	normal[0x36] = []func(){cpu.readParamA, nop, cpu.ldHLU8}
 
 	// SCF   [- 0 0 1] 1 [4]
 	normal[0x37] = []func(){cpu.scf}
@@ -250,7 +248,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x39] = []func(){nop, cpu.addHLSP}
 
 	// LD A (HL-) [] 1 [8]
-	normal[0x3a] = []func(){nop, cpu.ldAHLD(mapper)}
+	normal[0x3a] = []func(){nop, cpu.ldAHLD}
 
 	// DEC SP  [] 1 [8]
 	normal[0x3b] = []func(){nop, cpu.decSP}
@@ -286,7 +284,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x45] = []func(){cpu.ldBL}
 
 	// LD B (HL) [] 1 [8]
-	normal[0x46] = []func(){nop, cpu.ldBHL(mapper)}
+	normal[0x46] = []func(){nop, cpu.ldBHL}
 
 	// LD B A [] 1 [4]
 	normal[0x47] = []func(){cpu.ldBA}
@@ -310,7 +308,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x4d] = []func(){cpu.ldCL}
 
 	// LD C (HL) [] 1 [8]
-	normal[0x4e] = []func(){nop, cpu.ldCHL(mapper)}
+	normal[0x4e] = []func(){nop, cpu.ldCHL}
 
 	// LD C A [] 1 [4]
 	normal[0x4f] = []func(){cpu.ldCA}
@@ -334,7 +332,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x55] = []func(){cpu.ldDL}
 
 	// LD D (HL) [] 1 [8]
-	normal[0x56] = []func(){nop, cpu.ldDHL(mapper)}
+	normal[0x56] = []func(){nop, cpu.ldDHL}
 
 	// LD D A [] 1 [4]
 	normal[0x57] = []func(){cpu.ldDA}
@@ -358,7 +356,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x5d] = []func(){cpu.ldEL}
 
 	// LD E (HL) [] 1 [8]
-	normal[0x5e] = []func(){nop, cpu.ldEHL(mapper)}
+	normal[0x5e] = []func(){nop, cpu.ldEHL}
 
 	// LD E A [] 1 [4]
 	normal[0x5f] = []func(){cpu.ldEA}
@@ -382,7 +380,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x65] = []func(){cpu.ldHL}
 
 	// LD H (HL) [] 1 [8]
-	normal[0x66] = []func(){nop, cpu.ldHHL(mapper)}
+	normal[0x66] = []func(){nop, cpu.ldHHL}
 
 	// LD H A [] 1 [4]
 	normal[0x67] = []func(){cpu.ldHA}
@@ -406,34 +404,34 @@ func (cpu *CPU) Initialize() {
 	normal[0x6d] = []func(){nop}
 
 	// LD L (HL) [] 1 [8]
-	normal[0x6e] = []func(){nop, cpu.ldLHL(mapper)}
+	normal[0x6e] = []func(){nop, cpu.ldLHL}
 
 	// LD L A [] 1 [4]
 	normal[0x6f] = []func(){cpu.ldLA}
 
 	// LD (HL) B [] 1 [8]
-	normal[0x70] = []func(){nop, cpu.ldHLB(mapper)}
+	normal[0x70] = []func(){nop, cpu.ldHLB}
 
 	// LD (HL) C [] 1 [8]
-	normal[0x71] = []func(){nop, cpu.ldHLC(mapper)}
+	normal[0x71] = []func(){nop, cpu.ldHLC}
 
 	// LD (HL) D [] 1 [8]
-	normal[0x72] = []func(){nop, cpu.ldHLD(mapper)}
+	normal[0x72] = []func(){nop, cpu.ldHLD}
 
 	// LD (HL) E [] 1 [8]
-	normal[0x73] = []func(){nop, cpu.ldHLE(mapper)}
+	normal[0x73] = []func(){nop, cpu.ldHLE}
 
 	// LD (HL) H [] 1 [8]
-	normal[0x74] = []func(){nop, cpu.ldHLH(mapper)}
+	normal[0x74] = []func(){nop, cpu.ldHLH}
 
 	// LD (HL) L [] 1 [8]
-	normal[0x75] = []func(){nop, cpu.ldHLL(mapper)}
+	normal[0x75] = []func(){nop, cpu.ldHLL}
 
 	// HALT   [] 1 [4]
-	normal[0x76] = []func(){cpu.halt()}
+	normal[0x76] = []func(){cpu.halt}
 
 	// LD (HL) A [] 1 [8]
-	normal[0x77] = []func(){nop, cpu.ldHLA(mapper)}
+	normal[0x77] = []func(){nop, cpu.ldHLA}
 
 	// LD A B [] 1 [4]
 	normal[0x78] = []func(){cpu.ldAB}
@@ -454,7 +452,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x7d] = []func(){cpu.ldAL}
 
 	// LD A (HL) [] 1 [8]
-	normal[0x7e] = []func(){nop, cpu.ldAHL(mapper)}
+	normal[0x7e] = []func(){nop, cpu.ldAHL}
 
 	// LD A A [] 1 [4]
 	normal[0x7f] = []func(){nop}
@@ -478,7 +476,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x85] = []func(){cpu.addL}
 
 	// ADD A (HL) [Z 0 H C] 1 [8]
-	normal[0x86] = []func(){nop, cpu.addM(mapper)}
+	normal[0x86] = []func(){nop, cpu.addM}
 
 	// ADD A A [Z 0 H C] 1 [4]
 	normal[0x87] = []func(){cpu.addA}
@@ -502,7 +500,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x8d] = []func(){cpu.adcL}
 
 	// ADC A (HL) [Z 0 H C] 1 [8]
-	normal[0x8e] = []func(){nop, cpu.adcM(mapper)}
+	normal[0x8e] = []func(){nop, cpu.adcM}
 
 	// ADC A A [Z 0 H C] 1 [4]
 	normal[0x8f] = []func(){cpu.adcA}
@@ -526,7 +524,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x95] = []func(){cpu.subL}
 
 	// SUB (HL)  [Z 1 H C] 1 [8]
-	normal[0x96] = []func(){nop, cpu.subM(mapper)}
+	normal[0x96] = []func(){nop, cpu.subM}
 
 	// SUB A  [Z 1 H C] 1 [4]
 	normal[0x97] = []func(){cpu.subA}
@@ -550,7 +548,7 @@ func (cpu *CPU) Initialize() {
 	normal[0x9d] = []func(){cpu.sbcL}
 
 	// SBC A (HL) [Z 1 H C] 1 [8]
-	normal[0x9e] = []func(){nop, cpu.sbcM(mapper)}
+	normal[0x9e] = []func(){nop, cpu.sbcM}
 
 	// SBC A A [Z 1 H C] 1 [4]
 	normal[0x9f] = []func(){cpu.sbcA}
@@ -574,7 +572,7 @@ func (cpu *CPU) Initialize() {
 	normal[0xa5] = []func(){cpu.andL}
 
 	// AND (HL)  [Z 0 1 0] 1 [8]
-	normal[0xa6] = []func(){nop, cpu.andM(mapper)}
+	normal[0xa6] = []func(){nop, cpu.andM}
 
 	// AND A  [Z 0 1 0] 1 [4]
 	normal[0xa7] = []func(){cpu.andA}
@@ -598,7 +596,7 @@ func (cpu *CPU) Initialize() {
 	normal[0xad] = []func(){cpu.xorL}
 
 	// XOR (HL)  [Z 0 0 0] 1 [8]
-	normal[0xae] = []func(){nop, cpu.xorM(mapper)}
+	normal[0xae] = []func(){nop, cpu.xorM}
 
 	// XOR A  [Z 0 0 0] 1 [4]
 	normal[0xaf] = []func(){cpu.xorA}
@@ -622,7 +620,7 @@ func (cpu *CPU) Initialize() {
 	normal[0xb5] = []func(){cpu.orL}
 
 	// OR (HL)  [Z 0 0 0] 1 [8]
-	normal[0xb6] = []func(){nop, cpu.orM(mapper)}
+	normal[0xb6] = []func(){nop, cpu.orM}
 
 	// OR A  [Z 0 0 0] 1 [4]
 	normal[0xb7] = []func(){cpu.orA}
@@ -646,16 +644,16 @@ func (cpu *CPU) Initialize() {
 	normal[0xbd] = []func(){cpu.cpL}
 
 	// CP (HL)  [Z 1 H C] 1 [8]
-	normal[0xbe] = []func(){nop, cpu.cpM(mapper)}
+	normal[0xbe] = []func(){nop, cpu.cpM}
 
 	// CP A  [Z 1 H C] 1 [4]
 	normal[0xbf] = []func(){cpu.cpA}
 
 	// RET NZ  [] 1 [20 8]
-	normal[0xc0] = []func(){nop, nop, cpu.pop(mapper, &cpu.m8a), cpu.pop(mapper, &cpu.m8b), cpu.ret}
+	normal[0xc0] = []func(){nop, nop, cpu.pop(&cpu.m8a), cpu.pop(&cpu.m8b), cpu.ret}
 
 	// POP BC  [] 1 [12]
-	normal[0xc1] = []func(){nop, cpu.pop(mapper, &cpu.c), cpu.pop(mapper, &cpu.b)}
+	normal[0xc1] = []func(){nop, cpu.pop(&cpu.c), cpu.pop(&cpu.b)}
 
 	// JP NZ a16 [] 3 [16 12]
 	normal[0xc2] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
@@ -664,94 +662,94 @@ func (cpu *CPU) Initialize() {
 	normal[0xc3] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
 
 	// CALL NZ a16 [] 3 [24 12]
-	normal[0xc4] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xc4] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// PUSH BC      1 [16]
-	normal[0xc5] = []func(){nop, nop, cpu.push(mapper, &cpu.b), cpu.push(mapper, &cpu.c)}
+	normal[0xc5] = []func(){nop, nop, cpu.push(&cpu.b), cpu.push(&cpu.c)}
 
 	// ADD A d8 [Z 0 H C] 2 [8]
 	normal[0xc6] = []func(){cpu.readParamA, cpu.addU}
 
 	// RST 00H  [] 1 [16]
-	normal[0xc7] = []func(){nop, cpu.rst(0x0000), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xc7] = []func(){nop, cpu.rst(0x0000), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// RET Z  [] 1 [20 8]
-	normal[0xc8] = []func(){nop, nop, cpu.pop(mapper, &cpu.m8a), cpu.pop(mapper, &cpu.m8b), cpu.ret}
+	normal[0xc8] = []func(){nop, nop, cpu.pop(&cpu.m8a), cpu.pop(&cpu.m8b), cpu.ret}
 
 	// RET   [] 1 [16]
-	normal[0xc9] = []func(){nop, cpu.pop(mapper, &cpu.m8a), cpu.pop(mapper, &cpu.m8b), cpu.ret}
+	normal[0xc9] = []func(){nop, cpu.pop(&cpu.m8a), cpu.pop(&cpu.m8b), cpu.ret}
 
 	// JP Z a16 [] 3 [16 12]
 	normal[0xca] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
 
 	// CALL Z a16 [] 3 [24 12]
-	normal[0xcc] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xcc] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// CALL a16  [] 3 [24]
-	normal[0xcd] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xcd] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// ADC A d8 [Z 0 H C] 2 [8]
 	normal[0xce] = []func(){cpu.readParamA, cpu.adcU}
 
 	// RST 08H  [] 1 [16]
-	normal[0xcf] = []func(){nop, cpu.rst(0x0008), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xcf] = []func(){nop, cpu.rst(0x0008), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// RET NC  [] 1 [20 8]
-	normal[0xd0] = []func(){nop, nop, cpu.pop(mapper, &cpu.m8a), cpu.pop(mapper, &cpu.m8b), cpu.ret}
+	normal[0xd0] = []func(){nop, nop, cpu.pop(&cpu.m8a), cpu.pop(&cpu.m8b), cpu.ret}
 
 	// POP DE  [] 1 [12]
-	normal[0xd1] = []func(){nop, cpu.pop(mapper, &cpu.e), cpu.pop(mapper, &cpu.d)}
+	normal[0xd1] = []func(){nop, cpu.pop(&cpu.e), cpu.pop(&cpu.d)}
 
 	// JP NC a16 [] 3 [16 12]
 	normal[0xd2] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
 
 	// CALL NC a16 [] 3 [24 12]
-	normal[0xd4] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xd4] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// PUSH DE      1 [16]
-	normal[0xd5] = []func(){nop, nop, cpu.push(mapper, &cpu.d), cpu.push(mapper, &cpu.e)}
+	normal[0xd5] = []func(){nop, nop, cpu.push(&cpu.d), cpu.push(&cpu.e)}
 
 	// SUB d8  [Z 1 H C] 2 [8]
 	normal[0xd6] = []func(){cpu.readParamA, cpu.subU}
 
 	// RST 10H  [] 1 [16]
-	normal[0xd7] = []func(){nop, cpu.rst(0x0010), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xd7] = []func(){nop, cpu.rst(0x0010), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// RET C  [] 1 [20 8]
-	normal[0xd8] = []func(){nop, nop, cpu.pop(mapper, &cpu.m8a), cpu.pop(mapper, &cpu.m8b), cpu.ret}
+	normal[0xd8] = []func(){nop, nop, cpu.pop(&cpu.m8a), cpu.pop(&cpu.m8b), cpu.ret}
 
 	// RETI   [] 1 [16]
-	normal[0xd9] = []func(){nop, cpu.pop(mapper, &cpu.m8a), cpu.pop(mapper, &cpu.m8b), cpu.reti}
+	normal[0xd9] = []func(){nop, cpu.pop(&cpu.m8a), cpu.pop(&cpu.m8b), cpu.reti}
 
 	// JP C a16 [] 3 [16 12]
 	normal[0xda] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
 
 	// CALL C a16 [] 3 [24 12]
-	normal[0xdc] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xdc] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// SBC A d8 [Z 1 H C] 2 [8]
 	normal[0xde] = []func(){cpu.readParamA, cpu.sbcU}
 
 	// RST 18H  [] 1 [16]
-	normal[0xdf] = []func(){nop, cpu.rst(0x0018), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xdf] = []func(){nop, cpu.rst(0x0018), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// LDH (a8) A   2 [12]
-	normal[0xe0] = []func(){cpu.readParamA, nop, cpu.ldUXA(mapper)}
+	normal[0xe0] = []func(){cpu.readParamA, nop, cpu.ldUXA}
 
 	// POP HL  [] 1 [12]
-	normal[0xe1] = []func(){nop, cpu.pop(mapper, &cpu.l), cpu.pop(mapper, &cpu.h)}
+	normal[0xe1] = []func(){nop, cpu.pop(&cpu.l), cpu.pop(&cpu.h)}
 
 	// LD (C) A     1 [8]
-	normal[0xe2] = []func(){nop, cpu.ldCXA(mapper)}
+	normal[0xe2] = []func(){nop, cpu.ldCXA}
 
 	// PUSH HL      1 [16]
-	normal[0xe5] = []func(){nop, nop, cpu.push(mapper, &cpu.h), cpu.push(mapper, &cpu.l)}
+	normal[0xe5] = []func(){nop, nop, cpu.push(&cpu.h), cpu.push(&cpu.l)}
 
 	// AND d8  [Z 0 1 0] 2 [8]
 	normal[0xe6] = []func(){cpu.readParamA, cpu.andU}
 
 	// RST 20H  [] 1 [16]
-	normal[0xe7] = []func(){nop, cpu.rst(0x0020), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xe7] = []func(){nop, cpu.rst(0x0020), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// ADD SP r8 [0 0 H C] 2 [16]
 	normal[0xe8] = []func(){nop, cpu.readParamA, cpu.addSP, nop}
@@ -760,34 +758,34 @@ func (cpu *CPU) Initialize() {
 	normal[0xe9] = []func(){cpu.jpHL}
 
 	// LD (a16) A [] 3 [16]
-	normal[0xea] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.ldUX16A(mapper)}
+	normal[0xea] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.ldUX16A}
 
 	// XOR d8  [Z 0 0 0] 2 [8]
 	normal[0xee] = []func(){cpu.readParamA, cpu.xorU}
 
 	// RST 28H  [] 1 [16]
-	normal[0xef] = []func(){nop, cpu.rst(0x0028), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xef] = []func(){nop, cpu.rst(0x0028), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// LDH A (a8)   2 [12]
-	normal[0xf0] = []func(){cpu.readParamA, nop, cpu.ldAUX(mapper)}
+	normal[0xf0] = []func(){cpu.readParamA, nop, cpu.ldAUX}
 
 	// POP AF  [Z N H C] 1 [12]
-	normal[0xf1] = []func(){nop, cpu.popF(mapper), cpu.pop(mapper, &cpu.a)}
+	normal[0xf1] = []func(){nop, cpu.popF, cpu.pop(&cpu.a)}
 
 	// LD A (C)     1 [8]
-	normal[0xf2] = []func(){nop, cpu.ldACX(mapper)}
+	normal[0xf2] = []func(){nop, cpu.ldACX}
 
 	// DI   [] 1 [4]
 	normal[0xf3] = []func(){cpu.di}
 
 	// PUSH AF      1 [16]
-	normal[0xf5] = []func(){nop, nop, cpu.push(mapper, &cpu.a), cpu.push(mapper, &cpu.f)}
+	normal[0xf5] = []func(){nop, nop, cpu.push(&cpu.a), cpu.push(&cpu.f)}
 
 	// OR d8  [Z 0 0 0] 2 [8]
 	normal[0xf6] = []func(){cpu.readParamA, cpu.orU}
 
 	// RST 30H  [] 1 [16]
-	normal[0xf7] = []func(){nop, cpu.rst(0x0030), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xf7] = []func(){nop, cpu.rst(0x0030), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// LD HL SP+r8 [0 0 H C] 2 [12]
 	normal[0xf8] = []func(){cpu.readParamA, nop, cpu.ldHLSP}
@@ -796,7 +794,7 @@ func (cpu *CPU) Initialize() {
 	normal[0xf9] = []func(){nop, cpu.ldSPHL}
 
 	// LD A (a16) [] 3 [16]
-	normal[0xfa] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.ldAUX16(mapper)}
+	normal[0xfa] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.ldAUX16}
 
 	// EI   [] 1 [4]
 	normal[0xfb] = []func(){cpu.ei}
@@ -805,7 +803,7 @@ func (cpu *CPU) Initialize() {
 	normal[0xfe] = []func(){cpu.readParamA, cpu.cpU}
 
 	// RST 38H  [] 1 [16]
-	normal[0xff] = []func(){nop, cpu.rst(0x0038), cpu.push(mapper, &cpu.m8b), cpu.push(mapper, &cpu.m8a)}
+	normal[0xff] = []func(){nop, cpu.rst(0x0038), cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
 	// RLC B  [Z 0 0 C] 2 [8]
 	prefix[0x00] = []func(){nop, cpu.rlcB}
@@ -826,7 +824,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x05] = []func(){nop, cpu.rlcL}
 
 	// RLC (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x06] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.rlcM(mapper)}
+	prefix[0x06] = []func(){nop, nop, cpu.ldMHL, cpu.rlcM}
 
 	// RLC A  [Z 0 0 C] 2 [8]
 	prefix[0x07] = []func(){nop, cpu.rlcA}
@@ -850,7 +848,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x0d] = []func(){nop, cpu.rrcL}
 
 	// RRC (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x0e] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.rrcM(mapper)}
+	prefix[0x0e] = []func(){nop, nop, cpu.ldMHL, cpu.rrcM}
 
 	// RRC A  [Z 0 0 C] 2 [8]
 	prefix[0x0f] = []func(){nop, cpu.rrcA}
@@ -874,7 +872,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x15] = []func(){nop, cpu.rlL}
 
 	// RL (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x16] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.rlM(mapper)}
+	prefix[0x16] = []func(){nop, nop, cpu.ldMHL, cpu.rlM}
 
 	// RL A  [Z 0 0 C] 2 [8]
 	prefix[0x17] = []func(){nop, cpu.rlA}
@@ -898,7 +896,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x1d] = []func(){nop, cpu.rrL}
 
 	// RR (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x1e] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.rrM(mapper)}
+	prefix[0x1e] = []func(){nop, nop, cpu.ldMHL, cpu.rrM}
 
 	// RR A  [Z 0 0 C] 2 [8]
 	prefix[0x1f] = []func(){nop, cpu.rrA}
@@ -922,7 +920,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x25] = []func(){nop, cpu.slaL}
 
 	// SLA (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x26] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.slaM(mapper)}
+	prefix[0x26] = []func(){nop, nop, cpu.ldMHL, cpu.slaM}
 
 	// SLA A  [Z 0 0 C] 2 [8]
 	prefix[0x27] = []func(){nop, cpu.slaA}
@@ -946,7 +944,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x2d] = []func(){nop, cpu.sraL}
 
 	// SRA (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x2e] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.sraM(mapper)}
+	prefix[0x2e] = []func(){nop, nop, cpu.ldMHL, cpu.sraM}
 
 	// SRA A  [Z 0 0 C] 2 [8]
 	prefix[0x2f] = []func(){nop, cpu.sraA}
@@ -970,7 +968,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x35] = []func(){nop, cpu.swapL}
 
 	// SWAP (HL)  [Z 0 0 0] 2 [16]
-	prefix[0x36] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.swapM(mapper)}
+	prefix[0x36] = []func(){nop, nop, cpu.ldMHL, cpu.swapM}
 
 	// SWAP A  [Z 0 0 0] 2 [8]
 	prefix[0x37] = []func(){nop, cpu.swapA}
@@ -994,7 +992,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x3d] = []func(){nop, cpu.srlL}
 
 	// SRL (HL)  [Z 0 0 C] 2 [16]
-	prefix[0x3e] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.srlM(mapper)}
+	prefix[0x3e] = []func(){nop, nop, cpu.ldMHL, cpu.srlM}
 
 	// SRL A  [Z 0 0 C] 2 [8]
 	prefix[0x3f] = []func(){nop, cpu.srlA}
@@ -1018,7 +1016,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x45] = []func(){nop, cpu.bit(0, &cpu.l)}
 
 	// BIT 0 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x46] = []func(){nop, nop, cpu.bitM(mapper, 0)}
+	prefix[0x46] = []func(){nop, nop, cpu.bitM(0)}
 
 	// BIT 0 A [Z 0 1 -] 2 [8]
 	prefix[0x47] = []func(){nop, cpu.bit(0, &cpu.a)}
@@ -1042,7 +1040,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x4d] = []func(){nop, cpu.bit(1, &cpu.l)}
 
 	// BIT 1 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x4e] = []func(){nop, nop, cpu.bitM(mapper, 1)}
+	prefix[0x4e] = []func(){nop, nop, cpu.bitM(1)}
 
 	// BIT 1 A [Z 0 1 -] 2 [8]
 	prefix[0x4f] = []func(){nop, cpu.bit(1, &cpu.a)}
@@ -1066,7 +1064,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x55] = []func(){nop, cpu.bit(2, &cpu.l)}
 
 	// BIT 2 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x56] = []func(){nop, nop, cpu.bitM(mapper, 2)}
+	prefix[0x56] = []func(){nop, nop, cpu.bitM(2)}
 
 	// BIT 2 A [Z 0 1 -] 2 [8]
 	prefix[0x57] = []func(){nop, cpu.bit(2, &cpu.a)}
@@ -1090,7 +1088,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x5d] = []func(){nop, cpu.bit(3, &cpu.l)}
 
 	// BIT 3 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x5e] = []func(){nop, nop, cpu.bitM(mapper, 3)}
+	prefix[0x5e] = []func(){nop, nop, cpu.bitM(3)}
 
 	// BIT 3 A [Z 0 1 -] 2 [8]
 	prefix[0x5f] = []func(){nop, cpu.bit(3, &cpu.a)}
@@ -1114,7 +1112,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x65] = []func(){nop, cpu.bit(4, &cpu.l)}
 
 	// BIT 4 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x66] = []func(){nop, nop, cpu.bitM(mapper, 4)}
+	prefix[0x66] = []func(){nop, nop, cpu.bitM(4)}
 
 	// BIT 4 A [Z 0 1 -] 2 [8]
 	prefix[0x67] = []func(){nop, cpu.bit(4, &cpu.a)}
@@ -1138,7 +1136,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x6d] = []func(){nop, cpu.bit(5, &cpu.l)}
 
 	// BIT 5 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x6e] = []func(){nop, nop, cpu.bitM(mapper, 5)}
+	prefix[0x6e] = []func(){nop, nop, cpu.bitM(5)}
 
 	// BIT 5 A [Z 0 1 -] 2 [8]
 	prefix[0x6f] = []func(){nop, cpu.bit(5, &cpu.a)}
@@ -1162,7 +1160,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x75] = []func(){nop, cpu.bit(6, &cpu.l)}
 
 	// BIT 6 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x76] = []func(){nop, nop, cpu.bitM(mapper, 6)}
+	prefix[0x76] = []func(){nop, nop, cpu.bitM(6)}
 
 	// BIT 6 A [Z 0 1 -] 2 [8]
 	prefix[0x77] = []func(){nop, cpu.bit(6, &cpu.a)}
@@ -1186,7 +1184,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x7d] = []func(){nop, cpu.bit(7, &cpu.l)}
 
 	// BIT 7 (HL) [Z 0 1 -] 2 [12]
-	prefix[0x7e] = []func(){nop, nop, cpu.bitM(mapper, 7)}
+	prefix[0x7e] = []func(){nop, nop, cpu.bitM(7)}
 
 	// BIT 7 A [Z 0 1 -] 2 [8]
 	prefix[0x7f] = []func(){nop, cpu.bit(7, &cpu.a)}
@@ -1210,7 +1208,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x85] = []func(){nop, cpu.res(0, &cpu.l)}
 
 	// RES 0 (HL) [] 2 [16]
-	prefix[0x86] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 0)}
+	prefix[0x86] = []func(){nop, nop, cpu.ldMHL, cpu.resM(0)}
 
 	// RES 0 A [] 2 [8]
 	prefix[0x87] = []func(){nop, cpu.res(0, &cpu.a)}
@@ -1234,7 +1232,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x8d] = []func(){nop, cpu.res(1, &cpu.l)}
 
 	// RES 1 (HL) [] 2 [16]
-	prefix[0x8e] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 1)}
+	prefix[0x8e] = []func(){nop, nop, cpu.ldMHL, cpu.resM(1)}
 
 	// RES 1 A [] 2 [8]
 	prefix[0x8f] = []func(){nop, cpu.res(1, &cpu.a)}
@@ -1258,7 +1256,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x95] = []func(){nop, cpu.res(2, &cpu.l)}
 
 	// RES 2 (HL) [] 2 [16]
-	prefix[0x96] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 2)}
+	prefix[0x96] = []func(){nop, nop, cpu.ldMHL, cpu.resM(2)}
 
 	// RES 2 A [] 2 [8]
 	prefix[0x97] = []func(){nop, cpu.res(2, &cpu.a)}
@@ -1282,7 +1280,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0x9d] = []func(){nop, cpu.res(3, &cpu.l)}
 
 	// RES 3 (HL) [] 2 [16]
-	prefix[0x9e] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 3)}
+	prefix[0x9e] = []func(){nop, nop, cpu.ldMHL, cpu.resM(3)}
 
 	// RES 3 A [] 2 [8]
 	prefix[0x9f] = []func(){nop, cpu.res(3, &cpu.a)}
@@ -1306,7 +1304,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xa5] = []func(){nop, cpu.res(4, &cpu.l)}
 
 	// RES 4 (HL) [] 2 [16]
-	prefix[0xa6] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 4)}
+	prefix[0xa6] = []func(){nop, nop, cpu.ldMHL, cpu.resM(4)}
 
 	// RES 4 A [] 2 [8]
 	prefix[0xa7] = []func(){nop, cpu.res(4, &cpu.a)}
@@ -1330,7 +1328,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xad] = []func(){nop, cpu.res(5, &cpu.l)}
 
 	// RES 5 (HL) [] 2 [16]
-	prefix[0xae] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 5)}
+	prefix[0xae] = []func(){nop, nop, cpu.ldMHL, cpu.resM(5)}
 
 	// RES 5 A [] 2 [8]
 	prefix[0xaf] = []func(){nop, cpu.res(5, &cpu.a)}
@@ -1354,7 +1352,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xb5] = []func(){nop, cpu.res(6, &cpu.l)}
 
 	// RES 6 (HL) [] 2 [16]
-	prefix[0xb6] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 6)}
+	prefix[0xb6] = []func(){nop, nop, cpu.ldMHL, cpu.resM(6)}
 
 	// RES 6 A [] 2 [8]
 	prefix[0xb7] = []func(){nop, cpu.res(6, &cpu.a)}
@@ -1378,7 +1376,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xbd] = []func(){nop, cpu.res(7, &cpu.l)}
 
 	// RES 7 (HL) [] 2 [16]
-	prefix[0xbe] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.resM(mapper, 7)}
+	prefix[0xbe] = []func(){nop, nop, cpu.ldMHL, cpu.resM(7)}
 
 	// RES 7 A [] 2 [8]
 	prefix[0xbf] = []func(){nop, cpu.res(7, &cpu.a)}
@@ -1402,7 +1400,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xc5] = []func(){nop, cpu.set(0, &cpu.l)}
 
 	// SET 0 (HL) [] 2 [16]
-	prefix[0xc6] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 0)}
+	prefix[0xc6] = []func(){nop, nop, cpu.ldMHL, cpu.setM(0)}
 
 	// SET 0 A [] 2 [8]
 	prefix[0xc7] = []func(){nop, cpu.set(0, &cpu.a)}
@@ -1426,7 +1424,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xcd] = []func(){nop, cpu.set(1, &cpu.l)}
 
 	// SET 1 (HL) [] 2 [16]
-	prefix[0xce] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 1)}
+	prefix[0xce] = []func(){nop, nop, cpu.ldMHL, cpu.setM(1)}
 
 	// SET 1 A [] 2 [8]
 	prefix[0xcf] = []func(){nop, cpu.set(1, &cpu.a)}
@@ -1450,7 +1448,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xd5] = []func(){nop, cpu.set(2, &cpu.l)}
 
 	// SET 2 (HL) [] 2 [16]
-	prefix[0xd6] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 2)}
+	prefix[0xd6] = []func(){nop, nop, cpu.ldMHL, cpu.setM(2)}
 
 	// SET 2 A [] 2 [8]
 	prefix[0xd7] = []func(){nop, cpu.set(2, &cpu.a)}
@@ -1474,7 +1472,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xdd] = []func(){nop, cpu.set(3, &cpu.l)}
 
 	// SET 3 (HL) [] 2 [16]
-	prefix[0xde] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 3)}
+	prefix[0xde] = []func(){nop, nop, cpu.ldMHL, cpu.setM(3)}
 
 	// SET 3 A [] 2 [8]
 	prefix[0xdf] = []func(){nop, cpu.set(3, &cpu.a)}
@@ -1498,7 +1496,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xe5] = []func(){nop, cpu.set(4, &cpu.l)}
 
 	// SET 4 (HL) [] 2 [16]
-	prefix[0xe6] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 4)}
+	prefix[0xe6] = []func(){nop, nop, cpu.ldMHL, cpu.setM(4)}
 
 	// SET 4 A [] 2 [8]
 	prefix[0xe7] = []func(){nop, cpu.set(4, &cpu.a)}
@@ -1522,7 +1520,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xed] = []func(){nop, cpu.set(5, &cpu.l)}
 
 	// SET 5 (HL) [] 2 [16]
-	prefix[0xee] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 5)}
+	prefix[0xee] = []func(){nop, nop, cpu.ldMHL, cpu.setM(5)}
 
 	// SET 5 A [] 2 [8]
 	prefix[0xef] = []func(){nop, cpu.set(5, &cpu.a)}
@@ -1546,7 +1544,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xf5] = []func(){nop, cpu.set(6, &cpu.l)}
 
 	// SET 6 (HL) [] 2 [16]
-	prefix[0xf6] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 6)}
+	prefix[0xf6] = []func(){nop, nop, cpu.ldMHL, cpu.setM(6)}
 
 	// SET 6 A [] 2 [8]
 	prefix[0xf7] = []func(){nop, cpu.set(6, &cpu.a)}
@@ -1570,7 +1568,7 @@ func (cpu *CPU) Initialize() {
 	prefix[0xfd] = []func(){nop, cpu.set(7, &cpu.l)}
 
 	// SET 7 (HL) [] 2 [16]
-	prefix[0xfe] = []func(){nop, nop, cpu.ldMHL(mapper), cpu.setM(mapper, 7)}
+	prefix[0xfe] = []func(){nop, nop, cpu.ldMHL, cpu.setM(7)}
 
 	// SET 7 A [] 2 [8]
 	prefix[0xff] = []func(){nop, cpu.set(7, &cpu.a)}
