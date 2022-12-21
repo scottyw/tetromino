@@ -1,26 +1,26 @@
 package cpu
 
-func (cpu *CPU) adcM() {
-	cpu.adc(cpu.mapper.Read(cpu.hl()))
+func adcM(cpu *CPU) {
+	adc(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) adcA() { cpu.adc(cpu.a) }
+func adcA(cpu *CPU) { adc(cpu.a) }
 
-func (cpu *CPU) adcB() { cpu.adc(cpu.b) }
+func adcB(cpu *CPU) { adc(cpu.b) }
 
-func (cpu *CPU) adcC() { cpu.adc(cpu.c) }
+func adcC(cpu *CPU) { adc(cpu.c) }
 
-func (cpu *CPU) adcD() { cpu.adc(cpu.d) }
+func adcD(cpu *CPU) { adc(cpu.d) }
 
-func (cpu *CPU) adcE() { cpu.adc(cpu.e) }
+func adcE(cpu *CPU) { adc(cpu.e) }
 
-func (cpu *CPU) adcH() { cpu.adc(cpu.h) }
+func adcH(cpu *CPU) { adc(cpu.h) }
 
-func (cpu *CPU) adcL() { cpu.adc(cpu.l) }
+func adcL(cpu *CPU) { adc(cpu.l) }
 
-func (cpu *CPU) adcU() { cpu.adc(cpu.u8a) }
+func adcU(cpu *CPU) { adc(cpu.u8a) }
 
-func (cpu *CPU) adc(u8 uint8) {
+func adc(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
 	hf := hc8(a, u8)
@@ -37,27 +37,27 @@ func (cpu *CPU) adc(u8 uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) addM() {
-	cpu.add(cpu.mapper.Read(cpu.hl()))
+func addM(cpu *CPU) {
+	add(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) addA() { cpu.add(cpu.a) }
+func addA(cpu *CPU) { add(cpu.a) }
 
-func (cpu *CPU) addB() { cpu.add(cpu.b) }
+func addB(cpu *CPU) { add(cpu.b) }
 
-func (cpu *CPU) addC() { cpu.add(cpu.c) }
+func addC(cpu *CPU) { add(cpu.c) }
 
-func (cpu *CPU) addD() { cpu.add(cpu.d) }
+func addD(cpu *CPU) { add(cpu.d) }
 
-func (cpu *CPU) addE() { cpu.add(cpu.e) }
+func addE(cpu *CPU) { add(cpu.e) }
 
-func (cpu *CPU) addH() { cpu.add(cpu.h) }
+func addH(cpu *CPU) { add(cpu.h) }
 
-func (cpu *CPU) addL() { cpu.add(cpu.l) }
+func addL(cpu *CPU) { add(cpu.l) }
 
-func (cpu *CPU) addU() { cpu.add(cpu.u8a) }
+func addU(cpu *CPU) { add(cpu.u8a) }
 
-func (cpu *CPU) add(u8 uint8) {
+func add(u8 uint8) {
 	a := cpu.a
 	cpu.a += u8
 	// [Z 0 H C]
@@ -67,15 +67,15 @@ func (cpu *CPU) add(u8 uint8) {
 	cpu.setCf(c8(a, u8))
 }
 
-func (cpu *CPU) addHLBC() { cpu.addHL(cpu.bc()) }
+func addHLBC(cpu *CPU) { addHL(cpu.bc()) }
 
-func (cpu *CPU) addHLDE() { cpu.addHL(cpu.de()) }
+func addHLDE(cpu *CPU) { addHL(cpu.de()) }
 
-func (cpu *CPU) addHLHL() { cpu.addHL(cpu.hl()) }
+func addHLHL(cpu *CPU) { addHL(cpu.hl()) }
 
-func (cpu *CPU) addHLSP() { cpu.addHL(cpu.sp) }
+func addHLSP(cpu *CPU) { addHL(cpu.sp) }
 
-func (cpu *CPU) addHL(u16 uint16) {
+func addHL(u16 uint16) {
 	hl := cpu.hl()
 	new := hl + u16
 	cpu.h = uint8(new >> 8)
@@ -86,7 +86,7 @@ func (cpu *CPU) addHL(u16 uint16) {
 	cpu.setCf(c16(hl, u16))
 }
 
-func (cpu *CPU) addSP() {
+func addSP(cpu *CPU) {
 	i8 := int8(cpu.u8a)
 	sp := cpu.sp
 	cpu.sp = uint16(int(cpu.sp) + int(i8))
@@ -102,27 +102,27 @@ func (cpu *CPU) addSP() {
 	}
 }
 
-func (cpu *CPU) andM() {
-	cpu.and(cpu.mapper.Read(cpu.hl()))
+func andM(cpu *CPU) {
+	and(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) andA() { cpu.and(cpu.a) }
+func andA(cpu *CPU) { and(cpu.a) }
 
-func (cpu *CPU) andB() { cpu.and(cpu.b) }
+func andB(cpu *CPU) { and(cpu.b) }
 
-func (cpu *CPU) andC() { cpu.and(cpu.c) }
+func andC(cpu *CPU) { and(cpu.c) }
 
-func (cpu *CPU) andD() { cpu.and(cpu.d) }
+func andD(cpu *CPU) { and(cpu.d) }
 
-func (cpu *CPU) andE() { cpu.and(cpu.e) }
+func andE(cpu *CPU) { and(cpu.e) }
 
-func (cpu *CPU) andH() { cpu.and(cpu.h) }
+func andH(cpu *CPU) { and(cpu.h) }
 
-func (cpu *CPU) andL() { cpu.and(cpu.l) }
+func andL(cpu *CPU) { and(cpu.l) }
 
-func (cpu *CPU) andU() { cpu.and(cpu.u8a) }
+func andU(cpu *CPU) { and(cpu.u8a) }
 
-func (cpu *CPU) and(u8 uint8) {
+func and(u8 uint8) {
 	cpu.a &= u8
 	// [Z 0 1 0]
 	cpu.setZf(cpu.a == 0)
@@ -131,14 +131,14 @@ func (cpu *CPU) and(u8 uint8) {
 	cpu.setCf(false)
 }
 
-func (cpu *CPU) bitM(pos uint8) func() {
+func bitM(pos uint8) func() {
 	return func() {
 		u8 := cpu.mapper.Read(cpu.hl())
-		cpu.bit(pos, &u8)()
+		bit(pos, &u8)()
 	}
 }
 
-func (cpu *CPU) bit(pos uint8, r8 *uint8) func() {
+func bit(pos uint8, r8 *uint8) func() {
 	return func() {
 		zero := *r8&bits[pos] == 0
 		// [Z 0 1 -]
@@ -148,7 +148,7 @@ func (cpu *CPU) bit(pos uint8, r8 *uint8) func() {
 	}
 }
 
-func (cpu *CPU) call() {
+func call(cpu *CPU) {
 	// Store the old PC to write to memory in the next steps
 	cpu.m8a = uint8(cpu.pc & 0xff)
 	cpu.m8b = uint8(cpu.pc >> 8)
@@ -156,34 +156,34 @@ func (cpu *CPU) call() {
 	cpu.pc = cpu.u16()
 }
 
-func (cpu *CPU) ccf() {
+func ccf(cpu *CPU) {
 	// [- 0 0 C]
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(!cpu.cf())
 }
 
-func (cpu *CPU) cpM() {
-	cpu.cp(cpu.mapper.Read(cpu.hl()))
+func cpM(cpu *CPU) {
+	cp(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) cpA() { cpu.cp(cpu.a) }
+func cpA(cpu *CPU) { cp(cpu.a) }
 
-func (cpu *CPU) cpB() { cpu.cp(cpu.b) }
+func cpB(cpu *CPU) { cp(cpu.b) }
 
-func (cpu *CPU) cpC() { cpu.cp(cpu.c) }
+func cpC(cpu *CPU) { cp(cpu.c) }
 
-func (cpu *CPU) cpD() { cpu.cp(cpu.d) }
+func cpD(cpu *CPU) { cp(cpu.d) }
 
-func (cpu *CPU) cpE() { cpu.cp(cpu.e) }
+func cpE(cpu *CPU) { cp(cpu.e) }
 
-func (cpu *CPU) cpH() { cpu.cp(cpu.h) }
+func cpH(cpu *CPU) { cp(cpu.h) }
 
-func (cpu *CPU) cpL() { cpu.cp(cpu.l) }
+func cpL(cpu *CPU) { cp(cpu.l) }
 
-func (cpu *CPU) cpU() { cpu.cp(cpu.u8a) }
+func cpU(cpu *CPU) { cp(cpu.u8a) }
 
-func (cpu *CPU) cp(u8 uint8) {
+func cp(u8 uint8) {
 	// [Z 1 H C]
 	cpu.setZf(cpu.a == u8)
 	cpu.setNf(true)
@@ -191,14 +191,14 @@ func (cpu *CPU) cp(u8 uint8) {
 	cpu.setCf(c8Sub(cpu.a, u8))
 }
 
-func (cpu *CPU) cpl() {
+func cpl(cpu *CPU) {
 	cpu.a = ^cpu.a
 	// [- 1 1 -]
 	cpu.setNf(true)
 	cpu.setHf(true)
 }
 
-func (cpu *CPU) daa() {
+func daa(cpu *CPU) {
 	if cpu.nf() {
 		if cpu.hf() {
 			cpu.a -= 0x06
@@ -221,26 +221,26 @@ func (cpu *CPU) daa() {
 	cpu.setHf(false)
 }
 
-func (cpu *CPU) decM() {
-	cpu.dec(&cpu.m8a)
+func decM(cpu *CPU) {
+	dec(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) decA() { cpu.dec(&cpu.a) }
+func decA(cpu *CPU) { dec(&cpu.a) }
 
-func (cpu *CPU) decB() { cpu.dec(&cpu.b) }
+func decB(cpu *CPU) { dec(&cpu.b) }
 
-func (cpu *CPU) decC() { cpu.dec(&cpu.c) }
+func decC(cpu *CPU) { dec(&cpu.c) }
 
-func (cpu *CPU) decD() { cpu.dec(&cpu.d) }
+func decD(cpu *CPU) { dec(&cpu.d) }
 
-func (cpu *CPU) decE() { cpu.dec(&cpu.e) }
+func decE(cpu *CPU) { dec(&cpu.e) }
 
-func (cpu *CPU) decH() { cpu.dec(&cpu.h) }
+func decH(cpu *CPU) { dec(&cpu.h) }
 
-func (cpu *CPU) decL() { cpu.dec(&cpu.l) }
+func decL(cpu *CPU) { dec(&cpu.l) }
 
-func (cpu *CPU) dec(r8 *uint8) {
+func dec(r8 *uint8) {
 	old := *r8
 	*r8--
 	// [Z 1 H -]
@@ -249,41 +249,41 @@ func (cpu *CPU) dec(r8 *uint8) {
 	cpu.setHf(hc8Sub(old, 1))
 }
 
-func (cpu *CPU) decBC() {
+func decBC(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.bc())
-	cpu.dec16(&cpu.b, &cpu.c)
+	dec16(&cpu.b, &cpu.c)
 }
 
-func (cpu *CPU) decDE() {
+func decDE(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.de())
-	cpu.dec16(&cpu.d, &cpu.e)
+	dec16(&cpu.d, &cpu.e)
 }
 
-func (cpu *CPU) decHL() {
+func decHL(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.hl())
-	cpu.dec16(&cpu.h, &cpu.l)
+	dec16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) dec16(msb, lsb *uint8) {
+func dec16(msb, lsb *uint8) {
 	new := uint16(*msb)<<8 + uint16(*lsb) - 1
 	*msb = uint8(new >> 8)
 	*lsb = uint8(new)
 }
 
-func (cpu *CPU) decSP() {
+func decSP(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.sp)
 	cpu.sp--
 }
 
-func (cpu *CPU) di() {
+func di(cpu *CPU) {
 	cpu.interrupts.Disable()
 }
 
-func (cpu *CPU) ei() {
+func ei(cpu *CPU) {
 	cpu.interrupts.Enable()
 }
 
-func (cpu *CPU) halt() {
+func halt(cpu *CPU) {
 	if cpu.interrupts.Enabled() {
 		cpu.halted = true
 	} else {
@@ -295,26 +295,26 @@ func (cpu *CPU) halt() {
 	}
 }
 
-func (cpu *CPU) incM() {
-	cpu.inc(&cpu.m8a)
+func incM(cpu *CPU) {
+	inc(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) incA() { cpu.inc(&cpu.a) }
+func incA(cpu *CPU) { inc(&cpu.a) }
 
-func (cpu *CPU) incB() { cpu.inc(&cpu.b) }
+func incB(cpu *CPU) { inc(&cpu.b) }
 
-func (cpu *CPU) incC() { cpu.inc(&cpu.c) }
+func incC(cpu *CPU) { inc(&cpu.c) }
 
-func (cpu *CPU) incD() { cpu.inc(&cpu.d) }
+func incD(cpu *CPU) { inc(&cpu.d) }
 
-func (cpu *CPU) incE() { cpu.inc(&cpu.e) }
+func incE(cpu *CPU) { inc(&cpu.e) }
 
-func (cpu *CPU) incH() { cpu.inc(&cpu.h) }
+func incH(cpu *CPU) { inc(&cpu.h) }
 
-func (cpu *CPU) incL() { cpu.inc(&cpu.l) }
+func incL(cpu *CPU) { inc(&cpu.l) }
 
-func (cpu *CPU) inc(r8 *uint8) {
+func inc(r8 *uint8) {
 	old := *r8
 	*r8++
 	// [Z 0 H -]
@@ -323,174 +323,174 @@ func (cpu *CPU) inc(r8 *uint8) {
 	cpu.setHf(hc8(old, 1))
 }
 
-func (cpu *CPU) incBC() {
+func incBC(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.bc())
-	cpu.inc16(&cpu.b, &cpu.c)
+	inc16(&cpu.b, &cpu.c)
 }
 
-func (cpu *CPU) incDE() {
+func incDE(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.de())
-	cpu.inc16(&cpu.d, &cpu.e)
+	inc16(&cpu.d, &cpu.e)
 }
 
-func (cpu *CPU) incHL() {
+func incHL(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.hl())
-	cpu.inc16(&cpu.h, &cpu.l)
+	inc16(&cpu.h, &cpu.l)
 }
 
-func (cpu *CPU) inc16(msb, lsb *uint8) {
+func inc16(msb, lsb *uint8) {
 	new := uint16(*msb)<<8 + uint16(*lsb) + 1
 	*msb = uint8(new >> 8)
 	*lsb = uint8(new)
 }
 
-func (cpu *CPU) incSP() {
+func incSP(cpu *CPU) {
 	cpu.oam.TriggerWriteCorruption(cpu.sp)
 	cpu.sp++
 }
 
-func (cpu *CPU) jp() {
+func jp(cpu *CPU) {
 	cpu.pc = cpu.u16()
 }
 
-func (cpu *CPU) jpHL() {
+func jpHL(cpu *CPU) {
 	cpu.pc = cpu.hl()
 }
 
-func (cpu *CPU) jr() {
+func jr(cpu *CPU) {
 	i8 := int8(cpu.u8a)
 	cpu.pc = uint16(int16(cpu.pc) + int16(i8))
 }
 
-func (cpu *CPU) ldAB() { cpu.a = cpu.b }
+func ldAB(cpu *CPU) { cpu.a = cpu.b }
 
-func (cpu *CPU) ldAC() { cpu.a = cpu.c }
+func ldAC(cpu *CPU) { cpu.a = cpu.c }
 
-func (cpu *CPU) ldAD() { cpu.a = cpu.d }
+func ldAD(cpu *CPU) { cpu.a = cpu.d }
 
-func (cpu *CPU) ldAE() { cpu.a = cpu.e }
+func ldAE(cpu *CPU) { cpu.a = cpu.e }
 
-func (cpu *CPU) ldAH() { cpu.a = cpu.h }
+func ldAH(cpu *CPU) { cpu.a = cpu.h }
 
-func (cpu *CPU) ldAL() { cpu.a = cpu.l }
+func ldAL(cpu *CPU) { cpu.a = cpu.l }
 
-func (cpu *CPU) ldAU() { cpu.a = cpu.u8a }
+func ldAU(cpu *CPU) { cpu.a = cpu.u8a }
 
-func (cpu *CPU) ldBA() { cpu.b = cpu.a }
+func ldBA(cpu *CPU) { cpu.b = cpu.a }
 
-func (cpu *CPU) ldBC() { cpu.b = cpu.c }
+func ldBC(cpu *CPU) { cpu.b = cpu.c }
 
-func (cpu *CPU) ldBD() { cpu.b = cpu.d }
+func ldBD(cpu *CPU) { cpu.b = cpu.d }
 
-func (cpu *CPU) ldBE() { cpu.b = cpu.e }
+func ldBE(cpu *CPU) { cpu.b = cpu.e }
 
-func (cpu *CPU) ldBH() { cpu.b = cpu.h }
+func ldBH(cpu *CPU) { cpu.b = cpu.h }
 
-func (cpu *CPU) ldBL() { cpu.b = cpu.l }
+func ldBL(cpu *CPU) { cpu.b = cpu.l }
 
-func (cpu *CPU) ldBU() { cpu.b = cpu.u8a }
+func ldBU(cpu *CPU) { cpu.b = cpu.u8a }
 
-func (cpu *CPU) ldCA() { cpu.c = cpu.a }
+func ldCA(cpu *CPU) { cpu.c = cpu.a }
 
-func (cpu *CPU) ldCB() { cpu.c = cpu.b }
+func ldCB(cpu *CPU) { cpu.c = cpu.b }
 
-func (cpu *CPU) ldCD() { cpu.c = cpu.d }
+func ldCD(cpu *CPU) { cpu.c = cpu.d }
 
-func (cpu *CPU) ldCE() { cpu.c = cpu.e }
+func ldCE(cpu *CPU) { cpu.c = cpu.e }
 
-func (cpu *CPU) ldCH() { cpu.c = cpu.h }
+func ldCH(cpu *CPU) { cpu.c = cpu.h }
 
-func (cpu *CPU) ldCL() { cpu.c = cpu.l }
+func ldCL(cpu *CPU) { cpu.c = cpu.l }
 
-func (cpu *CPU) ldCU() { cpu.c = cpu.u8a }
+func ldCU(cpu *CPU) { cpu.c = cpu.u8a }
 
-func (cpu *CPU) ldDA() { cpu.d = cpu.a }
+func ldDA(cpu *CPU) { cpu.d = cpu.a }
 
-func (cpu *CPU) ldDB() { cpu.d = cpu.b }
+func ldDB(cpu *CPU) { cpu.d = cpu.b }
 
-func (cpu *CPU) ldDC() { cpu.d = cpu.c }
+func ldDC(cpu *CPU) { cpu.d = cpu.c }
 
-func (cpu *CPU) ldDE() { cpu.d = cpu.e }
+func ldDE(cpu *CPU) { cpu.d = cpu.e }
 
-func (cpu *CPU) ldDH() { cpu.d = cpu.h }
+func ldDH(cpu *CPU) { cpu.d = cpu.h }
 
-func (cpu *CPU) ldDL() { cpu.d = cpu.l }
+func ldDL(cpu *CPU) { cpu.d = cpu.l }
 
-func (cpu *CPU) ldDU() { cpu.d = cpu.u8a }
+func ldDU(cpu *CPU) { cpu.d = cpu.u8a }
 
-func (cpu *CPU) ldEA() { cpu.e = cpu.a }
+func ldEA(cpu *CPU) { cpu.e = cpu.a }
 
-func (cpu *CPU) ldEB() { cpu.e = cpu.b }
+func ldEB(cpu *CPU) { cpu.e = cpu.b }
 
-func (cpu *CPU) ldEC() { cpu.e = cpu.c }
+func ldEC(cpu *CPU) { cpu.e = cpu.c }
 
-func (cpu *CPU) ldED() { cpu.e = cpu.d }
+func ldED(cpu *CPU) { cpu.e = cpu.d }
 
-func (cpu *CPU) ldEH() { cpu.e = cpu.h }
+func ldEH(cpu *CPU) { cpu.e = cpu.h }
 
-func (cpu *CPU) ldEL() { cpu.e = cpu.l }
+func ldEL(cpu *CPU) { cpu.e = cpu.l }
 
-func (cpu *CPU) ldEU() { cpu.e = cpu.u8a }
+func ldEU(cpu *CPU) { cpu.e = cpu.u8a }
 
-func (cpu *CPU) ldHA() { cpu.h = cpu.a }
+func ldHA(cpu *CPU) { cpu.h = cpu.a }
 
-func (cpu *CPU) ldHB() { cpu.h = cpu.b }
+func ldHB(cpu *CPU) { cpu.h = cpu.b }
 
-func (cpu *CPU) ldHC() { cpu.h = cpu.c }
+func ldHC(cpu *CPU) { cpu.h = cpu.c }
 
-func (cpu *CPU) ldHD() { cpu.h = cpu.d }
+func ldHD(cpu *CPU) { cpu.h = cpu.d }
 
-func (cpu *CPU) ldHE() { cpu.h = cpu.e }
+func ldHE(cpu *CPU) { cpu.h = cpu.e }
 
-func (cpu *CPU) ldHL() { cpu.h = cpu.l }
+func ldHL(cpu *CPU) { cpu.h = cpu.l }
 
-func (cpu *CPU) ldHU() { cpu.h = cpu.u8a }
+func ldHU(cpu *CPU) { cpu.h = cpu.u8a }
 
-func (cpu *CPU) ldLA() { cpu.l = cpu.a }
+func ldLA(cpu *CPU) { cpu.l = cpu.a }
 
-func (cpu *CPU) ldLB() { cpu.l = cpu.b }
+func ldLB(cpu *CPU) { cpu.l = cpu.b }
 
-func (cpu *CPU) ldLC() { cpu.l = cpu.c }
+func ldLC(cpu *CPU) { cpu.l = cpu.c }
 
-func (cpu *CPU) ldLD() { cpu.l = cpu.d }
+func ldLD(cpu *CPU) { cpu.l = cpu.d }
 
-func (cpu *CPU) ldLE() { cpu.l = cpu.e }
+func ldLE(cpu *CPU) { cpu.l = cpu.e }
 
-func (cpu *CPU) ldLH() { cpu.l = cpu.h }
+func ldLH(cpu *CPU) { cpu.l = cpu.h }
 
-func (cpu *CPU) ldLU() { cpu.l = cpu.u8a }
+func ldLU(cpu *CPU) { cpu.l = cpu.u8a }
 
-func (cpu *CPU) ldHLU8() {
+func ldHLU8(cpu *CPU) {
 	cpu.mapper.Write(cpu.hl(), cpu.u8a)
 }
 
-func (cpu *CPU) ldBCU16() {
+func ldBCU16(cpu *CPU) {
 	u16 := cpu.u16()
 	cpu.b = uint8(u16 >> 8)
 	cpu.c = uint8(u16)
 }
 
-func (cpu *CPU) ldDEU16() {
+func ldDEU16(cpu *CPU) {
 	u16 := cpu.u16()
 	cpu.d = uint8(u16 >> 8)
 	cpu.e = uint8(u16)
 }
 
-func (cpu *CPU) ldHLU16() {
+func ldHLU16(cpu *CPU) {
 	u16 := cpu.u16()
 	cpu.h = uint8(u16 >> 8)
 	cpu.l = uint8(u16)
 }
 
-func (cpu *CPU) ldSPU16() {
+func ldSPU16(cpu *CPU) {
 	cpu.sp = cpu.u16()
 }
 
-func (cpu *CPU) ldSPHL() {
+func ldSPHL(cpu *CPU) {
 	cpu.sp = cpu.hl()
 }
 
-func (cpu *CPU) ldHLSP() {
+func ldHLSP(cpu *CPU) {
 	i8 := int8(cpu.u8a)
 	new := int(int(cpu.sp) + int(i8))
 	cpu.h = uint8(new >> 8)
@@ -507,131 +507,131 @@ func (cpu *CPU) ldHLSP() {
 	}
 }
 
-func (cpu *CPU) ldBCA() {
+func ldBCA(cpu *CPU) {
 	cpu.mapper.Write(cpu.bc(), cpu.a)
 }
 
-func (cpu *CPU) ldABC() {
+func ldABC(cpu *CPU) {
 	cpu.a = cpu.mapper.Read(cpu.bc())
 }
 
-func (cpu *CPU) ldDEA() {
+func ldDEA(cpu *CPU) {
 	cpu.mapper.Write(cpu.de(), cpu.a)
 }
 
-func (cpu *CPU) ldADE() {
+func ldADE(cpu *CPU) {
 	cpu.a = cpu.mapper.Read(cpu.de())
 }
 
-func (cpu *CPU) ldHLDA() {
+func ldHLDA(cpu *CPU) {
 	cpu.mapper.Write(cpu.hl(), cpu.a)
-	cpu.decHL()
+	decHL(cpu)
 }
 
-func (cpu *CPU) ldAHLD() {
+func ldAHLD(cpu *CPU) {
 	cpu.a = cpu.mapper.Read(cpu.hl())
-	cpu.decHL()
+	decHL(cpu)
 }
 
-func (cpu *CPU) ldHLIA() {
+func ldHLIA(cpu *CPU) {
 	cpu.mapper.Write(cpu.hl(), cpu.a)
-	cpu.incHL()
+	incHL(cpu)
 }
 
-func (cpu *CPU) ldAHLI() {
+func ldAHLI(cpu *CPU) {
 	cpu.a = cpu.mapper.Read(cpu.hl())
-	cpu.incHL()
+	incHL(cpu)
 }
 
-func (cpu *CPU) ldHLA() { cpu.mapper.Write(cpu.hl(), cpu.a) }
+func ldHLA(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.a) }
 
-func (cpu *CPU) ldHLB() { cpu.mapper.Write(cpu.hl(), cpu.b) }
+func ldHLB(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.b) }
 
-func (cpu *CPU) ldHLC() { cpu.mapper.Write(cpu.hl(), cpu.c) }
+func ldHLC(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.c) }
 
-func (cpu *CPU) ldHLD() { cpu.mapper.Write(cpu.hl(), cpu.d) }
+func ldHLD(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.d) }
 
-func (cpu *CPU) ldHLE() { cpu.mapper.Write(cpu.hl(), cpu.e) }
+func ldHLE(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.e) }
 
-func (cpu *CPU) ldHLH() { cpu.mapper.Write(cpu.hl(), cpu.h) }
+func ldHLH(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.h) }
 
-func (cpu *CPU) ldHLL() { cpu.mapper.Write(cpu.hl(), cpu.l) }
+func ldHLL(cpu *CPU) { cpu.mapper.Write(cpu.hl(), cpu.l) }
 
-func (cpu *CPU) ldAHL() { cpu.a = cpu.mapper.Read(cpu.hl()) }
+func ldAHL(cpu *CPU) { cpu.a = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldBHL() { cpu.b = cpu.mapper.Read(cpu.hl()) }
+func ldBHL(cpu *CPU) { cpu.b = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldCHL() { cpu.c = cpu.mapper.Read(cpu.hl()) }
+func ldCHL(cpu *CPU) { cpu.c = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldDHL() { cpu.d = cpu.mapper.Read(cpu.hl()) }
+func ldDHL(cpu *CPU) { cpu.d = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldEHL() { cpu.e = cpu.mapper.Read(cpu.hl()) }
+func ldEHL(cpu *CPU) { cpu.e = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldHHL() { cpu.h = cpu.mapper.Read(cpu.hl()) }
+func ldHHL(cpu *CPU) { cpu.h = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldLHL() { cpu.l = cpu.mapper.Read(cpu.hl()) }
+func ldLHL(cpu *CPU) { cpu.l = cpu.mapper.Read(cpu.hl()) }
 
-func (cpu *CPU) ldMHL() {
+func ldMHL(cpu *CPU) {
 	cpu.m8a = cpu.mapper.Read(cpu.hl())
 }
 
-func (cpu *CPU) ldACX() {
+func ldACX(cpu *CPU) {
 	a16 := uint16(0xff00 + uint16(cpu.c))
 	cpu.a = cpu.mapper.Read(a16)
 }
 
-func (cpu *CPU) ldCXA() {
+func ldCXA(cpu *CPU) {
 	a16 := uint16(0xff00 + uint16(cpu.c))
 	cpu.mapper.Write(a16, cpu.a)
 }
 
-func (cpu *CPU) ldAUX() {
+func ldAUX(cpu *CPU) {
 	a16 := uint16(0xff00 + uint16(cpu.u8a))
 	cpu.a = cpu.mapper.Read(a16)
 }
 
-func (cpu *CPU) ldUXA() {
+func ldUXA(cpu *CPU) {
 	a16 := uint16(0xff00 + uint16(cpu.u8a))
 	cpu.mapper.Write(a16, cpu.a)
 }
 
-func (cpu *CPU) ldAUX16() {
+func ldAUX16(cpu *CPU) {
 	cpu.a = cpu.mapper.Read(cpu.u16())
 }
 
-func (cpu *CPU) ldUX16A() {
+func ldUX16A(cpu *CPU) {
 	cpu.mapper.Write(cpu.u16(), cpu.a)
 }
 
-func (cpu *CPU) writeLowSP() {
+func writeLowSP(cpu *CPU) {
 	cpu.mapper.Write(cpu.u16(), uint8(cpu.sp))
 }
 
-func (cpu *CPU) writeHighSP() {
+func writeHighSP(cpu *CPU) {
 	cpu.mapper.Write(cpu.u16()+1, uint8(cpu.sp>>8))
 }
 
-func (cpu *CPU) orM() {
-	cpu.or(cpu.mapper.Read(cpu.hl()))
+func orM(cpu *CPU) {
+	or(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) orA() { cpu.or(cpu.a) }
+func orA(cpu *CPU) { or(cpu.a) }
 
-func (cpu *CPU) orB() { cpu.or(cpu.b) }
+func orB(cpu *CPU) { or(cpu.b) }
 
-func (cpu *CPU) orC() { cpu.or(cpu.c) }
+func orC(cpu *CPU) { or(cpu.c) }
 
-func (cpu *CPU) orD() { cpu.or(cpu.d) }
+func orD(cpu *CPU) { or(cpu.d) }
 
-func (cpu *CPU) orE() { cpu.or(cpu.e) }
+func orE(cpu *CPU) { or(cpu.e) }
 
-func (cpu *CPU) orH() { cpu.or(cpu.h) }
+func orH(cpu *CPU) { or(cpu.h) }
 
-func (cpu *CPU) orL() { cpu.or(cpu.l) }
+func orL(cpu *CPU) { or(cpu.l) }
 
-func (cpu *CPU) orU() { cpu.or(cpu.u8a) }
+func orU(cpu *CPU) { or(cpu.u8a) }
 
-func (cpu *CPU) or(u8 uint8) {
+func or(u8 uint8) {
 	cpu.a |= u8
 	// [Z 0 0 0]
 	cpu.setZf(cpu.a == 0)
@@ -640,69 +640,69 @@ func (cpu *CPU) or(u8 uint8) {
 	cpu.setCf(false)
 }
 
-func (cpu *CPU) pop(r8 *uint8) func() {
+func pop(r8 *uint8) func() {
 	return func() {
 		*r8 = cpu.mapper.Read(cpu.sp)
-		cpu.incSP()
+		incSP(cpu)
 	}
 }
 
-func (cpu *CPU) popF() {
+func popF(cpu *CPU) {
 	// Lower nibble is always zero no matter what data was written
 	cpu.f = cpu.mapper.Read(cpu.sp) & 0xf0
 	cpu.oam.TriggerWriteCorruption(cpu.sp)
 	cpu.sp++
 }
 
-func (cpu *CPU) push(r8 *uint8) func() {
-	return func() {
-		cpu.decSP()
+func push(r8 *uint8) func(*CPU) {
+	return func(cpu *CPU) {
+		decSP(cpu)
 		cpu.mapper.Write(cpu.sp, *r8)
 	}
 }
 
-func (cpu *CPU) resM(pos uint8) func() {
-	return func() {
-		cpu.res(pos, &cpu.m8a)()
+func resM(pos uint8) func(*CPU) {
+	return func(cpu *CPU) {
+		res(pos, &cpu.m8a)
 		cpu.mapper.Write(cpu.hl(), cpu.m8a)
 	}
 }
 
-func (cpu *CPU) res(pos uint8, r8 *uint8) func() {
-	return func() {
+func res(pos uint8, r8 *uint8) func(*CPU) {
+	return func(cpu *CPU) {
 		*r8 &^= bits[pos]
 	}
 }
 
-func (cpu *CPU) ret() {
+func ret(cpu *CPU) {
 	cpu.pc = uint16(cpu.m8b)<<8 | uint16(cpu.m8a)
 }
 
-func (cpu *CPU) reti() {
-	cpu.ret()
-	cpu.ei()
+func reti(cpu *CPU) {
+	ret(cpu)
+	ei(cpu)
 }
 
-func (cpu *CPU) rlM() {
-	cpu.rl(&cpu.m8a)
+func rlM(cpu *CPU) {
+	rl(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) rlA() { cpu.rl(&cpu.a) }
+func rlA(cpu *CPU) { rl(&cpu.a) }
 
-func (cpu *CPU) rlB() { cpu.rl(&cpu.b) }
+func rlB(cpu *CPU) { rl(&cpu.b) }
 
-func (cpu *CPU) rlC() { cpu.rl(&cpu.c) }
+func rlC(cpu *CPU) { rl(&cpu.c) }
 
-func (cpu *CPU) rlD() { cpu.rl(&cpu.d) }
+func rlD(cpu *CPU) { rl(&cpu.d) }
 
-func (cpu *CPU) rlE() { cpu.rl(&cpu.e) }
+func rlE(cpu *CPU) { rl(&cpu.e) }
 
-func (cpu *CPU) rlH() { cpu.rl(&cpu.h) }
+func rlH(cpu *CPU) { rl(&cpu.h) }
 
-func (cpu *CPU) rlL() { cpu.rl(&cpu.l) }
+func rlL(cpu *CPU) { rl(&cpu.l) }
 
-func (cpu *CPU) rl(r8 *uint8) {
+func rl(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
 	if cpu.cf() {
@@ -715,33 +715,33 @@ func (cpu *CPU) rl(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) rla() {
-	cpu.rl(&cpu.a)
+func rla(cpu *CPU) {
+	rl(&cpu.a)
 	cpu.f &^= zFlag
 	// [0 0 0 C]
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rlcM() {
-	cpu.rlc(&cpu.m8a)
+func rlcM(cpu *CPU) {
+	rlc(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) rlcA() { cpu.rlc(&cpu.a) }
+func rlcA(cpu *CPU) { rlc(&cpu.a) }
 
-func (cpu *CPU) rlcB() { cpu.rlc(&cpu.b) }
+func rlcB(cpu *CPU) { rlc(&cpu.b) }
 
-func (cpu *CPU) rlcC() { cpu.rlc(&cpu.c) }
+func rlcC(cpu *CPU) { rlc(&cpu.c) }
 
-func (cpu *CPU) rlcD() { cpu.rlc(&cpu.d) }
+func rlcD(cpu *CPU) { rlc(&cpu.d) }
 
-func (cpu *CPU) rlcE() { cpu.rlc(&cpu.e) }
+func rlcE(cpu *CPU) { rlc(&cpu.e) }
 
-func (cpu *CPU) rlcH() { cpu.rlc(&cpu.h) }
+func rlcH(cpu *CPU) { rlc(&cpu.h) }
 
-func (cpu *CPU) rlcL() { cpu.rlc(&cpu.l) }
+func rlcL(cpu *CPU) { rlc(&cpu.l) }
 
-func (cpu *CPU) rlc(r8 *uint8) {
+func rlc(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
 	if cf {
@@ -754,33 +754,33 @@ func (cpu *CPU) rlc(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) rlca() {
-	cpu.rlc(&cpu.a)
+func rlca(cpu *CPU) {
+	rlc(&cpu.a)
 	cpu.f &^= zFlag
 	// [0 0 0 C]
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rrM() {
-	cpu.rr(&cpu.m8a)
+func rrM(cpu *CPU) {
+	rr(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) rrA() { cpu.rr(&cpu.a) }
+func rrA(cpu *CPU) { rr(&cpu.a) }
 
-func (cpu *CPU) rrB() { cpu.rr(&cpu.b) }
+func rrB(cpu *CPU) { rr(&cpu.b) }
 
-func (cpu *CPU) rrC() { cpu.rr(&cpu.c) }
+func rrC(cpu *CPU) { rr(&cpu.c) }
 
-func (cpu *CPU) rrD() { cpu.rr(&cpu.d) }
+func rrD(cpu *CPU) { rr(&cpu.d) }
 
-func (cpu *CPU) rrE() { cpu.rr(&cpu.e) }
+func rrE(cpu *CPU) { rr(&cpu.e) }
 
-func (cpu *CPU) rrH() { cpu.rr(&cpu.h) }
+func rrH(cpu *CPU) { rr(&cpu.h) }
 
-func (cpu *CPU) rrL() { cpu.rr(&cpu.l) }
+func rrL(cpu *CPU) { rr(&cpu.l) }
 
-func (cpu *CPU) rr(r8 *uint8) {
+func rr(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
 	if cpu.cf() {
@@ -793,32 +793,32 @@ func (cpu *CPU) rr(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) rra() {
-	cpu.rr(&cpu.a)
+func rra(cpu *CPU) {
+	rr(&cpu.a)
 	// [0 0 0 C]
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rrcM() {
-	cpu.rrc(&cpu.m8a)
+func rrcM(cpu *CPU) {
+	rrc(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) rrcA() { cpu.rrc(&cpu.a) }
+func rrcA(cpu *CPU) { rrc(&cpu.a) }
 
-func (cpu *CPU) rrcB() { cpu.rrc(&cpu.b) }
+func rrcB(cpu *CPU) { rrc(&cpu.b) }
 
-func (cpu *CPU) rrcC() { cpu.rrc(&cpu.c) }
+func rrcC(cpu *CPU) { rrc(&cpu.c) }
 
-func (cpu *CPU) rrcD() { cpu.rrc(&cpu.d) }
+func rrcD(cpu *CPU) { rrc(&cpu.d) }
 
-func (cpu *CPU) rrcE() { cpu.rrc(&cpu.e) }
+func rrcE(cpu *CPU) { rrc(&cpu.e) }
 
-func (cpu *CPU) rrcH() { cpu.rrc(&cpu.h) }
+func rrcH(cpu *CPU) { rrc(&cpu.h) }
 
-func (cpu *CPU) rrcL() { cpu.rrc(&cpu.l) }
+func rrcL(cpu *CPU) { rrc(&cpu.l) }
 
-func (cpu *CPU) rrc(r8 *uint8) {
+func rrc(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
 	if cf {
@@ -831,14 +831,14 @@ func (cpu *CPU) rrc(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) rrca() {
-	cpu.rrc(&cpu.a)
+func rrca(cpu *CPU) {
+	rrc(&cpu.a)
 	// [0 0 0 C]
 	cpu.setZf(false)
 }
 
-func (cpu *CPU) rst(a16 uint16) func() {
-	return func() {
+func rst(a16 uint16) func(*CPU) {
+	return func(cpu *CPU) {
 		// Store the old PC to write to memory in the next steps
 		cpu.m8a = uint8(cpu.pc & 0xff)
 		cpu.m8b = uint8(cpu.pc >> 8)
@@ -847,39 +847,39 @@ func (cpu *CPU) rst(a16 uint16) func() {
 	}
 }
 
-func (cpu *CPU) setM(pos uint8) func() {
-	return func() {
-		cpu.set(pos, &cpu.m8a)()
+func setM(pos uint8) func(*CPU) {
+	return func(cpu *CPU) {
+		set(pos, &cpu.m8a)()
 		cpu.mapper.Write(cpu.hl(), cpu.m8a)
 	}
 }
 
-func (cpu *CPU) set(pos uint8, r8 *uint8) func() {
+func set(pos uint8, r8 *uint8) func() {
 	return func() {
 		*r8 |= bits[pos]
 	}
 }
 
-func (cpu *CPU) slaM() {
-	cpu.sla(&cpu.m8a)
+func slaM(cpu *CPU) {
+	sla(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) slaA() { cpu.sla(&cpu.a) }
+func slaA(cpu *CPU) { sla(&cpu.a) }
 
-func (cpu *CPU) slaB() { cpu.sla(&cpu.b) }
+func slaB(cpu *CPU) { sla(&cpu.b) }
 
-func (cpu *CPU) slaC() { cpu.sla(&cpu.c) }
+func slaC(cpu *CPU) { sla(&cpu.c) }
 
-func (cpu *CPU) slaD() { cpu.sla(&cpu.d) }
+func slaD(cpu *CPU) { sla(&cpu.d) }
 
-func (cpu *CPU) slaE() { cpu.sla(&cpu.e) }
+func slaE(cpu *CPU) { sla(&cpu.e) }
 
-func (cpu *CPU) slaH() { cpu.sla(&cpu.h) }
+func slaH(cpu *CPU) { sla(&cpu.h) }
 
-func (cpu *CPU) slaL() { cpu.sla(&cpu.l) }
+func slaL(cpu *CPU) { sla(&cpu.l) }
 
-func (cpu *CPU) sla(r8 *uint8) {
+func sla(r8 *uint8) {
 	cf := (*r8 & 0x80) > 0
 	*r8 <<= 1
 	// [Z 0 0 C]
@@ -889,26 +889,26 @@ func (cpu *CPU) sla(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) sraM() {
-	cpu.sra(&cpu.m8a)
+func sraM(cpu *CPU) {
+	sra(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) sraA() { cpu.sra(&cpu.a) }
+func sraA(cpu *CPU) { sra(&cpu.a) }
 
-func (cpu *CPU) sraB() { cpu.sra(&cpu.b) }
+func sraB(cpu *CPU) { sra(&cpu.b) }
 
-func (cpu *CPU) sraC() { cpu.sra(&cpu.c) }
+func sraC(cpu *CPU) { sra(&cpu.c) }
 
-func (cpu *CPU) sraD() { cpu.sra(&cpu.d) }
+func sraD(cpu *CPU) { sra(&cpu.d) }
 
-func (cpu *CPU) sraE() { cpu.sra(&cpu.e) }
+func sraE(cpu *CPU) { sra(&cpu.e) }
 
-func (cpu *CPU) sraH() { cpu.sra(&cpu.h) }
+func sraH(cpu *CPU) { sra(&cpu.h) }
 
-func (cpu *CPU) sraL() { cpu.sra(&cpu.l) }
+func sraL(cpu *CPU) { sra(&cpu.l) }
 
-func (cpu *CPU) sra(r8 *uint8) {
+func sra(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	bit7 := (*r8 & 0x80) > 0
 	*r8 >>= 1
@@ -922,26 +922,26 @@ func (cpu *CPU) sra(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) srlM() {
-	cpu.srl(&cpu.m8a)
+func srlM(cpu *CPU) {
+	srl(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) srlA() { cpu.srl(&cpu.a) }
+func srlA(cpu *CPU) { srl(&cpu.a) }
 
-func (cpu *CPU) srlB() { cpu.srl(&cpu.b) }
+func srlB(cpu *CPU) { srl(&cpu.b) }
 
-func (cpu *CPU) srlC() { cpu.srl(&cpu.c) }
+func srlC(cpu *CPU) { srl(&cpu.c) }
 
-func (cpu *CPU) srlD() { cpu.srl(&cpu.d) }
+func srlD(cpu *CPU) { srl(&cpu.d) }
 
-func (cpu *CPU) srlE() { cpu.srl(&cpu.e) }
+func srlE(cpu *CPU) { srl(&cpu.e) }
 
-func (cpu *CPU) srlH() { cpu.srl(&cpu.h) }
+func srlH(cpu *CPU) { srl(&cpu.h) }
 
-func (cpu *CPU) srlL() { cpu.srl(&cpu.l) }
+func srlL(cpu *CPU) { srl(&cpu.l) }
 
-func (cpu *CPU) srl(r8 *uint8) {
+func srl(r8 *uint8) {
 	cf := (*r8 & 0x01) > 0
 	*r8 >>= 1
 	// [Z 0 0 C]
@@ -951,26 +951,26 @@ func (cpu *CPU) srl(r8 *uint8) {
 	cpu.setCf(cf)
 }
 
-func (cpu *CPU) swapM() {
-	cpu.swap(&cpu.m8a)
+func swapM(cpu *CPU) {
+	swap(&cpu.m8a)
 	cpu.mapper.Write(cpu.hl(), cpu.m8a)
 }
 
-func (cpu *CPU) swapA() { cpu.swap(&cpu.a) }
+func swapA(cpu *CPU) { swap(&cpu.a) }
 
-func (cpu *CPU) swapB() { cpu.swap(&cpu.b) }
+func swapB(cpu *CPU) { swap(&cpu.b) }
 
-func (cpu *CPU) swapC() { cpu.swap(&cpu.c) }
+func swapC(cpu *CPU) { swap(&cpu.c) }
 
-func (cpu *CPU) swapD() { cpu.swap(&cpu.d) }
+func swapD(cpu *CPU) { swap(&cpu.d) }
 
-func (cpu *CPU) swapE() { cpu.swap(&cpu.e) }
+func swapE(cpu *CPU) { swap(&cpu.e) }
 
-func (cpu *CPU) swapH() { cpu.swap(&cpu.h) }
+func swapH(cpu *CPU) { swap(&cpu.h) }
 
-func (cpu *CPU) swapL() { cpu.swap(&cpu.l) }
+func swapL(cpu *CPU) { swap(&cpu.l) }
 
-func (cpu *CPU) swap(r8 *uint8) {
+func swap(r8 *uint8) {
 	u8 := *r8
 	*r8 = u8<<4 | u8>>4
 	// [Z 0 0 0]
@@ -980,38 +980,38 @@ func (cpu *CPU) swap(r8 *uint8) {
 	cpu.setCf(false)
 }
 
-func (cpu *CPU) scf() {
+func scf(cpu *CPU) {
 	// [- 0 0 1]
 	cpu.setNf(false)
 	cpu.setHf(false)
 	cpu.setCf(true)
 }
 
-func (cpu *CPU) stop() {
+func stop(cpu *CPU) {
 	cpu.stopped = true
 }
 
-func (cpu *CPU) sbcM() {
-	cpu.sbc(cpu.mapper.Read(cpu.hl()))
+func sbcM(cpu *CPU) {
+	sbc(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) sbcA() { cpu.sbc(cpu.a) }
+func sbcA(cpu *CPU) { sbc(cpu.a) }
 
-func (cpu *CPU) sbcB() { cpu.sbc(cpu.b) }
+func sbcB(cpu *CPU) { sbc(cpu.b) }
 
-func (cpu *CPU) sbcC() { cpu.sbc(cpu.c) }
+func sbcC(cpu *CPU) { sbc(cpu.c) }
 
-func (cpu *CPU) sbcD() { cpu.sbc(cpu.d) }
+func sbcD(cpu *CPU) { sbc(cpu.d) }
 
-func (cpu *CPU) sbcE() { cpu.sbc(cpu.e) }
+func sbcE(cpu *CPU) { sbc(cpu.e) }
 
-func (cpu *CPU) sbcH() { cpu.sbc(cpu.h) }
+func sbcH(cpu *CPU) { sbc(cpu.h) }
 
-func (cpu *CPU) sbcL() { cpu.sbc(cpu.l) }
+func sbcL(cpu *CPU) { sbc(cpu.l) }
 
-func (cpu *CPU) sbcU() { cpu.sbc(cpu.u8a) }
+func sbcU(cpu *CPU) { sbc(cpu.u8a) }
 
-func (cpu *CPU) sbc(u8 uint8) {
+func sbc(u8 uint8) {
 	a := cpu.a
 	cpu.a -= u8
 	hf := hc8Sub(a, u8)
@@ -1029,27 +1029,27 @@ func (cpu *CPU) sbc(u8 uint8) {
 
 }
 
-func (cpu *CPU) subM() {
-	cpu.sub(cpu.mapper.Read(cpu.hl()))
+func subM(cpu *CPU) {
+	sub(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) subA() { cpu.sub(cpu.a) }
+func subA(cpu *CPU) { sub(cpu.a) }
 
-func (cpu *CPU) subB() { cpu.sub(cpu.b) }
+func subB(cpu *CPU) { sub(cpu.b) }
 
-func (cpu *CPU) subC() { cpu.sub(cpu.c) }
+func subC(cpu *CPU) { sub(cpu.c) }
 
-func (cpu *CPU) subD() { cpu.sub(cpu.d) }
+func subD(cpu *CPU) { sub(cpu.d) }
 
-func (cpu *CPU) subE() { cpu.sub(cpu.e) }
+func subE(cpu *CPU) { sub(cpu.e) }
 
-func (cpu *CPU) subH() { cpu.sub(cpu.h) }
+func subH(cpu *CPU) { sub(cpu.h) }
 
-func (cpu *CPU) subL() { cpu.sub(cpu.l) }
+func subL(cpu *CPU) { sub(cpu.l) }
 
-func (cpu *CPU) subU() { cpu.sub(cpu.u8a) }
+func subU(cpu *CPU) { sub(cpu.u8a) }
 
-func (cpu *CPU) sub(u8 uint8) {
+func sub(u8 uint8) {
 	a := cpu.a
 	cpu.a -= u8
 	// [Z 1 H C]
@@ -1059,27 +1059,27 @@ func (cpu *CPU) sub(u8 uint8) {
 	cpu.setCf(c8Sub(a, u8))
 }
 
-func (cpu *CPU) xorM() {
-	cpu.xor(cpu.mapper.Read(cpu.hl()))
+func xorM(cpu *CPU) {
+	xor(cpu.mapper.Read(cpu.hl()))
 }
 
-func (cpu *CPU) xorA() { cpu.xor(cpu.a) }
+func xorA(cpu *CPU) { xor(cpu.a) }
 
-func (cpu *CPU) xorB() { cpu.xor(cpu.b) }
+func xorB(cpu *CPU) { xor(cpu.b) }
 
-func (cpu *CPU) xorC() { cpu.xor(cpu.c) }
+func xorC(cpu *CPU) { xor(cpu.c) }
 
-func (cpu *CPU) xorD() { cpu.xor(cpu.d) }
+func xorD(cpu *CPU) { xor(cpu.d) }
 
-func (cpu *CPU) xorE() { cpu.xor(cpu.e) }
+func xorE(cpu *CPU) { xor(cpu.e) }
 
-func (cpu *CPU) xorH() { cpu.xor(cpu.h) }
+func xorH(cpu *CPU) { xor(cpu.h) }
 
-func (cpu *CPU) xorL() { cpu.xor(cpu.l) }
+func xorL(cpu *CPU) { xor(cpu.l) }
 
-func (cpu *CPU) xorU() { cpu.xor(cpu.u8a) }
+func xorU(cpu *CPU) { xor(cpu.u8a) }
 
-func (cpu *CPU) xor(u8 uint8) {
+func xor(u8 uint8) {
 	cpu.a = cpu.a ^ u8
 	// [Z 0 0 0]
 	cpu.setZf(cpu.a == 0)

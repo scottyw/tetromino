@@ -111,21 +111,3 @@ func (cpu *CPU) CheckMooneye() []uint8 {
 	}
 	return nil
 }
-
-func (cpu *CPU) mooneye() {
-	// Mooneye uses this instruction (0x40) as a magic breakpoint
-	// to indicate that a test rom has completed
-	cpu.mooneyeDebugBreakpoint = true
-}
-
-// Read an 8-bit instruction argument
-func (cpu *CPU) readParamA() {
-	cpu.u8a = cpu.mapper.Read(cpu.pc)
-	cpu.pc++
-}
-
-// Read an additonal 8-bit instruction argument
-func (cpu *CPU) readParamB() {
-	cpu.u8b = cpu.mapper.Read(cpu.pc)
-	cpu.pc++
-}
