@@ -107,7 +107,7 @@ func (cpu *CPU) u16() uint16 {
 // the register values needed to see whether the test passed
 func (cpu *CPU) CheckMooneye() []uint8 {
 	if cpu.mooneyeDebugBreakpoint {
-		return []uint8{cpu.a, cpu.b, cpu.c, cpu.d, cpu.e, cpu.h, cpu.l}
+		return []uint8{cpu.b, cpu.c, cpu.d, cpu.e, cpu.h, cpu.l}
 	}
 	return nil
 }
