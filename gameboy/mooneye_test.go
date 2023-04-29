@@ -260,14 +260,14 @@ func TestMooneyeMBC2(t *testing.T) {
 func TestMooneyeMBC5(t *testing.T) {
 
 	for _, filename := range []string{
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_16Mb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_1Mb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_2Mb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_32Mb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_4Mb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_512kb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_64Mb.gb",
-		// "testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_8Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_16Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_1Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_2Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_32Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_4Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_512kb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_64Mb.gb",
+		"testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_8Mb.gb",
 	} {
 		t.Run(filename, func(t *testing.T) {
 			runMooneyeTest(t, filename)

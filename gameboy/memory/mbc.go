@@ -79,16 +79,22 @@ func newMBC(romImage []byte, rtc *rtc) mbc {
 		return newMBC3(rom, ram, rtc)
 	case 0x19:
 		// 19 - ROM + MBC5
+		return newMBC5(rom, ram)
 	case 0x1a:
 		// 1A - ROM + MBC5 + RAM
+		return newMBC5(rom, ram)
 	case 0x1b:
 		// 1B - ROM + MBC5 + RAM + BATT
+		return newMBC5(rom, ram)
 	case 0x1c:
 		// 1C - ROM + MBC5 + RUMBLE
+		return newMBC5(rom, ram)
 	case 0x1d:
 		// 1D - ROM + MBC5 + RUMBLE + SRAM
+		return newMBC5(rom, ram)
 	case 0x1e:
 		// 1E - ROM + MBC5 + RUMBLE + SRAM + BATT
+		return newMBC5(rom, ram)
 	case 0x20:
 		// 20 - ROM + MBC6 + RAM + BATT
 	case 0x22:

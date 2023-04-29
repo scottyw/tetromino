@@ -119,6 +119,14 @@ Some Mooneye tests pass (50 of 94).
 | :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_4Mb.gb            | [pic](testresults/emulator-only_mbc1_rom_4Mb.gb.png)            |
 | :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_512Kb.gb          | [pic](testresults/emulator-only_mbc1_rom_512Kb.gb.png)          |
 | :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc1/rom_8Mb.gb            | [pic](testresults/emulator-only_mbc1_rom_8Mb.gb.png)            |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_16Mb.gb           | [pic](testresults/emulator-only_mbc5_rom_16Mb.gb.png)           |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_1Mb.gb            | [pic](testresults/emulator-only_mbc5_rom_1Mb.gb.png)            |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_2Mb.gb            | [pic](testresults/emulator-only_mbc5_rom_2Mb.gb.png)            |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_32Mb.gb           | [pic](testresults/emulator-only_mbc5_rom_32Mb.gb.png)           |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_4Mb.gb            | [pic](testresults/emulator-only_mbc5_rom_4Mb.gb.png)            |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_512kb.gb          | [pic](testresults/emulator-only_mbc5_rom_512kb.gb.png)          |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_64Mb.gb           | [pic](testresults/emulator-only_mbc5_rom_64Mb.gb.png)           |
+| :green_heart: pass | testdata/mooneye-gb_hwtests/emulator-only/mbc5/rom_8Mb.gb            | [pic](testresults/emulator-only_mbc5_rom_8Mb.gb.png)            |
 
 ### Dependencies
 
