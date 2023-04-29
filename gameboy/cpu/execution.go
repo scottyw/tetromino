@@ -71,10 +71,6 @@ func (cpu *CPU) next() bool {
 	mapper := cpu.mapper
 	cpu.currentInstruction = mapper.Read(cpu.pc)
 
-	// FIXME Cleanup leftovers from the core execution refactor
-	// Every possible instruction value should be dispatchable
-	// Invalid instructions should panic
-
 	if cpu.currentInstruction == 0xcb {
 		cpu.pc++
 		cpu.currentInstruction = mapper.Read(cpu.pc)

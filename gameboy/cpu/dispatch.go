@@ -1,5 +1,10 @@
 package cpu
 
+import (
+	"fmt"
+	"os"
+)
+
 var normal [256][]func()
 var prefix [256][]func()
 var veryShortInterrupt []func()
@@ -9,6 +14,13 @@ var earlyCheck [256]func(int) bool
 
 func nop() {
 	// Do nothing
+}
+
+func fatal(msg string) func() {
+	return func() {
+		fmt.Println(msg)
+		os.Exit(1)
+	}
 }
 
 func isFinishedSpecial(check func() bool, early, last int) func(int) bool {
@@ -23,14 +35,6 @@ func isFinished(last int) func(int) bool {
 	}
 }
 
-//
-// FIXME Cleanup leftovers from the core execution refactor
-//
-// This initialize() method on CPU is no longer necessary and is a leftover from the major refactor of core execution that removed dispatch as a separate emulator component
-//
-// Replace this method with a standard init() function that doesn't depend on a reference to the CPU
-//
-
 func (cpu *CPU) Initialize() {
 
 	cpu.next()
@@ -38,23 +42,6 @@ func (cpu *CPU) Initialize() {
 	veryShortInterrupt = []func(){cpu.handleInterrupt}
 	shortInterrupt = []func(){nop, nop, nop, nop, cpu.handleInterrupt}
 	longInterrupt = []func(){nop, nop, nop, nop, nop, cpu.handleInterrupt}
-
-	// earlyCycle[0x20] = 2
-	// earlyCycle[0x28] = 2
-	// earlyCycle[0x30] = 2
-	// earlyCycle[0x38] = 2
-	// earlyCycle[0xc0] = 2
-	// earlyCycle[0xc2] = 3
-	// earlyCycle[0xc4] = 3
-	// earlyCycle[0xc8] = 2
-	// earlyCycle[0xca] = 3
-	// earlyCycle[0xcc] = 3
-	// earlyCycle[0xd0] = 2
-	// earlyCycle[0xd2] = 3
-	// earlyCycle[0xd4] = 3
-	// earlyCycle[0xd8] = 2
-	// earlyCycle[0xda] = 3
-	// earlyCycle[0xdc] = 3
 
 	earlyCheck[0x20] = isFinishedSpecial(cpu.zf, 2, 3)
 	earlyCheck[0x28] = isFinishedSpecial(cpu.nzf, 2, 3)
@@ -682,6 +669,9 @@ func (cpu *CPU) Initialize() {
 	// JP Z a16 [] 3 [16 12]
 	normal[0xca] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
 
+	// Undefined
+	normal[0xcb] = []func(){fatal("0xCB is not a valid instruction")}
+
 	// CALL Z a16 [] 3 [24 12]
 	normal[0xcc] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
 
@@ -702,6 +692,9 @@ func (cpu *CPU) Initialize() {
 
 	// JP NC a16 [] 3 [16 12]
 	normal[0xd2] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
+
+	// Undefined
+	normal[0xd3] = []func(){fatal("0xD3 is not a valid instruction")}
 
 	// CALL NC a16 [] 3 [24 12]
 	normal[0xd4] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
@@ -724,8 +717,14 @@ func (cpu *CPU) Initialize() {
 	// JP C a16 [] 3 [16 12]
 	normal[0xda] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.jp}
 
+	// Undefined
+	normal[0xdb] = []func(){fatal("0xDB is not a valid instruction")}
+
 	// CALL C a16 [] 3 [24 12]
 	normal[0xdc] = []func(){nop, cpu.readParamA, cpu.readParamB, cpu.call, cpu.push(&cpu.m8b), cpu.push(&cpu.m8a)}
+
+	// Undefined
+	normal[0xdd] = []func(){fatal("0xDD is not a valid instruction")}
 
 	// SBC A d8 [Z 1 H C] 2 [8]
 	normal[0xde] = []func(){cpu.readParamA, cpu.sbcU}
@@ -741,6 +740,12 @@ func (cpu *CPU) Initialize() {
 
 	// LD (C) A     1 [8]
 	normal[0xe2] = []func(){nop, cpu.ldCXA}
+
+	// Undefined
+	normal[0xe3] = []func(){fatal("0xE3 is not a valid instruction")}
+
+	// Undefined
+	normal[0xe4] = []func(){fatal("0xE4 is not a valid instruction")}
 
 	// PUSH HL      1 [16]
 	normal[0xe5] = []func(){nop, nop, cpu.push(&cpu.h), cpu.push(&cpu.l)}
@@ -760,6 +765,15 @@ func (cpu *CPU) Initialize() {
 	// LD (a16) A [] 3 [16]
 	normal[0xea] = []func(){cpu.readParamA, cpu.readParamB, nop, cpu.ldUX16A}
 
+	// Undefined
+	normal[0xeb] = []func(){fatal("0xEB is not a valid instruction")}
+
+	// Undefined
+	normal[0xec] = []func(){fatal("0xEC is not a valid instruction")}
+
+	// Undefined
+	normal[0xed] = []func(){fatal("0xED is not a valid instruction")}
+
 	// XOR d8  [Z 0 0 0] 2 [8]
 	normal[0xee] = []func(){cpu.readParamA, cpu.xorU}
 
@@ -777,6 +791,9 @@ func (cpu *CPU) Initialize() {
 
 	// DI   [] 1 [4]
 	normal[0xf3] = []func(){cpu.di}
+
+	// Undefined
+	normal[0xf4] = []func(){fatal("0xF4 is not a valid instruction")}
 
 	// PUSH AF      1 [16]
 	normal[0xf5] = []func(){nop, nop, cpu.push(&cpu.a), cpu.push(&cpu.f)}
@@ -798,6 +815,12 @@ func (cpu *CPU) Initialize() {
 
 	// EI   [] 1 [4]
 	normal[0xfb] = []func(){cpu.ei}
+
+	// Undefined
+	normal[0xfc] = []func(){fatal("0xFC is not a valid instruction")}
+
+	// Undefined
+	normal[0xfd] = []func(){fatal("0xFD is not a valid instruction")}
 
 	// CP d8  [Z 1 H C] 2 [8]
 	normal[0xfe] = []func(){cpu.readParamA, cpu.cpU}

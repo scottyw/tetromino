@@ -71,8 +71,6 @@ func (c *Controller) ButtonAction(button Button, pressed bool) {
 
 	switch button {
 
-	// FIXME it shouldn't be possible to press left and right at once or up and down at once
-
 	case Start:
 		if pressed {
 			c.buttonInput &^= 0x8
@@ -104,6 +102,7 @@ func (c *Controller) ButtonAction(button Button, pressed bool) {
 	case Down:
 		if pressed {
 			c.directionInput &^= 0x8
+			c.directionInput |= 0x4 // Unpress up
 		} else {
 			c.directionInput |= 0x8
 		}
@@ -111,6 +110,7 @@ func (c *Controller) ButtonAction(button Button, pressed bool) {
 	case Up:
 		if pressed {
 			c.directionInput &^= 0x4
+			c.directionInput |= 0x8 // Unpress down
 		} else {
 			c.directionInput |= 0x4
 		}
@@ -118,6 +118,7 @@ func (c *Controller) ButtonAction(button Button, pressed bool) {
 	case Left:
 		if pressed {
 			c.directionInput &^= 0x2
+			c.directionInput |= 0x1 // Unpress right
 		} else {
 			c.directionInput |= 0x2
 		}
@@ -125,6 +126,7 @@ func (c *Controller) ButtonAction(button Button, pressed bool) {
 	case Right:
 		if pressed {
 			c.directionInput &^= 0x1
+			c.directionInput |= 0x2 // Unpress left
 		} else {
 			c.directionInput |= 0x1
 		}
