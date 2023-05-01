@@ -48,7 +48,7 @@ type CPU struct {
 	currentInstruction     uint8
 	currentSubinstructions []func()
 	currentCycle           int
-	currentIsFinished      func(int) bool
+	currentIsFinishedEarly func(int) bool
 	currentMetadata        *metadata
 
 	// Context

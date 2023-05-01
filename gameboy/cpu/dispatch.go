@@ -10,7 +10,7 @@ var prefix [256][]func()
 var veryShortInterrupt []func()
 var shortInterrupt []func()
 var longInterrupt []func()
-var earlyCheck [256]func(int) bool
+var isFinishedEarlys [256]func(int) bool
 
 func nop() {
 	// Do nothing
@@ -23,42 +23,34 @@ func fatal(msg string) func() {
 	}
 }
 
-func isFinishedSpecial(check func() bool, early, last int) func(int) bool {
+func isFinishedEarly(check func() bool, early, last int) func(int) bool {
 	return func(currentCycle int) bool {
 		return (currentCycle == early && check()) || currentCycle == last
 	}
 }
 
-func isFinished(last int) func(int) bool {
-	return func(currentCycle int) bool {
-		return currentCycle == last
-	}
-}
-
 func (cpu *CPU) Initialize() {
-
-	cpu.next()
 
 	veryShortInterrupt = []func(){cpu.handleInterrupt}
 	shortInterrupt = []func(){nop, nop, nop, nop, cpu.handleInterrupt}
 	longInterrupt = []func(){nop, nop, nop, nop, nop, cpu.handleInterrupt}
 
-	earlyCheck[0x20] = isFinishedSpecial(cpu.zf, 2, 3)
-	earlyCheck[0x28] = isFinishedSpecial(cpu.nzf, 2, 3)
-	earlyCheck[0x30] = isFinishedSpecial(cpu.cf, 2, 3)
-	earlyCheck[0x38] = isFinishedSpecial(cpu.ncf, 2, 3)
-	earlyCheck[0xc0] = isFinishedSpecial(cpu.zf, 2, 5)
-	earlyCheck[0xc2] = isFinishedSpecial(cpu.zf, 3, 4)
-	earlyCheck[0xc4] = isFinishedSpecial(cpu.zf, 3, 6)
-	earlyCheck[0xc8] = isFinishedSpecial(cpu.nzf, 2, 5)
-	earlyCheck[0xca] = isFinishedSpecial(cpu.nzf, 3, 4)
-	earlyCheck[0xcc] = isFinishedSpecial(cpu.nzf, 3, 6)
-	earlyCheck[0xd0] = isFinishedSpecial(cpu.cf, 2, 5)
-	earlyCheck[0xd2] = isFinishedSpecial(cpu.cf, 3, 4)
-	earlyCheck[0xd4] = isFinishedSpecial(cpu.cf, 3, 6)
-	earlyCheck[0xd8] = isFinishedSpecial(cpu.ncf, 2, 5)
-	earlyCheck[0xda] = isFinishedSpecial(cpu.ncf, 3, 4)
-	earlyCheck[0xdc] = isFinishedSpecial(cpu.ncf, 3, 6)
+	isFinishedEarlys[0x20] = isFinishedEarly(cpu.zf, 2, 3)
+	isFinishedEarlys[0x28] = isFinishedEarly(cpu.nzf, 2, 3)
+	isFinishedEarlys[0x30] = isFinishedEarly(cpu.cf, 2, 3)
+	isFinishedEarlys[0x38] = isFinishedEarly(cpu.ncf, 2, 3)
+	isFinishedEarlys[0xc0] = isFinishedEarly(cpu.zf, 2, 5)
+	isFinishedEarlys[0xc2] = isFinishedEarly(cpu.zf, 3, 4)
+	isFinishedEarlys[0xc4] = isFinishedEarly(cpu.zf, 3, 6)
+	isFinishedEarlys[0xc8] = isFinishedEarly(cpu.nzf, 2, 5)
+	isFinishedEarlys[0xca] = isFinishedEarly(cpu.nzf, 3, 4)
+	isFinishedEarlys[0xcc] = isFinishedEarly(cpu.nzf, 3, 6)
+	isFinishedEarlys[0xd0] = isFinishedEarly(cpu.cf, 2, 5)
+	isFinishedEarlys[0xd2] = isFinishedEarly(cpu.cf, 3, 4)
+	isFinishedEarlys[0xd4] = isFinishedEarly(cpu.cf, 3, 6)
+	isFinishedEarlys[0xd8] = isFinishedEarly(cpu.ncf, 2, 5)
+	isFinishedEarlys[0xda] = isFinishedEarly(cpu.ncf, 3, 4)
+	isFinishedEarlys[0xdc] = isFinishedEarly(cpu.ncf, 3, 6)
 
 	// NOP          1 [4]
 	normal[0x00] = []func(){nop}

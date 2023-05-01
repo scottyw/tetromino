@@ -82,6 +82,7 @@ func New(config Config) *Gameboy {
 	// Create CPU
 	c := cpu.New(i, oam, config.DebugCPU, mapper)
 
+	// Initialize internal data structures
 	c.Initialize()
 
 	// Create a display

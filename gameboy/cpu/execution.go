@@ -59,8 +59,8 @@ func (cpu *CPU) next() bool {
 	interrupts := cpu.checkInterrupts()
 	if interrupts != nil {
 		cpu.currentCycle = 0
-		cpu.currentIsFinished = isFinished(len(interrupts))
 		cpu.currentSubinstructions = interrupts
+		cpu.currentIsFinishedEarly = nil
 		return false
 	}
 
@@ -77,15 +77,12 @@ func (cpu *CPU) next() bool {
 		cpu.currentCycle = 0
 		cpu.currentMetadata = prefixedInstructionMetadata[cpu.currentInstruction]
 		cpu.currentSubinstructions = prefix[cpu.currentInstruction]
-		cpu.currentIsFinished = isFinished(len(cpu.currentSubinstructions))
+		cpu.currentIsFinishedEarly = nil
 	} else {
 		cpu.currentCycle = 0
 		cpu.currentMetadata = instructionMetadata[cpu.currentInstruction]
 		cpu.currentSubinstructions = normal[cpu.currentInstruction]
-		cpu.currentIsFinished = earlyCheck[cpu.currentInstruction]
-		if cpu.currentIsFinished == nil {
-			cpu.currentIsFinished = isFinished(len(cpu.currentSubinstructions))
-		}
+		cpu.currentIsFinishedEarly = isFinishedEarlys[cpu.currentInstruction]
 	}
 
 	// Reset any context from previous instructions
@@ -126,9 +123,16 @@ func (cpu *CPU) next() bool {
 
 }
 
+func (cpu *CPU) isFinished() bool {
+	if cpu.currentIsFinishedEarly == nil {
+		return cpu.currentCycle == len(cpu.currentSubinstructions)
+	}
+	return cpu.currentIsFinishedEarly(cpu.currentCycle)
+}
+
 // ExecuteMachineCycle runs the CPU for one machine cycle
 func (cpu *CPU) ExecuteMachineCycle() {
-	if cpu.currentIsFinished(cpu.currentCycle) {
+	if cpu.isFinished() {
 		halted := cpu.next()
 		if halted {
 			return
