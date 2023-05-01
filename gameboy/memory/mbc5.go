@@ -1,9 +1,5 @@
 package memory
 
-import (
-	"fmt"
-)
-
 type mbc5 struct {
 	// ROM and RAM data and mask read from the cart
 	rom [][0x4000]byte
@@ -32,7 +28,7 @@ func (m *mbc5) Read(addr uint16) uint8 {
 		offset := addr - 0x4000
 		return m.rom[m.romBank][offset]
 	case addr < 0xa000:
-		panic(fmt.Sprintf("mbc5 has no read mapping for address 0x%04x", addr))
+		return 0xff
 	case addr < 0xc000:
 		if m.ramEnabled {
 			offset := addr - 0xa000
@@ -40,7 +36,7 @@ func (m *mbc5) Read(addr uint16) uint8 {
 		}
 		return 0xff
 	default:
-		panic(fmt.Sprintf("mbc5 has no read mapping for address 0x%04x", addr))
+		return 0xff
 	}
 }
 
@@ -58,7 +54,7 @@ func (m *mbc5) Write(addr uint16, value uint8) {
 		m.ramBank = value & 0x0f
 		m.ramBank %= uint8(len(m.ram))
 	default:
-		panic(fmt.Sprintf("mbc5 has no write mapping for address 0x%04x", addr))
+		// Ignore
 	}
 }
 

@@ -47,7 +47,6 @@ func runMooneyeTest(t *testing.T, filename string) {
 	} else {
 		fmt.Printf("| :green_heart: pass | %s | [pic](%s) |\n", filename, screenshotFilename)
 	}
-	t.Fail()
 }
 
 func TestMooneyeAcceptance(t *testing.T) {
@@ -158,13 +157,13 @@ func TestMooneyeMBC(t *testing.T) {
 		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc1/rom_4Mb.gb",
 		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc1/rom_512kb.gb",
 		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc1/rom_8Mb.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/bits_ramg.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/bits_romb.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/bits_unused.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/ram.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/rom_1Mb.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/rom_2Mb.gb",
-		// "testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/rom_512kb.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/bits_ramg.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/bits_romb.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/bits_unused.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/ram.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/rom_1Mb.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/rom_2Mb.gb",
+		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc2/rom_512kb.gb",
 		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc5/rom_16Mb.gb",
 		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc5/rom_1Mb.gb",
 		"testdata/mts-20221022-1430-8d742b9/emulator-only/mbc5/rom_2Mb.gb",

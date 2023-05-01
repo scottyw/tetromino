@@ -52,8 +52,10 @@ func newMBC(romImage []byte, rtc *rtc) mbc {
 		return newMBC1(rom, ram)
 	case 0x05:
 		// 05 - ROM + MBC2
+		return newMBC2(rom)
 	case 0x06:
 		// 06 - ROM + MBC2 + BATT
+		return newMBC2(rom)
 	case 0x08:
 		// 08 - ROM + RAM
 	case 0x09:
