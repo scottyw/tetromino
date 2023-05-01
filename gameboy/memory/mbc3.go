@@ -51,10 +51,8 @@ func (m *mbc3) Write(addr uint16, value uint8) {
 		m.ramEnabled = value&0x0f == 0x0a
 	case addr < 0x4000:
 		m.romBank = value & 0x7f
-		m.romBank %= uint8(len(m.rom))
 	case addr < 0x6000:
 		m.ramBank = value & 0x0f
-		m.ramBank %= uint8(len(m.ram))
 	case addr < 0x8000:
 		if value&0x01 == 0 {
 			m.rtc.latchLow()
